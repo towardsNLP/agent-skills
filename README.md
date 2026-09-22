@@ -1,6 +1,6 @@
 # Agent skills
 
-Twenty skills for Claude Code and Codex, grouped by what they are for. Some I wrote, some I
+Nineteen skills for Claude Code and Codex, grouped by what they are for. Some I wrote, some I
 adapted, some are vendored unchanged with attribution.
 
 ```
@@ -8,7 +8,7 @@ session/     start-session  end-session  sync-progress  wrap-day
 sdd/         check-contracts  to-spec
 thinking/    grilling  grill-me  grill-with-docs  research
              writing-for-agents  to-questionnaire  teach
-knowledge/   okf-creator  domain-modeling
+knowledge/   domain-modeling
 craft/       tdd  unslop  show-me-your-work  codebase-design  handoff
 ```
 
@@ -65,7 +65,7 @@ skill.** A skill that names one project stops being shareable.
 **Model-invoked** skills cost a permanent description slot in context, in exchange for the agent
 reaching them on its own. **User-invoked** skills (`disable-model-invocation: true`) cost nothing
 and are invisible to the model — which makes me the index that has to remember they exist. That
-trade is deliberate: **7 of 20 are model-invoked.**
+trade is deliberate: **6 of 19 are model-invoked.**
 
 `skillOverrides` in settings trims the rest: `"name-only"` keeps a skill invokable but suppresses
 its description; `"off"` hides it.
@@ -87,7 +87,6 @@ its description; `"off"` hides it.
 | `writing-for-agents` | model | How to write any document an agent reads: context pointers, the two loads, the information hierarchy, completion criteria, no-ops. Read it before editing a SKILL.md or an AGENTS.md. |
 | `to-questionnaire` | user | Turns a decision I cannot make alone into a questionnaire for the person who can. Interviews me about the *send*, then aims the questions at the gap. |
 | `teach` | user | Teach a concept over multiple sessions. **Claims the current directory** as a stateful workspace, so run it in a dedicated folder, never inside a project repo. |
-| `okf-creator` | model | Build Open Knowledge Format catalogs from authoritative sources: a curated, typed knowledge layer of Markdown + YAML for grounding an LLM. Ships six reference documents and three scripts. |
 | `domain-modeling` | model | Challenge a term against the glossary, sharpen fuzzy language, stress-test with invented scenarios, check the code agrees, write it down inline. |
 | `tdd` | model | Red-green-refactor, one vertical slice at a time. Its own guardrails tell it to skip when the test path is unclear or integration-heavy, so it stays quiet on experiment work. |
 | `unslop` | user | Cuts AI tells from prose. 33 numbered rules. For anything an outside reader sees. |
@@ -112,7 +111,7 @@ contend:
 
 | Source | Skills |
 |---|---|
-| Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` `okf-creator` |
+| Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` |
 | [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), unmodified | `writing-for-agents` `grilling` `grill-me` `grill-with-docs` `research` `handoff` `to-questionnaire` `codebase-design` `tdd` `teach` |
 | mattpocock/skills, adapted | `domain-modeling` — resolves its glossary and decision-record targets from `planning/agent/profile.md` instead of assuming `CONTEXT.md`, and never creates a second glossary |
 | [cursor/plugins pstack](https://github.com/cursor/plugins/tree/main/pstack), unmodified | `unslop` |
@@ -131,6 +130,10 @@ target rather than trying to lock it.
 
 Codex `agents/openai.yaml` sidecars were dropped throughout — they configure a Cursor-side policy
 that does not apply here.
+
+**Moved out:** `okf-creator` now lives in its own repository. It is text an agent reads *plus a
+library a program imports*, which is a different artefact with a different consumer and release
+cadence. It is still symlinked into `~/.claude/skills` from there.
 
 **Not adopted:** Pocock's `wayfinder` and `code-review`. `code-review` additionally shadows Claude
 Code's built-in command of that name, since personal skills outrank bundled ones.
