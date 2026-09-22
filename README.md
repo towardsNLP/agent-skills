@@ -10,6 +10,9 @@ thinking/    grilling  grill-me  grill-with-docs  research
              writing-for-agents  to-questionnaire  teach
 knowledge/   domain-modeling
 craft/       tdd  unslop  show-me-your-work  codebase-design  handoff
+
+tools/       ticket_status.py     derives doneness; the workflow writes none
+templates/   profile.md  state.md
 ```
 
 ## Two install scopes, and the trap between them
@@ -112,6 +115,34 @@ contend:
 | `planning/specs/<id>/spec.md` | `adr-spec`, once, then never again |
 | `planning/specs/<id>/acceptance.md` | `implement`, at spec close |
 | `planning/tickets/<id>/NN-*.md` | `tickets` writes them, `implement` closes them |
+
+## Derived status
+
+Nothing in this workflow writes down whether work is done. `tools/ticket_status.py` derives it by
+running each ticket's own check, and the exit code is the point — it is non-zero when a ticket
+carries an Outcome but its check fails, when a check no longer resolves, when a ticket is blocked
+by one that does not exist, when a planned component has no spec, or when a spec has no tickets.
+
+```
+P1-rule-engine  [2/5 done]
+   01 the YAML loader rejects an ungoverned predic done    gate    ahmad
+   03 the evaluator fires rules in priority order  open    gate    ahmad
+   04 the contradiction post-pass defeats the weak FAIL    gate    -
+   05 the SME confirms the tier assignment for fam manual  manual  -
+
+drift (1):
+  P1-rule-engine/04: closed, but its check fails
+```
+
+`open` and `FAIL` are different claims. Open means not built yet, which is most of a live board.
+FAIL means the Outcome asserts work the check does not support — the one this exists to catch.
+
+Standard library only, so vendoring is a single file copy: `make sync-tools TO=<project root>`,
+and the project's CI diffs its copy against this source. `make test` runs the suite.
+
+The reason it derives rather than reads: across three repositories, **95 acceptance boxes were
+written into specs and not one was ever ticked.** A status a human must remember to update is a
+status that lies.
 
 ## Origins
 
