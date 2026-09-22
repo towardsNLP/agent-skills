@@ -41,10 +41,22 @@ placeholder value is worse than a missing one, because a skill will act on it.
 > sits past a default read cutoff and the agent will silently read stale state. Newest-first
 > is the safer default.
 
-## Specs
+## Specs, tickets and decisions
 
+- **spec_map_path:** `planning/spec-map.md` — the planned component set, written by
+  `/deconstruct`. Planned only; status is derived.
 - **spec_dir:**
-- **spec_path_pattern:** e.g. `planning/specs/spec-<id>-<slug>.md`
+- **spec_path_pattern:** `planning/specs/<spec-id>/spec.md` — one directory per spec, holding a
+  frozen `spec.md` and an appended `acceptance.md`
+- **ticket_dir:** `planning/tickets/<spec-id>/` — `NN-slug.md`, one per ticket. Deliberately
+  outside `spec_dir`: where a project ships specs to a client, that keeps the internal/shared
+  line a directory boundary rather than a per-spec manifest entry that ships by omission.
+- **decision_records:** `planning/adr/` — `NNNN-slug.md`; the bar and format live in that
+  directory's README
+- **sme_register_path:** the file a `check_type: sme` ticket points a row at, or omit
+- **ticket_status_command:** what derives doneness — e.g. `make ticket-status`. Exits non-zero
+  when a ticket carries an Outcome but its check fails, when a check no longer resolves, when a
+  planned component has no spec, or when a spec has no tickets.
 - **spec_template_path:**
 - **spec_owner:** default owner written into new spec frontmatter
 - **spec_initial_status:** e.g. `Drafted`
@@ -98,5 +110,8 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **authorship_line:** required byline on new documents, or omit
 - **versioned_canonical_docs:** which version of a document is authoritative, where
   superseded copies exist
+- **spec_migration_mode:** `big-bang` or `on-touch` — for a repo whose existing specs predate
+  this layout. Under `on-touch` a spec converts when next amended or closed, and **a closed spec
+  never converts**: its path may already be cited by something a client holds.
 - **has_sync_progress:** `true`, or `false` for a solo project where `/end-session` also does
   the shared-doc update

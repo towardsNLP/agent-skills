@@ -1,11 +1,11 @@
 # Agent skills
 
-Nineteen skills for Claude Code and Codex, grouped by what they are for. Some I wrote, some I
+Twenty-two skills for Claude Code and Codex, grouped by what they are for. Some I wrote, some I
 adapted, some are vendored unchanged with attribution.
 
 ```
 session/     start-session  end-session  sync-progress  wrap-day
-sdd/         check-contracts  to-spec
+sdd/         deconstruct  adr-spec  tickets  implement  check-contracts
 thinking/    grilling  grill-me  grill-with-docs  research
              writing-for-agents  to-questionnaire  teach
 knowledge/   domain-modeling
@@ -65,7 +65,7 @@ skill.** A skill that names one project stops being shareable.
 **Model-invoked** skills cost a permanent description slot in context, in exchange for the agent
 reaching them on its own. **User-invoked** skills (`disable-model-invocation: true`) cost nothing
 and are invisible to the model — which makes me the index that has to remember they exist. That
-trade is deliberate: **6 of 19 are model-invoked.**
+trade is deliberate: **6 of 22 are model-invoked.**
 
 `skillOverrides` in settings trims the rest: `"name-only"` keeps a skill invokable but suppresses
 its description; `"off"` hides it.
@@ -79,7 +79,10 @@ its description; `"off"` hides it.
 | `sync-progress` | user | Consolidate diaries into the shared planning documents. Lead only. |
 | `wrap-day` | user | Run `end-session` then `sync-progress`, aborting if the first fails. |
 | `check-contracts` | user | Validate a name, path, ID or output against the project's conventions. |
-| `to-spec` | user | Create a spec, and fill it from the grilling that earned it. |
+| `deconstruct` | user | Break a whole project into the set of specs it needs, with dependency edges. Project level, run rarely. |
+| `adr-spec` | user | Record the decisions, then write the spec against them. The spec is frozen at approval. |
+| `tickets` | user | Cut an approved spec into tracking records, each independently verifiable by a named check. |
+| `implement` | user | Build one ticket in a fresh session: claim, work at the spec's seam, run the check, record the outcome. |
 | `grilling` | model | The interview primitive. Works a design tree in rounds, asks the whole frontier at once with a recommendation per question, and waits. Facts are the agent's job; decisions stay mine. |
 | `grill-me` | user | Typed entry point to `grilling`. |
 | `grill-with-docs` | user | `grilling` + `domain-modeling` together, so the interview leaves a paper trail. |
@@ -105,18 +108,23 @@ contend:
 | `planning/agent/state/<name>.md` | that contributor's `end-session` |
 | `planning/STATE.md` | the lead's `sync-progress` |
 | progress log, roadmap, plan | the lead's `sync-progress` |
-| `planning/specs/` and the roadmap row | `to-spec` |
+| `planning/spec-map.md` | `deconstruct` |
+| `planning/specs/<id>/spec.md` | `adr-spec`, once, then never again |
+| `planning/specs/<id>/acceptance.md` | `implement`, at spec close |
+| `planning/tickets/<id>/NN-*.md` | `tickets` writes them, `implement` closes them |
 
 ## Origins
 
 | Source | Skills |
 |---|---|
-| Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` |
+| Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` `deconstruct` |
 | [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), unmodified | `writing-for-agents` `grilling` `grill-me` `grill-with-docs` `research` `handoff` `to-questionnaire` `codebase-design` `tdd` `teach` |
 | mattpocock/skills, adapted | `domain-modeling` — resolves its glossary and decision-record targets from `planning/agent/profile.md` instead of assuming `CONTEXT.md`, and never creates a second glossary |
 | [cursor/plugins pstack](https://github.com/cursor/plugins/tree/main/pstack), unmodified | `unslop` |
 | pstack, adapted | `show-me-your-work` — two Cursor-specific references repointed: the transcript path, and the cross-model reviewer, which now says "prefer a different model family where the harness offers one" rather than assuming one exists |
-| Merged | `to-spec` — my `new-spec` plus Pocock's `to-spec`. Mine created a shell and refused to fill the hard sections; his synthesises the whole document from the conversation. Both are right about different situations, and the difference is whether thinking happened first — so the refusal became a *precondition* rather than a property. His issue-tracker publishing and user-stories section are dropped. |
+| Merged, then diverged | `adr-spec` — my `new-spec` plus Pocock's `to-spec`. Mine created a shell and refused to fill the hard sections; his synthesises the whole document from the conversation. The difference is whether thinking happened first, so the refusal became a *precondition* rather than a property. Then it diverged: decisions are recorded before the spec rather than assumed to exist, design detail is triaged to a contract or an ADR or nowhere, there is no task table, and no user stories. |
+| Adapted | `tickets` — from Pocock's `to-tickets`. Kept: tracer bullets, blocking edges and working the frontier, one-context-window sizing, prefactoring first, expand–contract for wide refactors, never modifying the parent. Changed: tickets are durable rather than throwaway, independently *verifiable* rather than vertically sliced, and doneness is derived from a named check rather than ticked in a box. |
+| Same name, different skill | `implement` — Pocock's is five lines and never touches the ticket, which is coherent when tickets are throwaway on a tracker. This one claims, loads only what the ticket names, works at the seam the spec already chose, and closes by recording what diverged. |
 
 The session set began as one copy per repo and drifted: 24 files, roughly 3,300 lines, five
 archetypes duplicated across five repositories, each fork accumulating its own edits. A lesson
@@ -141,8 +149,10 @@ Code's built-in command of that name, since personal skills outrank bundled ones
 ## The workflow
 
 ```
-start-session  →  [grill-me → to-spec → tickets]  →  work  →  end-session
-                                                              lead also: sync-progress
+deconstruct  →  grill-me  →  adr-spec  →  tickets  →  implement  →  review → ship
+  project        ──── one session ────      one fresh session per ticket
+
+start-session  →  <the above>  →  end-session        lead also: sync-progress
 ```
 
 Keep grilling and the documents it produces in **one unbroken context window**. The interview is

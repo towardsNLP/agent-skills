@@ -177,7 +177,7 @@ settle has to be amended when they do. It proposes each ADR against the four-par
 the outcome and any divergence, record the PR, release the claim. The file stays where it is — the
 PR points at that path, and the divergence record is the ticket's most durable content.
 
-Profile keys to add: `spec_map_path`, `ticket_dir`, `ticket_status_command`, `sme_register_path`,
+Profile keys the skills read (all present in `templates/profile.md`): `spec_map_path`, `ticket_dir`, `ticket_status_command`, `sme_register_path`,
 `spec_migration_mode`, and `spec_path_pattern` updated to `planning/specs/<spec-id>/spec.md`.
 
 ## 9. Where this diverges from Pocock, and why
