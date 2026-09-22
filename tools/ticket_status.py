@@ -63,7 +63,7 @@ def base_dir(pattern: str) -> str:
     inside the final segment -- so fall back to the last complete directory.
     """
     m = re.search(r"[<{]", pattern)
-    if not m:                                   # already a plain directory
+    if not m:  # already a plain directory
         return pattern.rstrip("/")
     head = pattern[: m.start()]
     return head[: head.rfind("/")].rstrip("/") if "/" in head else head.rstrip("/")
@@ -91,7 +91,7 @@ class Ticket:
     claimed_by: str = "unclaimed"
     blocked_by: list[str] = field(default_factory=list)
     has_outcome: bool = False
-    state: str = "unknown"      # pass | fail | unresolved | unknown | skipped
+    state: str = "unknown"  # pass | fail | unresolved | unknown | skipped
     detail: str = ""
 
     @property
@@ -137,9 +137,11 @@ def collect(root: Path, ticket_root: Path) -> dict[str, list[Ticket]]:
     if not ticket_root.is_dir():
         return out
     for spec_dir in sorted(p for p in ticket_root.iterdir() if p.is_dir()):
-        tickets = [parse_ticket(f, spec_dir.name)
-                   for f in sorted(spec_dir.glob("*.md"))
-                   if f.name.lower() != "readme.md"]
+        tickets = [
+            parse_ticket(f, spec_dir.name)
+            for f in sorted(spec_dir.glob("*.md"))
+            if f.name.lower() != "readme.md"
+        ]
         out[spec_dir.name] = tickets
     return out
 
@@ -165,8 +167,12 @@ def run(cmd: list[str] | str, root: Path, timeout: int) -> tuple[int, str]:
         # S603: running the check a ticket names IS the job. The checks come from
         # files in the repo, at the same trust level as the code being tested.
         p = subprocess.run(  # noqa: S603
-            cmd, cwd=root, capture_output=True, text=True,
-            timeout=timeout, shell=isinstance(cmd, str),
+            cmd,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            shell=isinstance(cmd, str),
         )
     except subprocess.TimeoutExpired:
         return 124, f"timed out after {timeout}s"
@@ -232,16 +238,18 @@ def mark(t: Ticket) -> str:
     """
     if t.state == "fail":
         return "FAIL" if t.has_outcome else "open"
-    return {"pass": "done", "unresolved": "BROKEN",
-            "unknown": "manual", "skipped": "-"}[t.state]
+    return {"pass": "done", "unresolved": "BROKEN", "unknown": "manual", "skipped": "-"}[t.state]
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--root", type=Path, default=Path("."), help="repository root")
     ap.add_argument("--profile", type=Path, default=None, help="path to profile.md")
-    ap.add_argument("--no-run", action="store_true",
-                    help="structure only: resolve paths and edges, run no checks")
+    ap.add_argument(
+        "--no-run",
+        action="store_true",
+        help="structure only: resolve paths and edges, run no checks",
+    )
     ap.add_argument("--timeout", type=int, default=300, help="seconds per check")
     a = ap.parse_args(argv)
 
@@ -261,11 +269,14 @@ def main(argv: list[str] | None = None) -> int:
         for t in tickets:
             evaluate(t, root, cfg, a.timeout, execute=not a.no_run)
             if t.state == "unresolved":
-                drift.append(f"{t.ident}: check does not resolve"
-                             + (f" -- {t.detail}" if t.detail else ""))
+                drift.append(
+                    f"{t.ident}: check does not resolve" + (f" -- {t.detail}" if t.detail else "")
+                )
             if t.has_outcome and t.state == "fail":
-                drift.append(f"{t.ident}: closed, but its check fails"
-                             + (f" -- {t.detail}" if t.detail else ""))
+                drift.append(
+                    f"{t.ident}: closed, but its check fails"
+                    + (f" -- {t.detail}" if t.detail else "")
+                )
             for b in t.blocked_by:
                 if f"{t.spec_id}/{b.split('/')[-1].zfill(2)}" not in known:
                     drift.append(f"{t.ident}: blocked by {b!r}, which does not exist")
@@ -293,13 +304,17 @@ def main(argv: list[str] | None = None) -> int:
         for t in tickets:
             claim = t.claimed_by if t.claimed_by.lower() != "unclaimed" else "-"
             note = f"  {t.detail}" if t.detail and t.state in {"fail", "unresolved"} else ""
-            print(f"  {t.number:>3} {t.title[:44]:<44} {mark(t):<7}"
-                  f" {t.check_type:<7} {claim:<12}{note}")
+            print(
+                f"  {t.number:>3} {t.title[:44]:<44} {mark(t):<7}"
+                f" {t.check_type:<7} {claim:<12}{note}"
+            )
 
     total = sum(len(v) for v in by_spec.values())
     plural = "spec" if len(by_spec) == 1 else "specs"
-    print(f"\n{total} tickets across {len(by_spec)} {plural}"
-          f"; {len(planned)} components planned, {len(written)} written")
+    print(
+        f"\n{total} tickets across {len(by_spec)} {plural}"
+        f"; {len(planned)} components planned, {len(written)} written"
+    )
     if exempt:
         print(f"{len(exempt)} predate ticketing and are exempt: {', '.join(exempt)}")
 
@@ -307,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
         print("no drift")
         return 0
 
-    sys.stdout.flush()   # so the report lands above the drift, not interleaved with it
+    sys.stdout.flush()  # so the report lands above the drift, not interleaved with it
     print(f"\ndrift ({len(drift)}):", file=sys.stderr)
     for d in drift:
         print(f"  {d}", file=sys.stderr)
