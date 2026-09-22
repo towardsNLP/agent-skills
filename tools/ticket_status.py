@@ -14,6 +14,11 @@ The exit code is the point. It is non-zero when:
   4. a component in the spec map has no spec              -- planned, unwritten
   5. a spec directory has no tickets                      -- written, uncut
 
+A repo adopting this workflow mid-flight will have specs that predate ticketing
+and will never have tickets. Name them in the profile's `pre_workflow_specs`
+rather than weakening condition 5: an explicit list is auditable, and it shrinks
+as those specs are retired.
+
 Standard library only, deliberately: this file is vendored into project repos,
 and a vendored file with dependencies is a burden on every one of them.
 """
@@ -263,8 +268,14 @@ def main(argv: list[str] | None = None) -> int:
     for ident in planned:
         if not any(name.split("-", 1)[0] == ident or name == ident for name in written):
             drift.append(f"{ident}: planned in the spec map, no spec written")
+    grandfathered = {s.strip() for s in re.split(r"[,\s]+", cfg.get("pre_workflow_specs", "")) if s.strip()}
+    exempt = []
     for name in sorted(written):
-        if not by_spec.get(name):
+        if by_spec.get(name):
+            continue
+        if name in grandfathered or name.split("-", 1)[0] in grandfathered:
+            exempt.append(name)
+        else:
             drift.append(f"{name}: spec written, no tickets cut")
 
     for spec_id in sorted(by_spec):
@@ -281,6 +292,8 @@ def main(argv: list[str] | None = None) -> int:
     plural = "spec" if len(by_spec) == 1 else "specs"
     print(f"\n{total} tickets across {len(by_spec)} {plural}"
           f"; {len(planned)} components planned, {len(written)} written")
+    if exempt:
+        print(f"{len(exempt)} predate ticketing and are exempt: {', '.join(exempt)}")
 
     if not drift:
         print("no drift")

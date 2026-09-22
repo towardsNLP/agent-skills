@@ -110,6 +110,9 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **authorship_line:** required byline on new documents, or omit
 - **versioned_canonical_docs:** which version of a document is authoritative, where
   superseded copies exist
+- **pre_workflow_specs:** spec IDs that predate ticketing and will never have tickets, so the
+  "spec written, no tickets cut" check exempts them. Auditable and meant to shrink; omit when the
+  repo has always used this workflow.
 - **spec_migration_mode:** `big-bang` or `on-touch` — for a repo whose existing specs predate
   this layout. Under `on-touch` a spec converts when next amended or closed, and **a closed spec
   never converts**: its path may already be cited by something a client holds.

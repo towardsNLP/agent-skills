@@ -245,3 +245,19 @@ def test_open_failing_ticket_reads_as_open_not_failed(project, capsys):
 def test_one_spec_is_not_pluralised(project, capsys):
     status(project({"P1-thing": [{}]}))
     assert "across 1 spec;" in capsys.readouterr().out
+
+
+def test_pre_workflow_spec_is_exempt_from_the_no_tickets_check(project, capsys):
+    """A repo adopting this mid-flight has specs that will never have tickets."""
+    root = project({"P1-thing": [{}]}, specs=("P1-thing", "P0.9-legacy"),
+                   map_rows=["| P1 | a thing | — |", "| P0.9 | legacy | — |"],
+                   profile_extra="- **pre_workflow_specs:** `P0.9`")
+    assert status(root) == 0
+    assert "predate ticketing" in capsys.readouterr().out
+
+
+def test_without_the_exemption_it_is_still_drift(project, capsys):
+    root = project({"P1-thing": [{}]}, specs=("P1-thing", "P0.9-legacy"),
+                   map_rows=["| P1 | a thing | — |", "| P0.9 | legacy | — |"])
+    assert status(root) == 1
+    assert "no tickets cut" in capsys.readouterr().err
