@@ -1,0 +1,18 @@
+{
+  "name": "sdd",
+  "version": "0.2.0",
+  "description": "Spec-driven session workflow skills: start and end a session, consolidate progress, validate project conventions, and instantiate specs. Project-neutral; each repo supplies its own planning/agent/profile.md.",
+  "author": {
+    "name": "Ahmad Hashemi"
+  },
+  "license": "MIT",
+  "keywords": ["sdd", "session", "planning", "specs", "progress", "conventions"],
+  "skills": [
+    "./session/start-session",
+    "./session/end-session",
+    "./session/sync-progress",
+    "./session/wrap-day",
+    "./sdd/check-contracts",
+    "./sdd/to-spec"
+  ]
+}

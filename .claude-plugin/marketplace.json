@@ -1,0 +1,16 @@
+{
+  "name": "agent-skills",
+  "owner": {
+    "name": "Ahmad Hashemi"
+  },
+  "description": "Agent skills for spec-driven development and session management.",
+  "plugins": [
+    {
+      "name": "sdd",
+      "source": "./",
+      "description": "Spec-driven session workflow: start and end a session, consolidate progress, validate project conventions, instantiate specs.",
+      "category": "workflow",
+      "keywords": ["sdd", "session", "planning", "specs"]
+    }
+  ]
+}
