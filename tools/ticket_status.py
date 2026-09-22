@@ -137,7 +137,8 @@ def collect(root: Path, ticket_root: Path) -> dict[str, list[Ticket]]:
     if not ticket_root.is_dir():
         return out
     for spec_dir in sorted(p for p in ticket_root.iterdir() if p.is_dir()):
-        tickets = [parse_ticket(f, spec_dir.name) for f in sorted(spec_dir.glob("*.md"))
+        tickets = [parse_ticket(f, spec_dir.name)
+                   for f in sorted(spec_dir.glob("*.md"))
                    if f.name.lower() != "readme.md"]
         out[spec_dir.name] = tickets
     return out
@@ -161,8 +162,12 @@ def parse_spec_map(path: Path) -> list[str]:
 
 def run(cmd: list[str] | str, root: Path, timeout: int) -> tuple[int, str]:
     try:
-        p = subprocess.run(cmd, cwd=root, capture_output=True, text=True,
-                           timeout=timeout, shell=isinstance(cmd, str))
+        # S603: running the check a ticket names IS the job. The checks come from
+        # files in the repo, at the same trust level as the code being tested.
+        p = subprocess.run(  # noqa: S603
+            cmd, cwd=root, capture_output=True, text=True,
+            timeout=timeout, shell=isinstance(cmd, str),
+        )
     except subprocess.TimeoutExpired:
         return 124, f"timed out after {timeout}s"
     except FileNotFoundError as exc:
@@ -185,12 +190,13 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
             t.state, t.detail = "unresolved", "sme_register_path missing"
             return
         row = t.check.split("#", 1)[-1]
-        hits = [l for l in register.read_text(encoding="utf-8").splitlines() if row in l]
+        rows = register.read_text(encoding="utf-8").splitlines()
+        hits = [line for line in rows if row in line]
         if not hits:
             t.state, t.detail = "unresolved", f"no row matching {row!r}"
             return
         pattern = cfg.get("sme_resolved_pattern", r"\b(resolved|confirmed|answered)\b")
-        ok = any(re.search(pattern, h, re.I) for h in hits)
+        ok = any(re.search(pattern, hit, re.I) for hit in hits)
         t.state = "pass" if ok else "fail"
         t.detail = "" if ok else "row still open"
         return
@@ -201,11 +207,11 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
 
     if t.check_type == "test":
         runner = shlex.split(cfg.get("test_command", "pytest"))
-        code, _ = run(runner + ["--collect-only", "-q", t.check], root, timeout)
+        code, _ = run([*runner, "--collect-only", "-q", t.check], root, timeout)
         if code != 0:
             t.state, t.detail = "unresolved", "does not collect"
             return
-        code, msg = run(runner + ["-q", t.check], root, timeout)
+        code, msg = run([*runner, "-q", t.check], root, timeout)
     else:  # gate
         code, msg = run(t.check, root, timeout)
         if code == 127:
@@ -243,7 +249,8 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_profile(a.profile or root / PROFILE_DEFAULT)
 
     ticket_root = root / base_dir(cfg.get("ticket_dir", "planning/tickets"))
-    spec_root = root / base_dir(cfg.get("spec_dir") or cfg.get("spec_path_pattern", "planning/specs"))
+    spec_pattern = cfg.get("spec_dir") or cfg.get("spec_path_pattern", "planning/specs")
+    spec_root = root / base_dir(spec_pattern)
     spec_map = root / cfg.get("spec_map_path", "planning/spec-map.md")
 
     by_spec = collect(root, ticket_root)
@@ -268,7 +275,8 @@ def main(argv: list[str] | None = None) -> int:
     for ident in planned:
         if not any(name.split("-", 1)[0] == ident or name == ident for name in written):
             drift.append(f"{ident}: planned in the spec map, no spec written")
-    grandfathered = {s.strip() for s in re.split(r"[,\s]+", cfg.get("pre_workflow_specs", "")) if s.strip()}
+    raw_exempt = re.split(r"[,\s]+", cfg.get("pre_workflow_specs", ""))
+    grandfathered = {s.strip() for s in raw_exempt if s.strip()}
     exempt = []
     for name in sorted(written):
         if by_spec.get(name):

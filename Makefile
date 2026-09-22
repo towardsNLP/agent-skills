@@ -3,6 +3,12 @@
 test:
 	python3 -m pytest tests/ -q
 
+# The status script is vendored into repos with stricter linters than this one has.
+# Keeping it clean here is cheaper than exempting it in every host.
+lint:
+	ruff check tools/ tests/ --line-length 100
+	ruff format --check tools/ tests/ --line-length 100
+
 # Copy the status script into a project that vendors it. The project's CI should
 # diff its copy against this source; a silent fork is how one repo ends up
 # trusting a check the others have already fixed.
