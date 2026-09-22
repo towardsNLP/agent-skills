@@ -48,8 +48,20 @@ def scalar(raw: str) -> str:
 
 
 def base_dir(pattern: str) -> str:
-    """`planning/tickets/<spec-id>/` -> `planning/tickets`."""
-    return pattern.split("<", 1)[0].rstrip("/")
+    """The fixed prefix of a path pattern, above the first placeholder.
+
+    `planning/tickets/<spec-id>/`          -> `planning/tickets`
+    `planning/specs/P{N}.{n}-<slug>/spec.md` -> `planning/specs`
+
+    Both placeholder styles occur: `<name>` and `{N}`. Truncating at the
+    placeholder is not enough, because a pattern may carry a literal prefix
+    inside the final segment -- so fall back to the last complete directory.
+    """
+    m = re.search(r"[<{]", pattern)
+    if not m:                                   # already a plain directory
+        return pattern.rstrip("/")
+    head = pattern[: m.start()]
+    return head[: head.rfind("/")].rstrip("/") if "/" in head else head.rstrip("/")
 
 
 def load_profile(path: Path) -> dict[str, str]:

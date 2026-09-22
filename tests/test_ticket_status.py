@@ -88,9 +88,18 @@ def test_scalar_strips_commentary_and_backticks():
     assert ts.scalar("`make ticket-status`") == "make ticket-status"
 
 
-def test_base_dir_drops_the_placeholder():
-    assert ts.base_dir("planning/tickets/<spec-id>/") == "planning/tickets"
-    assert ts.base_dir("planning/specs/<spec-id>/spec.md") == "planning/specs"
+@pytest.mark.parametrize("pattern,expected", [
+    ("planning/tickets/<spec-id>/", "planning/tickets"),
+    ("planning/specs/<spec-id>/spec.md", "planning/specs"),
+    # A literal prefix inside the final segment: truncating at the placeholder
+    # alone would leave `planning/tickets/P`.
+    ("planning/tickets/P{N}.{n}-<slug>/", "planning/tickets"),
+    ("planning/specs/P{N}.{n}-<slug>/spec.md", "planning/specs"),
+    ("planning/specs/", "planning/specs"),
+    ("planning/specs", "planning/specs"),
+])
+def test_base_dir_finds_the_fixed_prefix(pattern, expected):
+    assert ts.base_dir(pattern) == expected
 
 
 def test_profile_parsing_reads_prose_values(tmp_path):
