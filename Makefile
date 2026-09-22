@@ -5,8 +5,12 @@ test:
 
 # The status script is vendored into repos with stricter linters than this one has.
 # Keeping it clean here is cheaper than exempting it in every host.
+# Core correctness plus formatting, at the line length the hosts use. Deliberately
+# NOT ruff's full default set: a host repo pins its own ruff and its own select list,
+# and chasing whichever preview rules this machine's ruff happens to enable produces
+# churn that no host asked for. The gate that matters is the host's.
 lint:
-	ruff check tools/ tests/ --line-length 100
+	ruff check tools/ tests/ --select E,F,W,I --line-length 100
 	ruff format --check tools/ tests/ --line-length 100
 
 # Copy the status script into a project that vendors it. The project's CI should

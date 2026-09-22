@@ -9,7 +9,7 @@ and not one was ever ticked.
 The exit code is the point. It is non-zero when:
 
   1. a ticket carries an Outcome but its check fails      -- closed on a lie
-  2. a ticket's check no longer resolves                  -- the path moved
+  2. a CLOSED ticket's check no longer resolves            -- the path moved
   3. a ticket is blocked by a ticket that does not exist  -- a dangling edge
   4. a component in the spec map has no spec              -- planned, unwritten
   5. a spec directory has no tickets                      -- written, uncut
@@ -93,6 +93,12 @@ class Ticket:
     has_outcome: bool = False
     state: str = "unknown"  # pass | fail | unresolved | unknown | skipped
     detail: str = ""
+    # Two kinds of "unresolved" needing different treatment. MALFORMED means the
+    # ticket is wrong in itself -- no check named, or a register row that is not
+    # there -- and is drift whatever its state. A check that has simply not been
+    # written yet is the normal condition of an unstarted ticket, because TDD names
+    # the check before the test exists.
+    malformed: bool = False
 
     @property
     def ident(self) -> str:
@@ -187,19 +193,19 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
         t.state, t.detail = "unknown", "manual check, never derived"
         return
     if not t.check:
-        t.state, t.detail = "unresolved", "no check named"
+        t.state, t.detail, t.malformed = "unresolved", "no check named", True
         return
 
     if t.check_type == "sme":
         register = root / cfg.get("sme_register_path", "")
         if not cfg.get("sme_register_path") or not register.is_file():
-            t.state, t.detail = "unresolved", "sme_register_path missing"
+            t.state, t.detail, t.malformed = "unresolved", "sme_register_path missing", True
             return
         row = t.check.split("#", 1)[-1]
         rows = register.read_text(encoding="utf-8").splitlines()
         hits = [line for line in rows if row in line]
         if not hits:
-            t.state, t.detail = "unresolved", f"no row matching {row!r}"
+            t.state, t.detail, t.malformed = "unresolved", f"no row matching {row!r}", True
             return
         pattern = cfg.get("sme_resolved_pattern", r"\b(resolved|confirmed|answered)\b")
         ok = any(re.search(pattern, hit, re.I) for hit in hits)
@@ -238,6 +244,8 @@ def mark(t: Ticket) -> str:
     """
     if t.state == "fail":
         return "FAIL" if t.has_outcome else "open"
+    if t.state == "unresolved" and not (t.has_outcome or t.malformed):
+        return "todo"  # the check is named, the test is not written yet
     return {"pass": "done", "unresolved": "BROKEN", "unknown": "manual", "skipped": "-"}[t.state]
 
 
@@ -268,7 +276,12 @@ def main(argv: list[str] | None = None) -> int:
     for tickets in by_spec.values():
         for t in tickets:
             evaluate(t, root, cfg, a.timeout, execute=not a.no_run)
-            if t.state == "unresolved":
+            # A check that does not resolve YET is the normal state of an unstarted
+            # ticket: TDD names the check before the test exists. Only a ticket
+            # claiming to be done owes a check that resolves. Failing the board on
+            # planned work would punish cutting tickets ahead of time, which is the
+            # whole purpose of the blocking edges.
+            if t.malformed or (t.state == "unresolved" and t.has_outcome):
                 drift.append(
                     f"{t.ident}: check does not resolve" + (f" -- {t.detail}" if t.detail else "")
                 )

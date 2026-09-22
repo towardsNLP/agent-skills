@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-import ticket_status as ts  # noqa: E402
+# The path insert above must run first, so this import cannot join the block.
+import ticket_status as ts  # noqa: E402, I001
 
 
 TICKET = """# {num} — {title}
@@ -174,12 +175,6 @@ def test_open_ticket_whose_check_fails_is_not_drift(project):
     assert status(project({"P1-thing": [{"check": "false"}]})) == 0
 
 
-def test_unresolvable_check_is_drift(project, capsys):
-    root = project({"P1-thing": [{"check": "definitely-not-a-command-xyz"}]})
-    assert status(root) == 1
-    assert "does not resolve" in capsys.readouterr().err
-
-
 def test_ticket_with_no_check_is_drift(project, capsys):
     root = project({"P1-thing": [{"check": ""}]})
     assert status(root) == 1
@@ -253,13 +248,27 @@ def test_test_type_uses_the_configured_runner(project):
     assert status(root) == 0
 
 
-def test_test_type_that_does_not_collect_is_drift(project, capsys):
+def test_test_type_that_does_not_collect_yet_is_todo_not_drift(project, capsys):
+    """The test is named before it is written. That is TDD, not breakage."""
     root = project(
         {"P1-thing": [{"ctype": "test", "check": "tests/gone.py::test_y"}]},
         profile_extra="- **test_command:** `false`",
     )
+    assert status(root) == 0
+    assert "todo" in capsys.readouterr().out
+
+
+def test_closed_test_type_that_does_not_collect_is_drift(project, capsys):
+    root = project(
+        {
+            "P1-thing": [
+                {"ctype": "test", "check": "tests/gone.py::test_y", "outcome": "**PR:** #5"}
+            ]
+        },
+        profile_extra="- **test_command:** `false`",
+    )
     assert status(root) == 1
-    assert "does not collect" in capsys.readouterr().err
+    assert "does not resolve" in capsys.readouterr().err
 
 
 def test_no_run_skips_execution_but_keeps_structural_checks(project, capsys):
@@ -308,3 +317,18 @@ def test_without_the_exemption_it_is_still_drift(project, capsys):
     )
     assert status(root) == 1
     assert "no tickets cut" in capsys.readouterr().err
+
+
+def test_unstarted_ticket_whose_check_is_not_written_yet_is_not_drift(project, capsys):
+    """TDD names the check before the test exists. That is planning, not breakage."""
+    root = project({"P1-thing": [{"check": "definitely-not-a-command-xyz"}]})
+    assert status(root) == 0
+    assert "todo" in capsys.readouterr().out
+
+
+def test_closed_ticket_whose_check_vanished_is_drift(project, capsys):
+    root = project(
+        {"P1-thing": [{"check": "definitely-not-a-command-xyz", "outcome": "**PR:** #9"}]}
+    )
+    assert status(root) == 1
+    assert "does not resolve" in capsys.readouterr().err
