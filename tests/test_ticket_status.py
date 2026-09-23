@@ -332,3 +332,23 @@ def test_closed_ticket_whose_check_vanished_is_drift(project, capsys):
     )
     assert status(root) == 1
     assert "does not resolve" in capsys.readouterr().err
+
+
+def test_test_check_written_as_a_full_command_is_named_as_malformed(project, capsys):
+    """The runner comes from test_command; repeating it yields a useless error."""
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": "pytest tests/x.py::test_y"}]},
+        profile_extra="- **test_command:** `pytest`",
+    )
+    assert status(root) == 1
+    assert "should be a test node id" in capsys.readouterr().err
+
+
+def test_dot_directories_are_not_specs(project, capsys):
+    """Jupyter and friends leave .ipynb_checkpoints inside the ticket tree."""
+    root = project({"P1-thing": [{}]})
+    junk = root / "planning/tickets/.ipynb_checkpoints"
+    junk.mkdir()
+    (junk / "README-checkpoint.md").write_text("# stale\n")
+    assert status(root) == 0
+    assert ".ipynb_checkpoints" not in capsys.readouterr().out

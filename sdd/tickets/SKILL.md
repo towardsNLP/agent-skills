@@ -45,7 +45,7 @@ Pick a `check_type` for each:
 
 | `check_type` | The check is | Derived by the status script |
 |---|---|---|
-| `test` | a test node — `pytest path::name` | runs it |
+| `test` | a test node id alone — `path::name`, no runner | runs it with `test_command` |
 | `gate` | a command with a pass condition — a corpus, a validator, an experiment predicate | runs it |
 | `sme` | a row in `sme_register_path` that must resolve | greps it |
 | `manual` | a human procedure | reported as unknown, always |

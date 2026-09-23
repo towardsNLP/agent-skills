@@ -142,7 +142,9 @@ def collect(root: Path, ticket_root: Path) -> dict[str, list[Ticket]]:
     out: dict[str, list[Ticket]] = {}
     if not ticket_root.is_dir():
         return out
-    for spec_dir in sorted(p for p in ticket_root.iterdir() if p.is_dir()):
+    for spec_dir in sorted(
+        p for p in ticket_root.iterdir() if p.is_dir() and not p.name.startswith(".")
+    ):
         tickets = [
             parse_ticket(f, spec_dir.name)
             for f in sorted(spec_dir.glob("*.md"))
@@ -219,6 +221,14 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
 
     if t.check_type == "test":
         runner = shlex.split(cfg.get("test_command", "pytest"))
+        # The check is a NODE ID. The runner comes from test_command, so a check that
+        # repeats it produces `pytest ... "uv run pytest tests/..."` and fails with a
+        # collection error that explains nothing. Name the mistake instead.
+        if t.check.split()[0] in {runner[0], *runner}:
+            t.state = "unresolved"
+            t.detail = "check is a full command; it should be a test node id"
+            t.malformed = True
+            return
         code, _ = run([*runner, "--collect-only", "-q", t.check], root, timeout)
         if code != 0:
             t.state, t.detail = "unresolved", "does not collect"

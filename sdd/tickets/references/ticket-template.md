@@ -11,7 +11,7 @@ outcome rather than a layer-by-layer implementation list.
 **Blocked by:** NN, NN — or `none (can start immediately)`
 **Governs:** the contract sections and ADRs this must respect
 **check_type:** test | gate | sme | manual
-**check:** `pytest tests/unit/test_loader.py::test_rejects_unknown_predicate`
+**check:** `tests/unit/test_loader.py::test_rejects_unknown_predicate`
 **Claimed by:** unclaimed
 
 ## Approach (non-binding, ≤150 words)
@@ -37,6 +37,11 @@ which is most knowledge-engineering and experiment work.
 frontier without asking what is safe to start.
 
 **Governs** is how a fresh session inherits the constraints without reading the whole constitution.
+
+**check** is written differently per type, and the difference matters. For `test` it is a **node
+id alone** -- the runner comes from the profile's `test_command`, so repeating it produces a
+nonsense command. For `gate` it is the whole command. For `sme`, `<register path>#<row id>`. For
+`manual`, the procedure in prose.
 
 **check_type** and **check** are the acceptance criteria. There is no checkbox list, because
 checkboxes measurably do not get ticked: across three repositories, 95 acceptance boxes were
