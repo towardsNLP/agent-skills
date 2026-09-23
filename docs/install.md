@@ -63,10 +63,13 @@ reason these ship as a plugin rather than as personal skills.
 
 `name-only` keeps the skill invokable but suppresses its description. `off` hides it.
 
-Note: the published docs state that `disable-model-invocation: true` stops Claude from
-invoking a skill on its own, but they do not say whether the description still occupies
-context. `skillOverrides: name-only` is the documented lever for that. Measure with
-`/context` before and after rather than assuming.
+**Measured 2026-09-23, and the answer is the one that costs money:** `disable-model-invocation:
+true` stops Claude invoking a skill on its own, but **the description is still loaded.** Nine
+`user-only` project skills cost ~560 tokens in every session in that repo. The flag governs *who
+can reach* the skill, not whether it occupies context.
+
+`skillOverrides: name-only` is the lever that actually removes the description. Use `/skills` to
+read per-skill costs directly rather than inferring them.
 
 ## Updating
 

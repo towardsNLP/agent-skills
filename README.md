@@ -66,9 +66,19 @@ skill.** A skill that names one project stops being shareable.
 ## Invocation cost
 
 **Model-invoked** skills cost a permanent description slot in context, in exchange for the agent
-reaching them on its own. **User-invoked** skills (`disable-model-invocation: true`) cost nothing
-and are invisible to the model — which makes me the index that has to remember they exist. That
-trade is deliberate: **6 of 22 are model-invoked.**
+reaching them on its own. **User-invoked** skills (`disable-model-invocation: true`) are invisible
+to the model — which makes me the index that has to remember they exist. **6 of 22 are
+model-invoked.**
+
+**A user-invoked skill is not free.** Measured 2026-09-23 in a session with 32 skills loaded: the
+nine project skills, every one of them `user-only`, cost **~560 tokens**, and seven personal
+user-only skills another **~280**. `disable-model-invocation` changes *who can reach* a skill, not
+whether its description is loaded. The README said otherwise until this was measured; the lesson
+is the one `docs/install.md` already stated — measure with `/context` rather than reasoning from
+what a flag sounds like it does.
+
+The lever that actually reduces the cost is `skillOverrides`: `"name-only"` keeps a skill
+invokable while suppressing its description, `"off"` hides it entirely.
 
 `skillOverrides` in settings trims the rest: `"name-only"` keeps a skill invokable but suppresses
 its description; `"off"` hides it.
