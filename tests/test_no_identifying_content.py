@@ -7,9 +7,9 @@ new one fails until someone declares it deliberately.
 
 Scoped to `tests/` because that is where identifying data actually enters — a fixture
 wants a realistic contributor, and the nearest realistic name is a colleague's. That is
-exactly how `Morgan Vale` reached this suite. Skill and reference text is scoped out: it
-carries cited authors (Matt Pocock, Michael Feathers, Greg Nuckols) in files pinned by
-hash in `UPSTREAM.toml`, which cannot be edited here without forking them.
+exactly how a real one reached this suite once. Skill and reference text is scoped out:
+it carries cited authors (Matt Pocock, Michael Feathers, Greg Nuckols) in files pinned
+by hash in `UPSTREAM.toml`, which cannot be edited here without forking them.
 """
 
 from __future__ import annotations
