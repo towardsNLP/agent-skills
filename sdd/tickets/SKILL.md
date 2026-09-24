@@ -18,8 +18,10 @@ cannot size a ticket until you know where it gets verified.**
 
 ## Step 1 — Load one spec, and only one
 
-Read `spec_dir/<spec-id>/spec.md` and the contract sections its Anchors cite. Nothing else. If the
-spec has no Seams section filled in, stop: there is nothing to size against.
+Read `spec_dir/<spec-id>/spec.md`, then `amendments.md` in the same directory when it exists, then
+the contract sections its Anchors cite. Nothing else. The effective agreement is the frozen spec
+followed by approved amendments in date order. If it has no Seams section filled in, stop: there
+is nothing to size against.
 
 ## Step 2 — Read the current state of the code
 
@@ -47,11 +49,24 @@ Pick a `check_type` for each:
 |---|---|---|
 | `test` | a test node id alone — `path::name`, no runner | runs it with `test_command` |
 | `gate` | a command with a pass condition — a corpus, a validator, an experiment predicate | runs it |
+| `metric` | a command that compares a named metric with its registered baseline or threshold | runs it |
+| `dataset` | a command that validates schema, grain, identifiers, lineage or split integrity | runs it |
+| `query` | a command that runs a competency, SQL, SPARQL or graph-regression query | runs it |
+| `artifact` | a command that validates an output manifest, structure, hash or provenance | runs it |
 | `sme` | a row in `sme_register_path` that must resolve | greps it |
 | `manual` | a human procedure | reported as unknown, always |
 
 A ticket whose check you cannot name is a ticket you have not finished cutting. Say so rather than
 inventing one.
+
+Use the spec's work kind to choose what the ticket proves:
+
+- `build`: behaviour through `test` or a system `gate`.
+- `experiment`: registered predicates and evidence through `metric`, `dataset` or `artifact`.
+  A completed run may still produce `INCONCLUSIVE`; the ticket proves the run and record, not the
+  preferred hypothesis.
+- `knowledge-revision`: competency questions, constraints and provenance through `query`,
+  `dataset`, `artifact` or `sme`.
 
 ### Wide refactors are the exception
 
@@ -95,9 +110,8 @@ ticket is a record of what happened, and the reason the spec did not have to be 
 
 ## Hard rules
 
-- **Never edit the spec.** Not a word, not a status line. The spec is frozen at approval and this
-  skill is what makes that mechanical rather than aspirational. If the spec is wrong, say so and
-  stop.
+- **Never edit the spec or its amendments.** The agreement is frozen or append-only, and this
+  skill is what makes that mechanical rather than aspirational. If it is wrong, say so and stop.
 - **Never edit a ticket that has an Outcome.**
 - **Exactly one path per ticket: the check.** No other file paths, no line numbers. A path with a
   test behind it fails loudly when it moves; an incidental one rots in silence.

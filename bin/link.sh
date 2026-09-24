@@ -42,7 +42,11 @@ for DEST in "${DESTS[@]}"; do
       src="${src%/}"
       name="$(basename "$src")"
       target="$DEST/$name"
-      [ -e "$target" ] && [ ! -L "$target" ] && rm -rf "$target"
+      if [ -e "$target" ] && [ ! -L "$target" ]; then
+        echo "error: refusing to replace non-symlink $target" >&2
+        echo "Move it aside or remove it yourself, then re-run." >&2
+        exit 1
+      fi
       ln -sfn "$src" "$target"
       echo "linked $name -> $DEST"
     done

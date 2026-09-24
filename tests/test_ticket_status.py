@@ -122,6 +122,17 @@ def test_profile_parsing_reads_prose_values(tmp_path):
     assert cfg["spec_dir"] == "planning/specs"
 
 
+def test_spec_map_parser_accepts_kind_and_typed_requirements(tmp_path):
+    path = tmp_path / "spec-map.md"
+    path.write_text(
+        "| ID | Kind | Covers | Blocked by | Requires |\n"
+        "|---|---|---|---|---|\n"
+        "| F1 | build | loader | — | decision: schema |\n"
+        "| E1 | experiment | comparison | F1 | data: evaluation set |\n"
+    )
+    assert ts.parse_spec_map(path) == ["F1", "E1"]
+
+
 def test_empty_outcome_heading_is_not_an_outcome(tmp_path):
     f = tmp_path / "01-x.md"
     f.write_text(
@@ -136,6 +147,28 @@ def test_empty_outcome_heading_is_not_an_outcome(tmp_path):
         )
     )
     assert ts.parse_ticket(f, "P1-thing").has_outcome is False
+
+
+@pytest.mark.parametrize("placeholder", ["#NN", "TBD", "todo", "none", "n/a", "<PR>"])
+def test_outcome_placeholder_is_not_an_outcome(tmp_path, placeholder):
+    f = tmp_path / "01-x.md"
+    f.write_text(
+        TICKET.format(
+            num="01",
+            title="x",
+            blocked="none",
+            ctype="gate",
+            check="true",
+            claim="unclaimed",
+            outcome=f"**PR:** {placeholder}\n**Diverged:** nothing",
+        )
+    )
+    assert ts.parse_ticket(f, "P1-thing").has_outcome is False
+
+
+def test_pr_placeholder_does_not_turn_a_failing_open_ticket_into_drift(project):
+    root = project({"P1-thing": [{"check": "false", "outcome": "**PR:** #NN"}]})
+    assert status(root) == 0
 
 
 def test_outcome_counts_once_it_names_a_pr(tmp_path):
@@ -210,6 +243,18 @@ def test_manual_check_is_unknown_and_never_drift(project, capsys):
     root = project({"P1-thing": [{"ctype": "manual", "check": "eyeball it"}]})
     assert status(root) == 0
     assert "manual" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("ctype", ["gate", "metric", "dataset", "query", "artifact"])
+def test_command_check_types_run_their_command(project, ctype):
+    root = project({"P1-thing": [{"ctype": ctype, "check": "true"}]})
+    assert status(root) == 0
+
+
+def test_unknown_check_type_is_drift(project, capsys):
+    root = project({"P1-thing": [{"ctype": "vibes", "check": "true"}]})
+    assert status(root) == 1
+    assert "unknown check_type" in capsys.readouterr().err
 
 
 def test_sme_row_resolved_passes(project):

@@ -60,6 +60,11 @@ the spec's exit criterion **and** any gate the profile defines are met, not mere
 is written. Use *blocked on `<reason>`* when a diary surfaces one. Don't fabricate status;
 "started but not finished" is recorded as exactly that.
 
+For experiments, distinguish `run completed` from `predicate supported`. Preserve
+`INCONCLUSIVE` and link the experiment record. For knowledge revisions, distinguish `model
+changed` from `authority approved` and link the competency-query, constraint and provenance
+evidence. Never turn missing evidence into a positive or negative claim.
+
 ## Step 6 — Update the master plan's current-state section
 
 Only when a workstream completed or started, a gate closed, or a phase boundary was crossed.

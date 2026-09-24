@@ -1,8 +1,8 @@
 # Adopting the workflow in an existing repo
 
-Twenty-three items, grouped. Each names **what** and **done when** — a condition you can check,
-not a box to tick. That is deliberate: boxes measurably do not get ticked, so the last group is a
-command that either exits zero or tells you what is still wrong.
+Each item names **what** and **done when** — a condition you can check, not a box to tick. That is
+deliberate: boxes measurably do not get ticked, so the last group is a command that either exits
+zero or tells you what is still wrong.
 
 Run it top to bottom. Group F applies only where the repo ships planning material to a client.
 
@@ -30,14 +30,18 @@ a component set built on unsettled vocabulary decomposes along the wrong lines.
 The skills hold the workflow; the profile holds the facts. Every key below is read by at least one
 skill, and a missing one makes that skill guess.
 
-**B1.** `spec_map_path` — `planning/spec-map.md`
-**B2.** `spec_path_pattern` — `planning/specs/<spec-id>/spec.md`, one directory per spec
-**B3.** `ticket_dir` — `planning/tickets/<spec-id>/`, deliberately **outside** `spec_dir`
-**B4.** `decision_records` — `planning/adr/`
-**B5.** `sme_register_path` — the file a `check_type: sme` ticket points a row at, or omit
-**B6.** `ticket_status_command` — e.g. `make ticket-status`
-**B7.** `spec_migration_mode` — `big-bang` or `on-touch`
-**B8.** `test_command` — only where the runner is not `pytest`
+**B1.** `project_mode` — `software`, `data-science`, `knowledge-engineering` or `mixed`
+**B2.** `spec_map_path` — `planning/spec-map.md`
+**B3.** `spec_path_pattern` — `planning/specs/<spec-id>/spec.md`, one directory per spec
+**B4.** `ticket_dir` — `planning/tickets/<spec-id>/`, deliberately **outside** `spec_dir`
+**B5.** `decision_records` — `planning/adr/`
+**B6.** `sme_register_path` — the file a `check_type: sme` ticket points a row at, or omit
+**B7.** `ticket_status_command` — e.g. `make ticket-status`
+**B8.** `spec_migration_mode` — `big-bang` or `on-touch`
+**B9.** `test_command` — only where the runner is not `pytest`
+**B10.** `authority_map` and `doc_precedence_order` — every governed name resolves to one owner
+**B11.** Data and knowledge pointers — registries, contracts, competency questions, constraints
+and reproducibility command where they apply
 
 *Done when:* `grep -c '^\- \*\*' planning/agent/profile.md` accounts for all of them, and
 `ticket_status.py` parses the file without falling back to a default.
@@ -56,14 +60,16 @@ components are already known — most repos have this buried in a roadmap sectio
 `planning/specs/<id>-<slug>/spec.md`. Use `git mv` so history follows.
 *Done when:* no loose `.md` remains directly under `planning/specs/`.
 
-**C4. Split the acceptance record out.** Every spec gets an `acceptance.md` beside it holding the
-compliance table and any amendment block that was living in the spec body.
-*Done when:* no spec body contains a dated amendment or a compliance results table.
-*Why:* `spec.md` is frozen at approval. An amendment cannot interleave into a blueprint it is not
-allowed to open — which is the failure this exists to prevent.
+**C4. Split post-approval records out.** Every spec may have `amendments.md`, owned by
+`/adr-spec`, and gets `acceptance.md` at close from `/implement`. Move dated amendments to the
+first and compliance results to the second.
+*Done when:* no spec body contains a dated amendment or a compliance results table, and each file
+has one writer.
+*Why:* `spec.md` is frozen at approval. Amendments must remain visible to ticketing and
+implementation without interleaving into the blueprint or final compliance record.
 
-**C5. Update the spec template.** No task table; seams and acceptance in one section; a `Parent`
-frontmatter field; compliance codes moved to the `acceptance.md` shape.
+**C5. Update the spec template.** No task table; seams and acceptance in one section; `Kind` and
+`Parent` frontmatter fields; amendment and compliance records split into their owned files.
 
 ---
 

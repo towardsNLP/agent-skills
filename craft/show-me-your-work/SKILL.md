@@ -53,7 +53,11 @@ Commit it only when the work is ambitious enough that a reviewer needs the trail
 
 ## Audit the log against the transcript
 
-At the end of the run, before handing back, check the log told the truth. Read this run's transcript. Claude Code keeps them at `~/.claude/projects/<workspace-slug>/*.jsonl`, where the slug is the workspace path with the leading slash dropped and each `/` turned into `-`. Read only the current workspace's slug; globbing across `~/.claude/projects/*/` reads unrelated private chats. Walk the log against what actually happened:
+At the end of the run, before handing back, check that the log told the truth. Use the current
+harness's transcript or task-history reader when one exists. Scope it to this task and workspace.
+Never scan a global transcript directory: that can expose unrelated private work. When the harness
+does not expose a transcript, audit against the current conversation, command output and git
+evidence. Walk the log against what actually happened:
 
 - Every row maps to a real action. Cut invented or aspirational entries.
 - Each row's evidence resolves and shows what the row claims.
@@ -64,7 +68,11 @@ Fix the log, not the story. If the work diverged from what a row claims, the row
 
 ## Cross-model review of the trail
 
-Before handing back, spawn a subagent for the review. Prefer a different model family from the one that did the work where the harness offers one. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky.
+Before handing back, delegate the review to a reviewer agent when the harness offers one. Prefer a
+different model family where available. Otherwise perform a separate review pass and say that it
+was a self-review. The reviewer reads the audit trail and available task evidence, then flags what
+the user should inspect. This is a scan for weak evidence, skipped checks and risky choices, not a
+redo of the work.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.

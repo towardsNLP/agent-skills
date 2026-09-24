@@ -14,11 +14,11 @@ The set of specs this project needs, and what gates what. Planned set only — r
 
 ## Components
 
-| ID | Covers | Blocked by |
-|---|---|---|
-| F1 | <the need or component, one line> | — |
-| F2 | <…> | F1 |
-| B1 | <…> | F1, F2 |
+| ID | Kind | Covers | Blocked by | Requires |
+|---|---|---|---|---|
+| F1 | build | <the need or component, one line> | — | decision: architecture approved |
+| F2 | knowledge-revision | <...> | F1 | ontology: competency questions |
+| B1 | experiment | <...> | F1, F2 | data: evaluation set; evidence: baseline run |
 
 ## Needs not yet covered
 
@@ -41,6 +41,11 @@ is not understood yet.
 **Blocked by** makes the set a graph. The specs with no blockers are where `/adr-spec` starts. A
 cycle means a boundary is in the wrong place — fix the boundary rather than breaking the cycle by
 hand.
+
+**Kind** is `build`, `experiment` or `knowledge-revision`. It selects the downstream proof loop.
+
+**Requires** names external prerequisites using `decision:`, `data:`, `evidence:` or `ontology:`.
+These do not become fake component IDs merely to make the graph look uniform.
 
 **Needs not yet covered** is the section that earns the document. A component list alone cannot
 tell you what is missing; a need with no component can.

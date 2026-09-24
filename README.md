@@ -77,9 +77,6 @@ whether its description is loaded. The README said otherwise until this was meas
 is the one `docs/install.md` already stated — measure with `/context` rather than reasoning from
 what a flag sounds like it does.
 
-The lever that actually reduces the cost is `skillOverrides`: `"name-only"` keeps a skill
-invokable while suppressing its description, `"off"` hides it entirely.
-
 `skillOverrides` in settings trims the rest: `"name-only"` keeps a skill invokable but suppresses
 its description; `"off"` hides it.
 
@@ -91,11 +88,11 @@ its description; `"off"` hides it.
 | `end-session` | user | Log the session to your own diary and regenerate your own state file. |
 | `sync-progress` | user | Consolidate diaries into the shared planning documents. Lead only. |
 | `wrap-day` | user | Run `end-session` then `sync-progress`, aborting if the first fails. |
-| `check-contracts` | user | Validate a name, path, ID or output against the project's conventions. |
-| `deconstruct` | user | Break a whole project into the set of specs it needs, with dependency edges. Project level, run rarely. |
-| `adr-spec` | user | Record the decisions, then write the spec against them. The spec is frozen at approval. |
-| `tickets` | user | Cut an approved spec into tracking records, each independently verifiable by a named check. |
-| `implement` | user | Build one ticket in a fresh session: claim, work at the spec's seam, run the check, record the outcome. |
+| `check-contracts` | user | Validate code, data and knowledge names against the project's declared authorities. |
+| `deconstruct` | user | Break a project into build, experiment and knowledge-revision components with typed prerequisites. |
+| `adr-spec` | user | Record decisions, then write or amend a frozen spec. Approved amendments stay outside the spec body. |
+| `tickets` | user | Cut an effective spec into tracking records, each independently verifiable by a named check. |
+| `implement` | user | Execute one ticket through its build, experiment or knowledge-revision proof loop. |
 | `grilling` | model | The interview primitive. Works a design tree in rounds, asks the whole frontier at once with a recommendation per question, and waits. Facts are the agent's job; decisions stay mine. |
 | `grill-me` | user | Typed entry point to `grilling`. |
 | `grill-with-docs` | user | `grilling` + `domain-modeling` together, so the interview leaves a paper trail. |
@@ -104,7 +101,7 @@ its description; `"off"` hides it.
 | `to-questionnaire` | user | Turns a decision I cannot make alone into a questionnaire for the person who can. Interviews me about the *send*, then aims the questions at the gap. |
 | `teach` | user | Teach a concept over multiple sessions. **Claims the current directory** as a stateful workspace, so run it in a dedicated folder, never inside a project repo. |
 | `domain-modeling` | model | Challenge a term against the glossary, sharpen fuzzy language, stress-test with invented scenarios, check the code agrees, write it down inline. |
-| `tdd` | model | Red-green-refactor, one vertical slice at a time. Its own guardrails tell it to skip when the test path is unclear or integration-heavy, so it stays quiet on experiment work. |
+| `tdd` | model | Red-green-refactor, one vertical slice at a time. `implement` invokes it for build work, not experiment or knowledge-revision work. |
 | `unslop` | user | Cuts AI tells from prose. 33 numbered rules. For anything an outside reader sees. |
 | `show-me-your-work` | user | A TSV decision log, one row per decision, evidence as a pointer. For long or unattended runs. On trial. |
 | `codebase-design` | model | Deep-module vocabulary: module, interface, depth, seam, adapter, leverage, locality. Maps onto a ports-and-adapters layout directly. |
@@ -123,6 +120,7 @@ contend:
 | progress log, roadmap, plan | the lead's `sync-progress` |
 | `planning/spec-map.md` | `deconstruct` |
 | `planning/specs/<id>/spec.md` | `adr-spec`, once, then never again |
+| `planning/specs/<id>/amendments.md` | `adr-spec`, append-only |
 | `planning/specs/<id>/acceptance.md` | `implement`, at spec close |
 | `planning/tickets/<id>/NN-*.md` | `tickets` writes them, `implement` closes them |
 
@@ -154,18 +152,21 @@ The reason it derives rather than reads: across three repositories, **95 accepta
 written into specs and not one was ever ticked.** A status a human must remember to update is a
 status that lies.
 
-## Origins
+## Origins and pinned provenance
+
+[`UPSTREAM.toml`](UPSTREAM.toml) pins the source repository, full commit SHA, upstream path,
+license, comparison date, local status and change summary for every borrowed skill. Tests protect
+the content hash of each `vendored` `SKILL.md`; a local edit must reclassify it as `adapted`.
 
 | Source | Skills |
 |---|---|
 | Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` `deconstruct` |
-| [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), unmodified | `writing-for-agents` `grilling` `grill-me` `grill-with-docs` `research` `handoff` `to-questionnaire` `codebase-design` `tdd` `teach` |
-| mattpocock/skills, adapted | `domain-modeling` — resolves its glossary and decision-record targets from `planning/agent/profile.md` instead of assuming `CONTEXT.md`, and never creates a second glossary |
-| [cursor/plugins pstack](https://github.com/cursor/plugins/tree/main/pstack), unmodified | `unslop` |
-| pstack, adapted | `show-me-your-work` — two Cursor-specific references repointed: the transcript path, and the cross-model reviewer, which now says "prefer a different model family where the harness offers one" rather than assuming one exists |
+| [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), vendored | `research` `to-questionnaire` `codebase-design` `teach` |
+| mattpocock/skills, adapted | `writing-for-agents` `grilling` `grill-me` `grill-with-docs` `handoff` `tdd` `domain-modeling` |
+| [cursor/plugins pstack](https://github.com/cursor/plugins/tree/main/pstack), adapted | `unslop` `show-me-your-work`; `start-session` also uses two pstack principles as inspiration |
 | Merged, then diverged | `adr-spec` — my `new-spec` plus Pocock's `to-spec`. Mine created a shell and refused to fill the hard sections; his synthesises the whole document from the conversation. The difference is whether thinking happened first, so the refusal became a *precondition* rather than a property. Then it diverged: decisions are recorded before the spec rather than assumed to exist, design detail is triaged to a contract or an ADR or nowhere, there is no task table, and no user stories. |
 | Adapted | `tickets` — from Pocock's `to-tickets`. Kept: tracer bullets, blocking edges and working the frontier, one-context-window sizing, prefactoring first, expand–contract for wide refactors, never modifying the parent. Changed: tickets are durable rather than throwaway, independently *verifiable* rather than vertically sliced, and doneness is derived from a named check rather than ticked in a box. |
-| Same name, different skill | `implement` — Pocock's is five lines and never touches the ticket, which is coherent when tickets are throwaway on a tracker. This one claims, loads only what the ticket names, works at the seam the spec already chose, and closes by recording what diverged. |
+| Reimplemented under the same generic name | `implement` — Pocock's is five lines and never touches the ticket, which is coherent when tickets are throwaway on a tracker. This one claims, loads only what the ticket names, selects a proof loop by work kind, and closes by recording what diverged. |
 
 The session set began as one copy per repo and drifted: 24 files, roughly 3,300 lines, five
 archetypes duplicated across five repositories, each fork accumulating its own edits. A lesson
@@ -192,6 +193,10 @@ Code's built-in command of that name, since personal skills outrank bundled ones
 ```
 deconstruct  →  grill-me  →  adr-spec  →  tickets  →  implement  →  review → ship
   project        ──── one session ────      one fresh session per ticket
+
+                  build → red / green / refactor
+             experiment → register / run / evaluate
+     knowledge-revision → query / revise / validate provenance
 
 start-session  →  <the above>  →  end-session        lead also: sync-progress
 ```

@@ -10,7 +10,7 @@ outcome rather than a layer-by-layer implementation list.
 
 **Blocked by:** NN, NN — or `none (can start immediately)`
 **Governs:** the contract sections and ADRs this must respect
-**check_type:** test | gate | sme | manual
+**check_type:** test | gate | metric | dataset | query | artifact | sme | manual
 **check:** `tests/unit/test_loader.py::test_rejects_unknown_predicate`
 **Claimed by:** unclaimed
 
@@ -24,7 +24,7 @@ outcome rather than a layer-by-layer implementation list.
 
 <!-- Written once, by the implementing session at close. Empty until then. -->
 
-**PR:** #NN
+**PR:**
 **Diverged:** what differed from the blueprint, or `nothing`.
 ```
 
@@ -40,8 +40,9 @@ frontier without asking what is safe to start.
 
 **check** is written differently per type, and the difference matters. For `test` it is a **node
 id alone** -- the runner comes from the profile's `test_command`, so repeating it produces a
-nonsense command. For `gate` it is the whole command. For `sme`, `<register path>#<row id>`. For
-`manual`, the procedure in prose.
+nonsense command. For `gate`, `metric`, `dataset`, `query` and `artifact` it is the whole command
+and that command exits non-zero when the named condition fails. For `sme`, use `<register
+path>#<row id>`. For `manual`, write the procedure in prose.
 
 **check_type** and **check** are the acceptance criteria. There is no checkbox list, because
 checkboxes measurably do not get ticked: across three repositories, 95 acceptance boxes were
@@ -57,5 +58,7 @@ but writing it as prescription is how a spec reached 811 lines of design that no
 to depart from.
 
 **Outcome** is what the implementing session writes instead of a status: the PR, and what diverged.
+Leave `PR` empty while the ticket is open. A placeholder such as `#NN` is text and older status
+parsers mistook it for a closed ticket.
 This is the ticket's most durable content and the reason the file stays where it is after close —
 never moved to a `done/` folder, never deleted.

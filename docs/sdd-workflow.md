@@ -1,9 +1,8 @@
 # The SDD workflow: deconstruct → spec → ticket → implement → ship
 
 Authors: Ahmad Hashemi & Claude (Anthropic)
-Settled 2026-09-22. The earlier vocabulary ("slice") is retired in favour of "ticket".
-
-This is the design. No skill has been written against it yet.
+Settled 2026-09-22; extended for build, experiment and knowledge-revision work on 2026-09-23. The
+earlier vocabulary ("slice") is retired in favour of "ticket".
 
 ---
 
@@ -48,10 +47,11 @@ Three consequences run through every decision below, and each one is this move a
 
 | Artifact | Written by | Lifetime | Path |
 |---|---|---|---|
-| Spec map | `/deconstruct`, amended by hand | project | `planning/spec-map.md` |
+| Spec map | `/deconstruct`, after user approval | project | `planning/spec-map.md` |
 | ADR | `/adr-spec` proposes, human approves | forever | `planning/adr/NNNN-slug.md` |
 | Spec | `/adr-spec` | **immutable after approval** | `planning/specs/<spec-id>/spec.md` |
-| Acceptance record | `/implement` at spec close | append-only | `planning/specs/<spec-id>/acceptance.md` |
+| Amendment record | `/adr-spec` | append-only | `planning/specs/<spec-id>/amendments.md` |
+| Acceptance record | `/implement` at spec close | once | `planning/specs/<spec-id>/acceptance.md` |
 | Ticket | `/tickets`; closed by `/implement` | durable | `planning/tickets/<spec-id>/NN-slug.md` |
 | Contracts / glossary | `domain-modeling`, human-ruled | forever | per profile |
 
@@ -67,23 +67,24 @@ planning/
   adr/NNNN-slug.md                    decisions (sandcastle format)
   references/                         glossary, contracts — the constitution
   specs/<spec-id>/spec.md             blueprint, frozen
-  specs/<spec-id>/acceptance.md       close record + amendment log
+  specs/<spec-id>/amendments.md       approved changes, append-only
+  specs/<spec-id>/acceptance.md       close record
   tickets/<spec-id>/NN-slug.md        tracking records (internal)
   diaries/  agent/  templates/  notes/
 ```
 
-`spec.md` has two commits: created, approved. Everything that happens afterwards goes in
-`acceptance.md`. This is structural, not a convention — an amendment cannot interleave into a
-blueprint it is not allowed to open.
+`spec.md` has two commits: created, approved. Approved changes go in `amendments.md`; compliance at
+close goes in `acceptance.md`. This is structural, not a convention. It keeps one writer per file
+and prevents amendments from interleaving into a blueprint they are not allowed to open.
 
 ## 5. The spec
 
 A **high-level blueprint for a feature.** Why · product anchor · scope (IN/OUT/DEFERRED) ·
 inputs and outputs · seams · acceptance · risks · references.
 
-Frontmatter carries `Kind: build | experiment`, `Parent` (the roadmap row or PLAN section it
-expands), and `Anchors` extended to cite ADRs and contract sections. The reverse link is never
-written: `grep -l 'adr/0002' planning/specs/` computes it.
+Frontmatter carries `Kind: build | experiment | knowledge-revision`, `Parent` (the spec-map row or
+PLAN section it expands), and `Anchors` extended to cite ADRs and contract sections. The reverse
+link is never written: `grep -l 'adr/0002' planning/specs/` computes it.
 
 Design detail has **three destinations and no fourth**: a **contract** if others build against it,
 an **ADR** if it was a hard-to-reverse decision, or **nowhere** if it is implementation. On this
@@ -92,9 +93,14 @@ leaves roughly 330.
 
 For `Kind: experiment`, §3 becomes Hypothesis / Controls / Not varied and acceptance leads with
 the registered predicate and its baseline. An experiment spec decomposes into the same ticket
-object — one arm, one ticket, `check_type: gate`, the check being the predicate. Expect
-experiment specs to be **re-ticketed mid-flight**; you cannot write the ablation's ticket until
-arm 1 has run.
+object. A run normally uses `check_type: metric` or `artifact`; input validation may be a separate
+`dataset` ticket. Expect experiment specs to be **re-ticketed mid-flight**; you cannot write the
+ablation's ticket until arm 1 has run.
+
+For `Kind: knowledge-revision`, section 3 names competency questions, authority, inference
+boundaries and unknowns. Acceptance leads with competency queries, constraints, expected
+entailments and provenance. Absence stays unknown unless a governing contract closes the world for
+that question.
 
 ## 6. The ticket
 
@@ -106,7 +112,7 @@ A **tracking record used to manage the work**, not a design document.
 **What becomes true:** what is the case once this lands
 **Blocked by:** NN, NN — or "none (can start immediately)"
 **Governs:** contract §X, adr/NNNN
-**check_type:** test | gate | sme | manual
+**check_type:** test | gate | metric | dataset | query | artifact | sme | manual
 **check:** `<pytest node | command | SME register row | procedure>`
 **Claimed by:** <name — branch> | unclaimed
 
@@ -115,7 +121,7 @@ A **tracking record used to manage the work**, not a design document.
 
 ## Outcome
 <!-- written once, by the implementing session at close -->
-**PR:** #NN
+**PR:**
 **Diverged:** what differed from the blueprint, or "nothing"
 ```
 
@@ -147,11 +153,11 @@ Rules:
 | the outcome and what diverged | whether a check still resolves |
 | the planned component set | which specs are owed, which lack tickets |
 
-`tools/ticket_status.py` dispatches on `check_type`: run tests, run gates, grep the SME register,
-report `manual` as always-unknown. It **exits non-zero** when a ticket carries an Outcome but its
-check fails, when a check no longer resolves, when a spec in the map has no directory, or when a
-spec directory has no tickets. That exit code is the drift detector, and it is the reason the
-script exists.
+`tools/ticket_status.py` dispatches on `check_type`: run tests; run gate, metric, dataset, query and
+artifact commands; grep the SME register; report `manual` as always-unknown. It **exits non-zero**
+when a ticket carries an Outcome but its check fails, when a check no longer resolves, when a spec
+in the map has no directory, or when a spec directory has no tickets. That exit code is the drift
+detector, and it is the reason the script exists.
 
 It is vendored: the plugin holds the source, each project keeps a copy at `tools/ticket_status.py`
 synced by `make sync-tools`, with CI checking the copy matches. A plugin-only script cannot run in
@@ -162,9 +168,9 @@ GitHub Actions. Package it with pip at the third adopter, not before.
 | Skill | Reads | Writes | Never touches |
 |---|---|---|---|
 | `/deconstruct` | PLAN, roadmap, glossary, code | `spec-map.md` | specs, ADRs |
-| `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary | ADRs (one at a time, each approved), then `spec.md` | tickets, other specs |
-| `/tickets` | one spec + the contracts it cites | `tickets/<spec-id>/NN-*.md` | **the spec** |
-| `/implement` | one ticket + its spec + the contracts it names | code, tests, the ticket's Outcome, `acceptance.md` at spec close | the spec body, other tickets |
+| `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary | approved ADRs, then `spec.md` or an append to `amendments.md` | tickets, roadmap status |
+| `/tickets` | one effective agreement + the contracts it cites | `tickets/<spec-id>/NN-*.md` | **the spec and amendments** |
+| `/implement` | one ticket + its effective agreement + named contracts | work artifacts, the ticket's Outcome, `acceptance.md` at spec close | spec, amendments, other tickets |
 
 `/deconstruct` requires the glossary and flags missing vocabulary but never authors it — that is
 `domain-modeling`'s job, which keeps DDD genuinely upstream.
@@ -173,12 +179,15 @@ GitHub Actions. Package it with pip at the third adopter, not before.
 settle has to be amended when they do. It proposes each ADR against the four-part bar in
 `adr/README.md`; **the human rules on each one.**
 
-`/implement` closes the ticket by *demonstrating* done, never declaring it: run the check, record
-the outcome and any divergence, record the PR, release the claim. The file stays where it is — the
-PR points at that path, and the divergence record is the ticket's most durable content.
+`/implement` closes the ticket by *demonstrating* done, never declaring it. Build work uses
+red-green-refactor. Experiment work registers, runs and evaluates a predicate. Knowledge revision
+starts with a competency query or constraint and closes with provenance intact. The skill runs the
+check, records the outcome and divergence, and leaves the ticket in place.
 
-Profile keys the skills read (all present in `templates/profile.md`): `spec_map_path`, `ticket_dir`, `ticket_status_command`, `sme_register_path`,
-`spec_migration_mode`, and `spec_path_pattern` updated to `planning/specs/<spec-id>/spec.md`.
+Profile keys the skills read are present in `templates/profile.md`: `project_mode`,
+`spec_map_path`, `ticket_dir`, `ticket_status_command`, `sme_register_path`,
+`spec_migration_mode`, and `spec_path_pattern`. Data and knowledge projects also point to their
+registries, contracts, competency questions and reproducibility command there.
 
 ## 9. Where this diverges from Pocock, and why
 
@@ -223,6 +232,6 @@ Every decision above traces to a measurement, not a preference:
 ## 11. Not decided
 
 - Whether the spec map replaces an existing hand-maintained component tracker or absorbs part of it.
-- What `check_type: manual` reporting looks like once there are enough of them to matter.
+- Whether `check_type: manual` needs a separate review queue once enough manual checks exist.
 - Roadmaps carrying stacked "prior state" blocks in place of a single current state — a separate
   cleanup, and not this design's problem to solve.

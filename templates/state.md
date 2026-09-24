@@ -32,7 +32,11 @@ Copy the shape below.
 
 - **Branch:** `<current topic branch>`
 - **Phase / workstream:** `<id — short name>`
+- **Work kind:** `<build | experiment | knowledge-revision>`
 - **Governing spec:** `<path, or "none — gap">`
+- **Question:** `<active hypothesis or competency question; omit for ordinary build work>`
+- **Evidence context:** `<dataset/model/ontology/artifact versions, or "none">`
+- **Last verified:** `<command plus artifact or commit, or "none">`
 - **Next action:** `<one concrete sentence>`
 
 ## Recent
@@ -49,6 +53,7 @@ Copy the shape below.
 
 - `<blocker>` — owner, waiting since YYYY-MM-DD
 - `<open question>` → `<where it is tracked>`
+- `<epistemic risk>` → `<claim, source or evaluation record>`
 
 ## In flight
 

@@ -1,0 +1,150 @@
+# Pinned provenance for borrowed skills and workflow ideas.
+# `vendored` means the local SKILL.md matches the pinned upstream file. Agent-specific
+# sidecars are deliberately not copied. `adapted` keeps the upstream function with local
+# changes. `inspired` and `reimplemented` carry an idea or lineage, not upstream text.
+
+[[sources]]
+id = "mattpocock-skills"
+repository = "https://github.com/mattpocock/skills"
+commit = "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+license = "MIT"
+license_url = "https://github.com/mattpocock/skills/blob/c55ee46073ed923f86ce59a5eb3b6d895095d1b7/LICENSE"
+last_compared = "2026-09-23"
+
+[[sources]]
+id = "cursor-pstack"
+repository = "https://github.com/cursor/plugins/tree/main/pstack"
+commit = "12d587dfb20741cafc376c42c696c5f6e2a64487"
+license = "MIT"
+license_url = "https://github.com/cursor/plugins/blob/12d587dfb20741cafc376c42c696c5f6e2a64487/pstack/LICENSE"
+last_compared = "2026-09-23"
+
+[[skills]]
+local_path = "thinking/research"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/research/SKILL.md"
+status = "vendored"
+sha256 = "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4"
+changes = "Agent-specific sidecars omitted."
+
+[[skills]]
+local_path = "thinking/to-questionnaire"
+source = "mattpocock-skills"
+upstream_path = "skills/productivity/to-questionnaire/SKILL.md"
+status = "vendored"
+sha256 = "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b"
+changes = "Agent-specific sidecars omitted."
+
+[[skills]]
+local_path = "thinking/teach"
+source = "mattpocock-skills"
+upstream_path = "skills/productivity/teach/SKILL.md"
+status = "vendored"
+sha256 = "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43"
+changes = "Agent-specific sidecars omitted."
+
+[[skills]]
+local_path = "craft/codebase-design"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/codebase-design/SKILL.md"
+status = "vendored"
+sha256 = "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2"
+changes = "Agent-specific sidecars omitted."
+
+[[skills]]
+local_path = "thinking/writing-for-agents"
+source = "mattpocock-skills"
+upstream_path = "skills/productivity/writing-for-agents/SKILL.md"
+status = "adapted"
+changes = "Corrects invocation-cost claims from local measurements; omits agent sidecars."
+
+[[skills]]
+local_path = "thinking/grilling"
+source = "mattpocock-skills"
+upstream_path = "skills/productivity/grilling/SKILL.md"
+status = "adapted"
+changes = "Uses harness-neutral helper-agent and bounded-lookup wording."
+
+[[skills]]
+local_path = "thinking/grill-me"
+source = "mattpocock-skills"
+upstream_path = "skills/productivity/grill-me/SKILL.md"
+status = "adapted"
+changes = "Replaces the Claude-specific Skill tool instruction with Agent Skills wording."
+
+[[skills]]
+local_path = "thinking/grill-with-docs"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/grill-with-docs/SKILL.md"
+status = "adapted"
+changes = "Replaces the Claude-specific Skill tool instruction and clarifies composition."
+
+[[skills]]
+local_path = "craft/handoff"
+source = "mattpocock-skills"
+upstream_path = "skills/productivity/handoff/SKILL.md"
+status = "adapted"
+changes = "Uses harness-neutral skill invocation wording."
+
+[[skills]]
+local_path = "craft/tdd"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/tdd/SKILL.md"
+status = "adapted"
+changes = "Restores the refactor phase and uses harness-neutral skill invocation wording."
+
+[[skills]]
+local_path = "knowledge/domain-modeling"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/domain-modeling/SKILL.md"
+status = "adapted"
+changes = "Resolves glossary and decision-record targets from the project profile and never creates a second glossary."
+
+[[skills]]
+local_path = "sdd/adr-spec"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/to-spec/SKILL.md"
+status = "inspired"
+changes = "Records approved ADRs before a frozen spec, triages design detail and supports amendments outside the spec body."
+
+[[skills]]
+local_path = "sdd/tickets"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/to-tickets/SKILL.md"
+status = "adapted"
+changes = "Uses durable local tickets, named checks, derived status and recorded outcomes."
+
+[[skills]]
+local_path = "sdd/implement"
+source = "mattpocock-skills"
+upstream_path = "skills/engineering/implement/SKILL.md"
+status = "reimplemented"
+changes = "Claims and closes durable tickets and routes build, experiment and knowledge-revision proof loops."
+
+[[skills]]
+local_path = "craft/unslop"
+source = "cursor-pstack"
+upstream_path = "pstack/skills/unslop/SKILL.md"
+status = "adapted"
+changes = "Adds a final self-audit step."
+
+[[skills]]
+local_path = "craft/show-me-your-work"
+source = "cursor-pstack"
+upstream_path = "pstack/skills/show-me-your-work/SKILL.md"
+status = "adapted"
+changes = "Uses portable transcript discovery and reviewer-agent fallback while preserving the TSV decision log."
+
+[[skills]]
+local_path = "session/start-session"
+source = "cursor-pstack"
+upstream_path = "pstack/skills/principle-guard-the-context-window/SKILL.md"
+status = "inspired"
+changes = "Applies bounded context loading to project state and long planning documents."
+
+[[skills]]
+local_path = "session/start-session"
+source = "cursor-pstack"
+upstream_path = "pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md"
+status = "inspired"
+changes = "Applies one-writer-per-file state ownership."

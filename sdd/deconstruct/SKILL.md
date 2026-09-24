@@ -1,6 +1,6 @@
 ---
 name: deconstruct
-description: Break a whole project into the set of specs it needs. Maps needs and components to spec IDs with their dependency edges, and writes the planned set to a spec map. Run rarely, at project level, before any spec exists.
+description: Break a whole project into the set of specs it needs. Classifies build, experiment and knowledge-revision components, maps dependency edges and typed external requirements, and writes the approved planned set to a spec map. Run rarely at project level.
 disable-model-invocation: true
 ---
 
@@ -28,7 +28,7 @@ decomposes along the wrong lines and every spec below it inherits the error.
 of the code to know what already exists. This is the one skill that reads broadly on purpose;
 everything downstream reads narrowly.
 
-## Step 3 — Enumerate the components
+## Step 3 — Enumerate and classify the components
 
 A component is **a thing that can be specified independently and verified on its own.** Work from
 two directions and reconcile:
@@ -41,15 +41,36 @@ raise it rather than quietly keeping it.
 
 Give each an ID that fits `workstream_id_scheme` and names an entry in `phase_vocabulary`.
 
-## Step 4 — Draw the edges
+Give each one a work kind. The kind determines how the downstream spec, ticket checks and
+implementation loop behave:
+
+| Kind | The component changes | Its primary proof |
+|---|---|---|
+| `build` | system behaviour | a failing-then-passing test at a named seam |
+| `experiment` | what the project can claim from a measurement | a registered predicate evaluated against a baseline |
+| `knowledge-revision` | a governed model, rule or representation | competency queries, constraints and provenance |
+
+Split a component that needs two primary proofs. A software pipeline that runs an experiment is
+usually a `build` component followed by an `experiment` component, not one mixed component.
+
+## Step 4 — Draw the edges and requirements
 
 For each component, what must exist before it can be specified or built. Foundations before the
 things that stand on them. Flag any cycle: a cycle means the boundary is in the wrong place, and
 it is cheapest to move now.
 
+Keep component blockers separate from external requirements. Record the latter with one of these
+labels so a missing input is not mistaken for unfinished code:
+
+- `decision:` a human or SME ruling.
+- `data:` a dataset, sample or data contract.
+- `evidence:` a prior result or source set.
+- `ontology:` a vocabulary, schema or competency-question set.
+
 ## Step 5 — Put the map to the user
 
-Present the components with their IDs, what each covers, and its blockers. Ask:
+Present the components with their IDs, kinds, what each covers, blockers and typed requirements.
+Ask:
 
 - Is anything missing — a need with no component?
 - Is anything here that should be cut?
@@ -69,7 +90,7 @@ recorded, in its own header, the exact failure it was built to prevent — a spe
 other specs and neither had been written — because keeping it current was someone's job and that
 someone was busy. The planned set changes when a human decides it does. Everything else is derived.
 
-Report the component count, the ones with no blockers, and the vocabulary gaps still open.
+Report the component count by kind, the ones with no blockers, and the vocabulary gaps still open.
 
 ## Hard rules
 

@@ -42,6 +42,9 @@ _TITLE = re.compile(r"^#\s*(\d+)\s*[-—]+\s*(.+)$")
 _MAP_ROW = re.compile(r"^\|\s*([A-Za-z0-9.\-]+)\s*\|([^|]*)\|([^|]*)\|")
 
 NONE_WORDS = {"none", "none (can start immediately)", "-", "—", ""}
+COMMAND_CHECK_TYPES = {"gate", "metric", "dataset", "query", "artifact"}
+CHECK_TYPES = {"test", "sme", "manual", *COMMAND_CHECK_TYPES}
+OUTCOME_PLACEHOLDERS = {"", "#nn", "nn", "n/a", "none", "tbd", "todo", "<pr>"}
 
 
 def scalar(raw: str) -> str:
@@ -133,8 +136,11 @@ def parse_ticket(path: Path, spec_id: str) -> Ticket:
             if v not in NONE_WORDS:
                 t.blocked_by = [p.strip() for p in re.split(r"[,;]", scalar(value)) if p.strip()]
 
-    # An Outcome is real only once it names a PR; the template ships the heading empty.
-    t.has_outcome = bool(re.search(r"^\*\*PR:\*\*\s*\S", outcome, re.M))
+    # An Outcome is real only once the placeholder has been replaced. Older
+    # templates shipped `#NN`, which must not close every newly cut ticket.
+    pr = re.search(r"^\*\*PR:\*\*\s*(.*)$", outcome, re.M)
+    pr_value = scalar(pr.group(1)).lower() if pr else ""
+    t.has_outcome = pr_value not in OUTCOME_PLACEHOLDERS
     return t
 
 
@@ -191,6 +197,12 @@ def run(cmd: list[str] | str, root: Path, timeout: int) -> tuple[int, str]:
 
 
 def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: bool) -> None:
+    if t.check_type not in CHECK_TYPES:
+        allowed = ", ".join(sorted(CHECK_TYPES))
+        t.state = "unresolved"
+        t.detail = f"unknown check_type {t.check_type!r}; expected one of: {allowed}"
+        t.malformed = True
+        return
     if t.check_type == "manual":
         t.state, t.detail = "unknown", "manual check, never derived"
         return
@@ -234,7 +246,7 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
             t.state, t.detail = "unresolved", "does not collect"
             return
         code, msg = run([*runner, "-q", t.check], root, timeout)
-    else:  # gate
+    else:  # gate, metric, dataset, query, artifact
         code, msg = run(t.check, root, timeout)
         if code == 127:
             t.state, t.detail = "unresolved", "command not found"

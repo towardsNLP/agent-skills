@@ -1,7 +1,12 @@
 .PHONY: test lint sync-tools
 
+# Prefer the active pyenv interpreter when one exists. Homebrew's system Python on macOS may not
+# carry the development dependencies even when the selected project interpreter does. Callers can
+# still override this with `make test PYTHON=/path/to/python`.
+PYTHON ?= $(shell pyenv which python3 2>/dev/null || command -v python3)
+
 test:
-	python3 -m pytest tests/ -q
+	"$(PYTHON)" -m pytest tests/ -q
 
 # The status script is vendored into repos with stricter linters than this one has.
 # Keeping it clean here is cheaper than exempting it in every host.

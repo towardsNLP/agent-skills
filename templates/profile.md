@@ -36,6 +36,8 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **glossary_path:** or omit
 - **sync_targets:** the exact files `/sync-progress` may write
 - **doc_precedence_order:** which document wins on which question
+- **authority_map:** question category to the file or command that owns the answer. Cover names,
+  schemas, metrics, source IDs, ontology IRIs, model revisions and artifact IDs where they apply.
 
 > Keep `progress_log_ordering` honest. If the log is oldest-first and long, the newest entry
 > sits past a default read cutoff and the agent will silently read stale state. Newest-first
@@ -43,11 +45,13 @@ placeholder value is worse than a missing one, because a skill will act on it.
 
 ## Specs, tickets and decisions
 
+- **project_mode:** `software`, `data-science`, `knowledge-engineering` or `mixed`
+
 - **spec_map_path:** `planning/spec-map.md` — the planned component set, written by
   `/deconstruct`. Planned only; status is derived.
 - **spec_dir:**
 - **spec_path_pattern:** `planning/specs/<spec-id>/spec.md` — one directory per spec, holding a
-  frozen `spec.md` and an appended `acceptance.md`
+  frozen `spec.md`, append-only `amendments.md` when needed, and `acceptance.md` at close
 - **ticket_dir:** `planning/tickets/<spec-id>/` — `NN-slug.md`, one per ticket. Deliberately
   outside `spec_dir`: where a project ships specs to a client, that keeps the internal/shared
   line a directory boundary rather than a per-spec manifest entry that ships by omission.
@@ -57,12 +61,33 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **ticket_status_command:** what derives doneness — e.g. `make ticket-status`. Exits non-zero
   when a ticket carries an Outcome but its check fails, when a check no longer resolves, when a
   planned component has no spec, or when a spec has no tickets.
+- **test_command:** the runner prepended to a `check_type: test` node ID, e.g. `uv run pytest`;
+  omit to use `pytest`
 - **spec_template_path:**
 - **spec_owner:** default owner written into new spec frontmatter
 - **spec_initial_status:** e.g. `Drafted`
 - **spec_frontmatter_fields:** the required field list, in order
 - **workstream_id_scheme:** the ID grammar, with examples
 - **phase_vocabulary:** the valid phase or increment names
+
+## Data, evidence and knowledge
+
+Delete this section in a software-only project. These are pointers to governing records, not a
+second copy of their content.
+
+- **dataset_registry_path:** dataset IDs, versions, hashes and permitted uses
+- **data_contracts_path:** grain, identifiers, units, null semantics, cardinalities and lineage
+- **experiment_registry_path:** hypotheses, baselines, predicates, splits, metrics and outcomes
+- **evaluation_protocol_path:** comparison and error-analysis rules
+- **artifact_registry_path:** produced artifacts, hashes, parameters and generating runs
+- **source_registry_path:** source IDs, authority tiers, versions and supersession
+- **claim_register_path:** claims linked to evidence, scope, uncertainty and defeaters
+- **ontology_path:** the governed ontology or knowledge-model root
+- **competency_questions_path:** questions the knowledge model must answer
+- **shape_constraints_path:** SHACL or equivalent structural constraints
+- **inference_policy:** open-world and closed-world boundaries, permitted entailments and unknowns
+- **randomness_policy:** seeds, repetitions and determinism expectations
+- **reproducibility_command:** the command that rebuilds or rechecks the relevant artifacts
 
 ## Git
 

@@ -36,8 +36,9 @@ contributor dictates. With no git, summarise from the session's actual file chan
 
 ## Step 2 — Append a dated entry
 
-Required: goal, what I did, branch or context, workstream tag. Optional, and omitted when
-empty: decisions or notes, blockers, next session.
+Required: goal, what I did, branch or context, workstream tag. Optional, and omitted when empty:
+evidence produced, observations, interpretations or decisions, epistemic risks, blockers, next
+session. For experiment and knowledge work, keep observations separate from interpretations.
 
 ```markdown
 ## YYYY-MM-DD — [Brief session title]
@@ -51,7 +52,10 @@ empty: decisions or notes, blockers, next session.
 ### What I did
 - [Concrete deliverables, with file paths and counts]
 
-### Decisions / notes
+### Evidence produced
+### Observations
+### Interpretations / decisions
+### Epistemic risks
 ### Blockers
 ### Next session
 
@@ -66,13 +70,17 @@ Rewrite `planning/agent/state/<contributor>.md` whole, to the shape in the plugi
 `templates/state.md`. Set `state_as_of` to the date of the entry you just wrote. Keep it
 under 400 words, link rather than quote, and cut oldest first.
 
+Record the work kind, active hypothesis or competency question, evidence versions and last
+verified command when they apply. "The run completed" is an observation. A hypothesis result is a
+separate statement tied to its registered predicate.
+
 **Write only your own file**, the same rule as diaries. Never write another contributor's
 state file, and never write a shared one. One writer per file is what lets parallel sessions
 run without contending; a single shared state file that every `/end-session` rewrites races.
 
 This is not optional bookkeeping. Your state file is the only thing your `/start-session`
-reads, so a skipped regeneration means the next session either starts stale or pays a
-subagent to reconstruct it.
+reads, so a skipped regeneration means the next session either starts stale or pays for a helper
+agent or bounded reconstruction.
 
 ## Step 4 — Auto-memory, lead only
 
