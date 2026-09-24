@@ -29,16 +29,21 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def project(
-    tmp_path: Path, *, state_date: str = "2026-09-24", claimant: str = "Ahmad Hashemi"
-) -> Path:
+# Fixture identities are invented. A real contributor's name in a fixture is a leak the
+# day the repository goes public, and it arrives through exactly this parameter.
+# `test_fixture_identities_are_invented` holds the line; add only invented names there.
+CONTRIBUTOR = "Dana Reed"
+OTHER_CONTRIBUTOR = "Morgan Vale"
+
+
+def project(tmp_path: Path, *, state_date: str = "2026-09-24", claimant: str = CONTRIBUTOR) -> Path:
     write(
         tmp_path / "planning/agent/profile.md",
-        """# Agent profile
+        f"""# Agent profile
 
 ## Identity and people
 - **contributors:**
-  - Ahmad Hashemi — lead, active
+  - {CONTRIBUTOR} — lead, active
 
 ## Diaries
 - **diary_dir:** `planning/diaries/`
@@ -53,7 +58,7 @@ def project(
 """,
     )
     write(
-        tmp_path / "planning/agent/state/ahmad.md",
+        tmp_path / "planning/agent/state/dana.md",
         f"""# State
 
 **state_as_of:** {state_date}
@@ -61,14 +66,14 @@ def project(
 ## Now
 
 - **Branch:** `main`
-- **Phase / workstream:** P2.3 — ontology revision
+- **Phase / workstream:** P2.3 — vocabulary revision
 - **Work kind:** knowledge-revision
-- **Ticket:** `planning/tickets/P2.3-ontology/03-revise-authority.md`
-- **Governing spec:** `planning/specs/P2.3-ontology/spec.md`
-- **Question:** Which authority governs conflicting jurisdiction labels?
-- **Evidence context:** ontology v7; source registry 2026-09-20
-- **Last verified:** `make validate-ontology`
-- **Next action:** revise the authority relation after confirming ticket 03
+- **Ticket:** `planning/tickets/P2.3-vocabulary/03-revise-parent-term.md`
+- **Governing spec:** `planning/specs/P2.3-vocabulary/spec.md`
+- **Question:** Which register decides when two category labels conflict?
+- **Evidence context:** vocabulary v7; source register 2026-09-20
+- **Last verified:** `make validate-vocabulary`
+- **Next action:** revise the parent-term relation after confirming ticket 03
 
 ## Recent
 
@@ -80,13 +85,13 @@ def project(
 """,
     )
     write(
-        tmp_path / "planning/tickets/P2.3-ontology/03-revise-authority.md",
-        f"""# 03 — Revise authority
+        tmp_path / "planning/tickets/P2.3-vocabulary/03-revise-parent-term.md",
+        f"""# 03 — Revise parent term
 
-**What becomes true:** Conflicting jurisdiction labels resolve through one explicit
-authority relation without copying the source hierarchy.
+**What becomes true:** Conflicting category labels resolve through one explicit
+parent-term relation without copying the source hierarchy.
 **Blocked by:** none (can start immediately)
-**Governs:** `spec.md#3-scope`; `ontology.ttl#Authority`; ADR-0007
+**Governs:** `spec.md#3-scope`; `vocabulary.ttl#ParentTerm`; ADR-0007
 **check_type:** query
 **check:** `python tools/check_competency.py CQ-14`
 **Claimed by:** {claimant}
@@ -100,9 +105,9 @@ THIS LONG APPROACH MUST NOT ENTER THE PACKET.
 THIS OUTCOME MUST NOT ENTER THE PACKET.
 """,
     )
-    write(tmp_path / "planning/diaries/ahmad-diary.md", "# Diary\n\n## 2026-09-24 — Work\n")
+    write(tmp_path / "planning/diaries/dana-diary.md", "# Diary\n\n## 2026-09-24 — Work\n")
     write(
-        tmp_path / "planning/specs/P2.3-ontology/spec.md",
+        tmp_path / "planning/specs/P2.3-vocabulary/spec.md",
         "THIS FULL SPEC MUST NEVER ENTER THE STARTUP PACKET\n" * 100,
     )
     return tmp_path
@@ -120,13 +125,13 @@ def test_packet_reads_only_routing_fields(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(context_packet, "read_text", tracked_read)
     output = context_packet.build_packet(
         root,
-        contributor="Ahmad Hashemi",
+        contributor=CONTRIBUTOR,
         branch="main",
     )
 
     assert len(output) <= context_packet.DEFAULT_MAX_CHARS
     assert len(output.split()) <= 250
-    assert "Conflicting jurisdiction labels" in output
+    assert "Conflicting category labels" in output
     assert "without copying the source hierarchy" in output
     assert "spec.md#3-scope" in output
     assert "check_competency.py CQ-14" in output
@@ -139,15 +144,15 @@ def test_packet_reads_only_routing_fields(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_packet_flags_stale_state_and_foreign_claim(tmp_path: Path) -> None:
-    root = project(tmp_path, state_date="2026-09-20", claimant="Morgan Vale")
+    root = project(tmp_path, state_date="2026-09-20", claimant=OTHER_CONTRIBUTOR)
     output = context_packet.build_packet(
         root,
-        contributor="Ahmad Hashemi",
-        branch="ahmad-ontology-31",
+        contributor=CONTRIBUTOR,
+        branch="dana-vocabulary-31",
     )
 
     assert "State is stale" in output
-    assert "claimed by Morgan Vale" in output
+    assert f"claimed by {OTHER_CONTRIBUTOR}" in output
     assert "differs from recorded branch" in output
 
 
@@ -155,7 +160,7 @@ def test_packet_fails_closed_when_budget_is_exceeded(tmp_path: Path) -> None:
     root = project(tmp_path)
     output = context_packet.build_packet(
         root,
-        contributor="Ahmad Hashemi",
+        contributor=CONTRIBUTOR,
         branch="main",
         max_chars=800,
     )
@@ -169,21 +174,21 @@ def test_packet_fails_closed_when_budget_is_exceeded(tmp_path: Path) -> None:
 
 def test_long_field_is_kept_whole_when_the_complete_card_fits(tmp_path: Path) -> None:
     root = project(tmp_path)
-    ticket = root / "planning/tickets/P2.3-ontology/03-revise-authority.md"
+    ticket = root / "planning/tickets/P2.3-vocabulary/03-revise-parent-term.md"
     marker = "END-OF-COMPLETE-GOAL"
     long_goal = " ".join(["meaningful"] * 35) + f" {marker}"
     text = ticket.read_text(encoding="utf-8")
     text = text.replace(
-        "Conflicting jurisdiction labels resolve through one explicit\n"
-        "authority relation without copying the source hierarchy.",
+        "Conflicting category labels resolve through one explicit\n"
+        "parent-term relation without copying the source hierarchy.",
         long_goal,
     )
     ticket.write_text(text, encoding="utf-8")
 
     output = context_packet.build_packet(
         root,
-        contributor="Ahmad Hashemi",
-        branch="ahmad-ontology-31",
+        contributor=CONTRIBUTOR,
+        branch="dana-vocabulary-31",
     )
 
     assert len(long_goal) > context_packet.LONG_FIELD_CHARS
@@ -194,7 +199,7 @@ def test_long_field_is_kept_whole_when_the_complete_card_fits(tmp_path: Path) ->
 
 def test_overflow_never_returns_a_prefix_of_an_acceptance_command(tmp_path: Path) -> None:
     root = project(tmp_path)
-    ticket = root / "planning/tickets/P2.3-ontology/03-revise-authority.md"
+    ticket = root / "planning/tickets/P2.3-vocabulary/03-revise-parent-term.md"
     command = "python tools/check_competency.py " + "CQ-14-" * 120 + "COMMAND-END"
     text = ticket.read_text(encoding="utf-8")
     text = text.replace("python tools/check_competency.py CQ-14", command)
@@ -202,8 +207,8 @@ def test_overflow_never_returns_a_prefix_of_an_acceptance_command(tmp_path: Path
 
     output = context_packet.build_packet(
         root,
-        contributor="Ahmad Hashemi",
-        branch="ahmad-ontology-31",
+        contributor=CONTRIBUTOR,
+        branch="dana-vocabulary-31",
         max_chars=800,
     )
 
@@ -222,7 +227,7 @@ def test_a_task_outside_the_project_is_refused_rather_than_read(tmp_path: Path) 
 
     for task in (str(outside), "../elsewhere/01-secret.md"):
         output = context_packet.build_packet(
-            root, task=task, contributor="Ahmad Hashemi", branch="ahmad-ontology-31"
+            root, task=task, contributor=CONTRIBUTOR, branch="dana-vocabulary-31"
         )
         assert "LEAKED-FROM-OUTSIDE" not in output
         assert "No ticket inside the project resolves" in output
@@ -232,14 +237,14 @@ def test_a_symlinked_escape_is_refused_too(tmp_path: Path) -> None:
     root = project(tmp_path / "repo")
     outside = tmp_path / "elsewhere/01-secret.md"
     write(outside, "# 01 — Secret\n\n**What becomes true:** LEAKED-VIA-SYMLINK\n")
-    link = root / "planning/tickets/P2.3-ontology/09-link.md"
+    link = root / "planning/tickets/P2.3-vocabulary/09-link.md"
     link.symlink_to(outside)
 
     output = context_packet.build_packet(
         root,
-        task="planning/tickets/P2.3-ontology/09-link.md",
-        contributor="Ahmad Hashemi",
-        branch="ahmad-ontology-31",
+        task="planning/tickets/P2.3-vocabulary/09-link.md",
+        contributor=CONTRIBUTOR,
+        branch="dana-vocabulary-31",
     )
 
     assert "LEAKED-VIA-SYMLINK" not in output
@@ -248,35 +253,33 @@ def test_a_symlinked_escape_is_refused_too(tmp_path: Path) -> None:
 
 def test_blocked_card_keeps_the_conflict_warnings(tmp_path: Path) -> None:
     """A foreign claim is what should stop the session, so overflow must not drop it."""
-    root = project(tmp_path, claimant="Morgan Vale")
-    ticket = root / "planning/tickets/P2.3-ontology/03-revise-authority.md"
+    root = project(tmp_path, claimant=OTHER_CONTRIBUTOR)
+    ticket = root / "planning/tickets/P2.3-vocabulary/03-revise-parent-term.md"
     goal = " ".join(["meaningful"] * 400)
     ticket.write_text(
         ticket.read_text(encoding="utf-8").replace(
-            "Conflicting jurisdiction labels resolve through one explicit\n"
-            "authority relation without copying the source hierarchy.",
+            "Conflicting category labels resolve through one explicit\n"
+            "parent-term relation without copying the source hierarchy.",
             goal,
         ),
         encoding="utf-8",
     )
 
     output = context_packet.build_packet(
-        root, contributor="Ahmad Hashemi", branch="main", max_chars=800
+        root, contributor=CONTRIBUTOR, branch="main", max_chars=800
     )
 
     assert "blocked" in output
     assert goal not in output
-    assert "claimed by Morgan Vale" in output
+    assert f"claimed by {OTHER_CONTRIBUTOR}" in output
     assert "trunk branch" in output
 
 
 def test_freshness_is_not_claimed_without_a_diary_to_compare(tmp_path: Path) -> None:
     root = project(tmp_path)
-    (root / "planning/diaries/ahmad-diary.md").unlink()
+    (root / "planning/diaries/dana-diary.md").unlink()
 
-    output = context_packet.build_packet(
-        root, contributor="Ahmad Hashemi", branch="ahmad-ontology-31"
-    )
+    output = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
 
     assert "State freshness" not in output
     assert "No diary entry to compare against" in output
@@ -289,12 +292,12 @@ def test_a_budget_too_small_for_the_blocked_card_is_refused(tmp_path: Path) -> N
 
 
 def test_a_name_that_is_only_a_substring_is_not_on_the_roster(tmp_path: Path) -> None:
-    """A roster listing Ahmad Hashemi does not make "Ahma" a contributor."""
+    """A roster listing Dana Reed does not make "Dan" a contributor."""
     root = project(tmp_path)
 
-    assert "roster" not in context_packet.build_packet(root, contributor="Ahmad Hashemi")
+    assert "roster" not in context_packet.build_packet(root, contributor=CONTRIBUTOR)
     assert "not present in the profile contributor roster" in context_packet.build_packet(
-        root, contributor="Ahma"
+        root, contributor="Dan"
     )
 
 
