@@ -9,11 +9,11 @@ skills are available. There is no install command to run and nothing to copy.
 ```json
 {
   "extraKnownMarketplaces": {
-    "agent-skills": {
+    "towardsnlp-agent-skills": {
       "source": { "source": "github", "repo": "towardsNLP/agent-skills" }
     }
   },
-  "enabledPlugins": { "sdd@agent-skills": true }
+  "enabledPlugins": { "sdd@towardsnlp-agent-skills": true }
 }
 ```
 
@@ -74,4 +74,4 @@ read per-skill costs directly rather than inferring them.
 ## Updating
 
 Bump `version` in `.claude-plugin/plugin.json`, commit, push. Contributors pick the change
-up automatically; `/plugin marketplace update agent-skills` forces it immediately.
+up automatically; `/plugin marketplace update towardsnlp-agent-skills` forces it immediately.
