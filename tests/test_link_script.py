@@ -6,6 +6,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parents[1]
 
 
@@ -67,6 +69,30 @@ def test_a_dangling_symlink_destination_is_rejected(tmp_path: Path):
 
     assert result.returncode == 1
     assert "is not a directory" in result.stderr
+    assert list(first.iterdir()) == []
+
+
+@pytest.mark.parametrize("blocked_kind", ["file", "dangling symlink"])
+def test_a_non_directory_destination_parent_stops_the_run_too(tmp_path: Path, blocked_kind: str):
+    """`mkdir -p` creates the parent, so a file at `~/.agents` is the mirrored case.
+
+    It is the one that costs something: the destination it blocks is the second, so
+    without this check `~/.claude/skills` is fully linked before the run dies.
+    """
+    first = tmp_path / ".claude/skills"
+    first.mkdir(parents=True)
+
+    blocked = tmp_path / ".agents"
+    if blocked_kind == "file":
+        blocked.write_text("not a directory", encoding="utf-8")
+    else:
+        blocked.symlink_to(tmp_path / "gone")
+
+    result = run_linker(tmp_path)
+
+    assert result.returncode == 1
+    assert f"error: {blocked} is not a directory." in result.stderr
+    assert result.stdout == ""  # not one "linked ..." line, at either destination
     assert list(first.iterdir()) == []
 
 

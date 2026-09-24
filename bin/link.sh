@@ -25,6 +25,18 @@ PERSONAL_DIRS=(thinking knowledge craft)
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 DESTS=("$HOME/.claude/skills" "$HOME/.agents/skills")
 
+# `mkdir -p` fails on a path that exists but is not a directory, and on a symlink
+# with nothing behind it. Reaching either inside the linking loop would fail after
+# the other destination had already been written, so both are checked up front.
+# -e is false for a dangling symlink, which is why -L is tested as well.
+require_dir_or_absent() {
+  if { [ -e "$1" ] || [ -L "$1" ]; } && [ ! -d "$1" ]; then
+    echo "error: $1 is not a directory." >&2
+    echo "Move it aside or remove it yourself, then re-run." >&2
+    exit 1
+  fi
+}
+
 # Check every destination before linking any of them. Refusing halfway leaves one
 # harness linked and the other untouched, which is a worse state to debug than a
 # run that did nothing at all.
@@ -39,15 +51,10 @@ for DEST in "${DESTS[@]}"; do
         ;;
     esac
   fi
-  # `mkdir -p` fails on a path that exists but is not a directory, and on a symlink
-  # with nothing behind it. Reaching that failure in the linking loop below would put
-  # it after the other destination had already been rewritten, so catch it here.
-  # -e is false for a dangling symlink, which is why -L is tested as well.
-  if { [ -e "$DEST" ] || [ -L "$DEST" ]; } && [ ! -d "$DEST" ]; then
-    echo "error: $DEST is not a directory." >&2
-    echo "Move it aside or remove it yourself, then re-run." >&2
-    exit 1
-  fi
+  # The parent too: `mkdir -p` creates it, so a regular file there stops the run just
+  # as a non-directory destination does.
+  require_dir_or_absent "$(dirname "$DEST")"
+  require_dir_or_absent "$DEST"
   for dir in "${PERSONAL_DIRS[@]}"; do
     for src in "$REPO/$dir"/*/; do
       target="$DEST/$(basename "${src%/}")"
