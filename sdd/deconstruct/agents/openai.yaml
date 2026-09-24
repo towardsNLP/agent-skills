@@ -1,0 +1,5 @@
+interface:
+  display_name: "Deconstruct"
+  short_description: "Map project work into governed components"
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  display_name: "End Session"
+  short_description: "Record session results in personal state"
+policy:
+  allow_implicit_invocation: false

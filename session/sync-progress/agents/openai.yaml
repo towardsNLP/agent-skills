@@ -1,0 +1,5 @@
+interface:
+  display_name: "Sync Progress"
+  short_description: "Consolidate contributor progress for the lead"
+policy:
+  allow_implicit_invocation: false

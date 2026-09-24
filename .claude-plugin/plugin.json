@@ -1,6 +1,6 @@
 {
   "name": "sdd",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Spec-driven workflow skills: deconstruct a project into specs, record decisions and write a spec, cut it into tickets, implement one per session, plus session management. Project-neutral; each repo supplies its own planning/agent/profile.md.",
   "author": {
     "name": "Ahmad Hashemi"

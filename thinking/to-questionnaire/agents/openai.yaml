@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Questionnaire"
+  short_description: "Turn an unresolved decision into questions"
+policy:
+  allow_implicit_invocation: false

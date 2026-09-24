@@ -1,0 +1,5 @@
+interface:
+  display_name: "Writing for Agents"
+  short_description: "Write clear instructions for coding agents"
+policy:
+  allow_implicit_invocation: true

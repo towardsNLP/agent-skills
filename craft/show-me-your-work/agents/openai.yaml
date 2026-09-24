@@ -1,0 +1,5 @@
+interface:
+  display_name: "Show Me Your Work"
+  short_description: "Record a reviewable trail of decisions"
+policy:
+  allow_implicit_invocation: false

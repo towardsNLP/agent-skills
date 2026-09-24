@@ -1,0 +1,5 @@
+interface:
+  display_name: "ADR and Spec"
+  short_description: "Record decisions before writing the spec"
+policy:
+  allow_implicit_invocation: false

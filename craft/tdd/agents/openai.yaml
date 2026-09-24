@@ -1,0 +1,5 @@
+interface:
+  display_name: "Test-Driven Development"
+  short_description: "Build features and fixes test-first"
+policy:
+  allow_implicit_invocation: true

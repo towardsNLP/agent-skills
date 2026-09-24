@@ -1,0 +1,5 @@
+interface:
+  display_name: "Start Session"
+  short_description: "Create a bounded read-only session card"
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Check Contracts"
+  short_description: "Validate changes against project contracts"
+policy:
+  allow_implicit_invocation: false

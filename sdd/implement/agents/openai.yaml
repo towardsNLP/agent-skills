@@ -1,0 +1,5 @@
+interface:
+  display_name: "Implement Ticket"
+  short_description: "Execute and verify one governed ticket"
+policy:
+  allow_implicit_invocation: false

@@ -6,10 +6,17 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILL_GROUPS = ("session", "sdd", "thinking", "knowledge", "craft")
 
 
 def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
+
+
+def skill_manifests() -> list[Path]:
+    return sorted(
+        manifest for group in SKILL_GROUPS for manifest in (ROOT / group).rglob("SKILL.md")
+    )
 
 
 def test_check_contracts_uses_profile_key_names():
@@ -71,6 +78,33 @@ def test_portable_skills_do_not_name_the_claude_skill_tool_or_transcript_path():
     skill_text = "\n".join(path.read_text(encoding="utf-8") for path in ROOT.rglob("SKILL.md"))
     assert "Skill tool" not in skill_text
     assert "~/.claude/projects/" not in skill_text
+
+
+def test_openai_sidecars_cover_every_skill_and_match_invocation_policy():
+    manifests = skill_manifests()
+    expected_sidecars = {manifest.parent / "agents/openai.yaml" for manifest in manifests}
+    actual_sidecars = {
+        sidecar for group in SKILL_GROUPS for sidecar in (ROOT / group).rglob("agents/openai.yaml")
+    }
+
+    assert actual_sidecars == expected_sidecars
+    for manifest in manifests:
+        frontmatter = manifest.read_text(encoding="utf-8").split("---", 2)[1]
+        sidecar = manifest.parent / "agents/openai.yaml"
+        metadata = sidecar.read_text(encoding="utf-8")
+
+        display_name = re.search(r'^  display_name: "([^"]+)"$', metadata, re.MULTILINE)
+        short_description = re.search(r'^  short_description: "([^"]+)"$', metadata, re.MULTILINE)
+        implicit = re.search(r"^  allow_implicit_invocation: (true|false)$", metadata, re.MULTILINE)
+
+        assert display_name, sidecar
+        assert short_description, sidecar
+        assert 25 <= len(short_description.group(1)) <= 64, sidecar
+        assert implicit, sidecar
+        assert (implicit.group(1) == "true") == (
+            "disable-model-invocation: true" not in frontmatter
+        ), sidecar
+        assert "model:" not in metadata
 
 
 def test_tdd_contains_the_refactor_phase():

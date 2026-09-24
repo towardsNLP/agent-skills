@@ -1,0 +1,5 @@
+interface:
+  display_name: "Wrap Day"
+  short_description: "Record the session and sync shared progress"
+policy:
+  allow_implicit_invocation: false

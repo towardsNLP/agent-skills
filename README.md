@@ -65,17 +65,15 @@ skill.** A skill that names one project stops being shareable.
 
 ## Invocation cost
 
-**Model-invoked** skills cost a permanent description slot in context, in exchange for the agent
-reaching them on its own. **User-invoked** skills (`disable-model-invocation: true`) are invisible
-to the model — which makes me the index that has to remember they exist. **6 of 22 are
-model-invoked.**
+Invocation intent is recorded for both hosts. Claude Code reads `disable-model-invocation` from
+`SKILL.md`. OpenAI products read `policy.allow_implicit_invocation` from
+`agents/openai.yaml`. **6 of 22 are model-invoked.** The other 16 remain available by explicit
+invocation.
 
-**A user-invoked skill is not free.** Measured 2026-09-23 in a session with 32 skills loaded: the
-nine project skills, every one of them `user-only`, cost **~560 tokens**, and seven personal
-user-only skills another **~280**. `disable-model-invocation` changes *who can reach* a skill, not
-whether its description is loaded. The README said otherwise until this was measured; the lesson
-is the one `docs/install.md` already stated — measure with `/context` rather than reasoning from
-what a flag sounds like it does.
+An explicit skill may still have a metadata cost. Measured 2026-09-23 in a Claude Code session
+with 32 skills loaded, the nine explicit project skills cost **~560 tokens**, and seven explicit
+personal skills another **~280**. Invocation policy changes who can reach a skill. It does not
+guarantee identical context accounting across hosts. Measure with the host's context inspector.
 
 `skillOverrides` in settings trims the rest: `"name-only"` keeps a skill invokable but suppresses
 its description; `"off"` hides it.
@@ -179,8 +177,9 @@ route discovery outside the main context and return only a bounded card; elimina
 target rather than trying to lock it. The skill names no worker type or model. Claude Code, Codex
 and other hosts may use different isolation mechanisms without changing the workflow contract.
 
-Codex `agents/openai.yaml` sidecars were dropped throughout — they configure a Cursor-side policy
-that does not apply here.
+Every skill has an `agents/openai.yaml` sidecar for OpenAI UI metadata and invocation policy. The
+sidecar is a host adapter, not a second copy of the workflow. Its policy must match
+`disable-model-invocation` in `SKILL.md`; a contract test checks the pair.
 
 **Moved out:** `okf-creator` now lives in its own repository. It is text an agent reads *plus a
 library a program imports*, which is a different artefact with a different consumer and release
