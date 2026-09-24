@@ -6,6 +6,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "session/start-session/scripts/context_packet.py"
 
@@ -212,7 +214,91 @@ def test_overflow_never_returns_a_prefix_of_an_acceptance_command(tmp_path: Path
     assert "COMMAND-END" not in output
 
 
-def test_skill_is_model_neutral_and_requires_isolation_when_available() -> None:
+def test_a_task_outside_the_project_is_refused_rather_than_read(tmp_path: Path) -> None:
+    """An escaping path has no project-relative rendering, and reading it widens the boundary."""
+    root = project(tmp_path / "repo")
+    outside = tmp_path / "elsewhere/01-secret.md"
+    write(outside, "# 01 — Secret\n\n**What becomes true:** LEAKED-FROM-OUTSIDE\n")
+
+    for task in (str(outside), "../elsewhere/01-secret.md"):
+        output = context_packet.build_packet(
+            root, task=task, contributor="Ahmad Hashemi", branch="ahmad-ontology-31"
+        )
+        assert "LEAKED-FROM-OUTSIDE" not in output
+        assert "No ticket inside the project resolves" in output
+
+
+def test_a_symlinked_escape_is_refused_too(tmp_path: Path) -> None:
+    root = project(tmp_path / "repo")
+    outside = tmp_path / "elsewhere/01-secret.md"
+    write(outside, "# 01 — Secret\n\n**What becomes true:** LEAKED-VIA-SYMLINK\n")
+    link = root / "planning/tickets/P2.3-ontology/09-link.md"
+    link.symlink_to(outside)
+
+    output = context_packet.build_packet(
+        root,
+        task="planning/tickets/P2.3-ontology/09-link.md",
+        contributor="Ahmad Hashemi",
+        branch="ahmad-ontology-31",
+    )
+
+    assert "LEAKED-VIA-SYMLINK" not in output
+    assert "No ticket inside the project resolves" in output
+
+
+def test_blocked_card_keeps_the_conflict_warnings(tmp_path: Path) -> None:
+    """A foreign claim is what should stop the session, so overflow must not drop it."""
+    root = project(tmp_path, claimant="Morgan Vale")
+    ticket = root / "planning/tickets/P2.3-ontology/03-revise-authority.md"
+    goal = " ".join(["meaningful"] * 400)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "Conflicting jurisdiction labels resolve through one explicit\n"
+            "authority relation without copying the source hierarchy.",
+            goal,
+        ),
+        encoding="utf-8",
+    )
+
+    output = context_packet.build_packet(
+        root, contributor="Ahmad Hashemi", branch="main", max_chars=800
+    )
+
+    assert "blocked" in output
+    assert goal not in output
+    assert "claimed by Morgan Vale" in output
+    assert "trunk branch" in output
+
+
+def test_freshness_is_not_claimed_without_a_diary_to_compare(tmp_path: Path) -> None:
+    root = project(tmp_path)
+    (root / "planning/diaries/ahmad-diary.md").unlink()
+
+    output = context_packet.build_packet(
+        root, contributor="Ahmad Hashemi", branch="ahmad-ontology-31"
+    )
+
+    assert "State freshness" not in output
+    assert "No diary entry to compare against" in output
+
+
+def test_a_budget_too_small_for_the_blocked_card_is_refused(tmp_path: Path) -> None:
+    """Below the floor even the fixed refusal overflows, so the ceiling cannot be honoured."""
+    with pytest.raises(ValueError):
+        context_packet.build_packet(project(tmp_path), max_chars=context_packet.MIN_MAX_CHARS - 1)
+
+
+def test_a_name_that_is_only_a_substring_is_not_on_the_roster(tmp_path: Path) -> None:
+    """A roster listing Ahmad Hashemi does not make "Ahma" a contributor."""
+    root = project(tmp_path)
+
+    assert "roster" not in context_packet.build_packet(root, contributor="Ahmad Hashemi")
+    assert "not present in the profile contributor roster" in context_packet.build_packet(
+        root, contributor="Ahma"
+    )
+
+
+def test_skill_is_model_neutral_and_runs_the_script_without_delegating() -> None:
     skill = (ROOT / "session/start-session/SKILL.md").read_text(encoding="utf-8")
     frontmatter = skill.split("---", 2)[1]
 
@@ -220,7 +306,10 @@ def test_skill_is_model_neutral_and_requires_isolation_when_available() -> None:
     assert "agent:" not in frontmatter
     assert "context: fork" in frontmatter
     assert "background: false" in frontmatter
-    assert "isolated worker, subagent or fork" in skill
-    assert "vendor-specific agent type" in skill
     assert "scripts/context_packet.py" in skill
     assert "Do not open the profile" in skill
+    # The script bounds its own output, so a relayed worker adds a failure path
+    # without narrowing what reaches the model. Both stay refused by name.
+    assert "Do not delegate this command" in skill
+    assert "isolated worker, subagent or fork" in skill
+    assert "vendor-specific agent type" in skill

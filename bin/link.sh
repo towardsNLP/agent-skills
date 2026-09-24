@@ -25,6 +25,9 @@ PERSONAL_DIRS=(thinking knowledge craft)
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 DESTS=("$HOME/.claude/skills" "$HOME/.agents/skills")
 
+# Check every destination before linking any of them. Refusing halfway leaves one
+# harness linked and the other untouched, which is a worse state to debug than a
+# run that did nothing at all.
 for DEST in "${DESTS[@]}"; do
   if [ -L "$DEST" ]; then
     resolved="$(readlink "$DEST")"
@@ -36,18 +39,25 @@ for DEST in "${DESTS[@]}"; do
         ;;
     esac
   fi
-  mkdir -p "$DEST"
   for dir in "${PERSONAL_DIRS[@]}"; do
     for src in "$REPO/$dir"/*/; do
-      src="${src%/}"
-      name="$(basename "$src")"
-      target="$DEST/$name"
+      target="$DEST/$(basename "${src%/}")"
       if [ -e "$target" ] && [ ! -L "$target" ]; then
         echo "error: refusing to replace non-symlink $target" >&2
         echo "Move it aside or remove it yourself, then re-run." >&2
         exit 1
       fi
-      ln -sfn "$src" "$target"
+    done
+  done
+done
+
+for DEST in "${DESTS[@]}"; do
+  mkdir -p "$DEST"
+  for dir in "${PERSONAL_DIRS[@]}"; do
+    for src in "$REPO/$dir"/*/; do
+      src="${src%/}"
+      name="$(basename "$src")"
+      ln -sfn "$src" "$DEST/$name"
       echo "linked $name -> $DEST"
     done
   done

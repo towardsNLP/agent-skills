@@ -246,11 +246,18 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
             t.state, t.detail = "unresolved", "does not collect"
             return
         code, msg = run([*runner, "-q", t.check], root, timeout)
-    else:  # gate, metric, dataset, query, artifact
+    elif t.check_type in COMMAND_CHECK_TYPES:
         code, msg = run(t.check, root, timeout)
         if code == 127:
             t.state, t.detail = "unresolved", "command not found"
             return
+    else:
+        # Unreachable while the guard above and these branches agree. Named rather
+        # than left as an `else` that would shell-execute the next type someone adds.
+        t.state = "unresolved"
+        t.detail = f"no evaluator for check_type {t.check_type!r}"
+        t.malformed = True
+        return
 
     t.state = "pass" if code == 0 else "fail"
     t.detail = "" if code == 0 else msg[:90]

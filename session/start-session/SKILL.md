@@ -1,7 +1,7 @@
 ---
 name: start-session
 description: Produce a bounded, read-only session card before work begins. Resolves contributor, branch, current task, claim, evidence identifiers and exact context pointers without loading long project documents.
-compatibility: Requires Python 3 and git when the workspace uses git. Uses an isolated worker when the host provides one; otherwise uses the bundled read-only script inline.
+compatibility: Requires Python 3, and git when the workspace uses git. Runs one bundled read-only script; needs no host-specific agent, model or isolation mechanism.
 disable-model-invocation: true
 context: fork
 background: false
@@ -12,20 +12,9 @@ background: false
 Orient the session without importing the project into the conversation. The output is a routing
 record, not a project briefing.
 
-## Keep discovery outside the main context
+## Run the script, and do not read the documents yourself
 
-The `context: fork` hint gives hosts that support it declarative isolation. Other hosts ignore the
-hint and follow the capability-based instructions below.
-
-If the host provides an isolated worker, subagent or fork, use one that can run read-only shell
-commands. Give it only this standalone task: run the bundled context-packet script from the
-project root and return its stdout verbatim. Do not pass conversation history, choose a
-vendor-specific agent type, or pin a model. Let the host select its own isolation mechanism.
-
-If the host has no isolation mechanism, run the script directly. It reads source files inside the
-process; only its bounded stdout enters the model context.
-
-The script is `scripts/context_packet.py` relative to this `SKILL.md`. Run:
+The script is `scripts/context_packet.py` relative to this `SKILL.md`. Run it directly:
 
 ```bash
 python3 <skill-dir>/scripts/context_packet.py --project-root .
@@ -33,6 +22,16 @@ python3 <skill-dir>/scripts/context_packet.py --project-root .
 
 When the user supplies a ticket path or `<spec-id>/<ticket-number>`, also pass
 `--task <value>`. Do not search for a task the user did not name.
+
+**The process is the context boundary, not the conversation.** The script opens the profile,
+state, ticket and diary headings inside Python and prints one bounded card. The documents never
+enter a model context on any path, so nothing is gained by moving the run somewhere else.
+
+Do not delegate this command. Dispatching an isolated worker, subagent or fork to relay one
+deterministic script buys no containment the script does not already provide, and adds a
+relay that can fail. Where the host runs this skill in its own isolated context — Claude Code's
+`context: fork` does exactly that — it still runs the same command. Never pass conversation
+history, choose a vendor-specific agent type, or pin a model.
 
 ## Return the card and stop
 

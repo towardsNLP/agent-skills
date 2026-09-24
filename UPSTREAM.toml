@@ -1,7 +1,11 @@
 # Pinned provenance for borrowed skills and workflow ideas.
-# `vendored` means the local SKILL.md matches the pinned upstream file. Agent-specific
-# sidecars are deliberately not copied. `adapted` keeps the upstream function with local
-# changes. `inspired` and `reimplemented` carry an idea or lineage, not upstream text.
+# `vendored` means the local SKILL.md matches the pinned upstream file. `adapted` keeps the
+# upstream function with local changes. `inspired` and `reimplemented` carry an idea or
+# lineage, not upstream text.
+#
+# The pin covers SKILL.md only. No upstream `agents/` sidecar is copied; every skill here
+# carries a local one written against this repo's own invocation policy, so a sidecar is
+# never evidence of upstream content.
 
 [[sources]]
 id = "mattpocock-skills"
@@ -25,7 +29,7 @@ source = "mattpocock-skills"
 upstream_path = "skills/engineering/research/SKILL.md"
 status = "vendored"
 sha256 = "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4"
-changes = "Agent-specific sidecars omitted."
+changes = "SKILL.md unchanged; upstream sidecars not copied."
 
 [[skills]]
 local_path = "thinking/to-questionnaire"
@@ -33,7 +37,7 @@ source = "mattpocock-skills"
 upstream_path = "skills/productivity/to-questionnaire/SKILL.md"
 status = "vendored"
 sha256 = "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b"
-changes = "Agent-specific sidecars omitted."
+changes = "SKILL.md unchanged; upstream sidecars not copied."
 
 [[skills]]
 local_path = "thinking/teach"
@@ -41,7 +45,7 @@ source = "mattpocock-skills"
 upstream_path = "skills/productivity/teach/SKILL.md"
 status = "vendored"
 sha256 = "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43"
-changes = "Agent-specific sidecars omitted."
+changes = "SKILL.md unchanged; upstream sidecars not copied."
 
 [[skills]]
 local_path = "craft/codebase-design"
@@ -49,14 +53,14 @@ source = "mattpocock-skills"
 upstream_path = "skills/engineering/codebase-design/SKILL.md"
 status = "vendored"
 sha256 = "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2"
-changes = "Agent-specific sidecars omitted."
+changes = "SKILL.md unchanged; upstream sidecars not copied."
 
 [[skills]]
 local_path = "thinking/writing-for-agents"
 source = "mattpocock-skills"
 upstream_path = "skills/productivity/writing-for-agents/SKILL.md"
 status = "adapted"
-changes = "Corrects invocation-cost claims from local measurements; omits agent sidecars."
+changes = "Corrects invocation-cost claims from local measurements."
 
 [[skills]]
 local_path = "thinking/grilling"

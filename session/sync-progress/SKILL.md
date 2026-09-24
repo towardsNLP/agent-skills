@@ -86,7 +86,7 @@ the profile names no contracts file.
 ## Step 9 — Regenerate the shared state index
 
 Rewrite `planning/STATE.md` whole: a derived index over the per-contributor state files and
-this sync entry. Set `state_as_of` to the date of the entry you just wrote. Under 400 words,
+this sync entry. Set `state_as_of` to the date of the entry you just wrote. Under 300 words,
 links rather than quotes, oldest cut first.
 
 **This skill is the only writer of `planning/STATE.md`**, which is what keeps it free of

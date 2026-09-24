@@ -25,6 +25,9 @@ from pathlib import Path
 
 PROFILE_DEFAULT = Path("planning/agent/profile.md")
 DEFAULT_MAX_CHARS = 2500
+# Below this the fixed blocked-card message alone does not fit, so the budget
+# could not be honoured even by returning nothing useful. Refuse instead.
+MIN_MAX_CHARS = 800
 LONG_FIELD_CHARS = 240
 
 _PROFILE_FIELD = re.compile(r"^\s*-\s+\*\*([A-Za-z_][A-Za-z0-9_]*):\*\*\s*(.*)$")
@@ -45,6 +48,14 @@ def path_value(value: str) -> str:
         if separator in value:
             value = value.split(separator, 1)[0]
     return value.strip().strip("`").rstrip(".")
+
+
+def contained(root: Path, path: Path) -> bool:
+    """Check that a path stays inside the project once symlinks are followed."""
+    try:
+        return path.resolve().is_relative_to(root.resolve())
+    except OSError:
+        return False
 
 
 def read_text(path: Path) -> str:
@@ -128,7 +139,9 @@ def roster_contains(profile_text: str, contributor: str) -> bool | None:
     )
     if not match or "contributors" not in match.group(1).casefold():
         return None
-    return contributor.casefold() in match.group(1).casefold()
+    # Whole name only. A substring test makes "Al" a member of a roster listing Alice.
+    bounded = rf"(?<![\w-]){re.escape(contributor)}(?![\w-])"
+    return re.search(bounded, match.group(1), re.IGNORECASE) is not None
 
 
 def resolve_state(root: Path, profile: dict[str, str], contributor: str) -> Path | None:
@@ -186,14 +199,19 @@ def ticket_root(profile: dict[str, str]) -> str:
 
 
 def resolve_ticket(root: Path, profile: dict[str, str], task: str) -> Path | None:
-    """Resolve an exact path or an unambiguous ``<spec-id>/<number>`` shorthand."""
+    """Resolve an exact path or an unambiguous ``<spec-id>/<number>`` shorthand.
+
+    A task that names a file outside the project resolves to ``None``. Reading it
+    would widen the boundary this helper exists to hold, and an escaping path has no
+    project-relative rendering for the card.
+    """
     task = path_value(task)
     if task.casefold() in _NONE:
         return None
 
     direct = root / task
     if direct.is_file():
-        return direct
+        return direct.resolve() if contained(root, direct) else None
 
     match = re.fullmatch(r"([^/]+)/([0-9]+)", task)
     if not match:
@@ -204,7 +222,10 @@ def resolve_ticket(root: Path, profile: dict[str, str], task: str) -> Path | Non
     # Shorthand lookup is deliberately narrow: one matching ticket is required.
     for spec_dir in base.glob(f"{spec_prefix}*"):
         hits.extend(spec_dir.glob(f"{number.zfill(2)}-*.md"))
-    return sorted(hits)[0] if len(hits) == 1 else None
+    if len(hits) != 1:
+        return None
+    # `ticket_dir` comes from the profile and may itself point outside the project.
+    return hits[0].resolve() if contained(root, hits[0]) else None
 
 
 def extract_branch(value: str) -> str:
@@ -262,6 +283,16 @@ class SessionCard:
         """Join card lines using the exact representation used for budget checks."""
         return "\n".join(lines).strip() + "\n"
 
+    def _fit(self, lines: list[str], heading: str, items: list[str], max_chars: int) -> list[str]:
+        """Append whichever complete items fit, adding the heading only if one does."""
+        heading_added = False
+        for item in items:
+            candidate = [*(lines if heading_added else [*lines, "", heading]), item]
+            if len(self._output(candidate)) <= max_chars:
+                lines = candidate
+                heading_added = True
+        return lines
+
     def _blocked_output(self, root: Path, max_chars: int) -> str:
         """Fail closed without returning a plausible but semantically partial task."""
         lines = [
@@ -287,15 +318,17 @@ class SessionCard:
             if len(self._output(candidate)) <= max_chars:
                 lines = candidate
 
-        source_heading_added = False
-        for source in self._shown_sources(root):
-            prefix = [*lines, "", "## Sources"] if not source_heading_added else lines
-            candidate = [*prefix, f"- `{source}`"]
-            if len(self._output(candidate)) <= max_chars:
-                lines = candidate
-                source_heading_added = True
-
-        return self._output(lines)
+        # A blocked card is the one that most needs these: a foreign claim or a trunk
+        # branch is what should stop the session, and dropping them first would leave
+        # the conflict invisible exactly when the card cannot show the work.
+        lines = self._fit(
+            lines, "## Warnings", [f"- {one_line(w)}" for w in self.warnings], max_chars
+        )
+        return self._output(
+            self._fit(
+                lines, "## Sources", [f"- `{s}`" for s in self._shown_sources(root)], max_chars
+            )
+        )
 
     def render(self, root: Path, max_chars: int) -> str:
         """Render the full card, or an explicitly blocked atomic-field fallback."""
@@ -326,6 +359,8 @@ def build_packet(
     max_chars: int = DEFAULT_MAX_CHARS,
 ) -> str:
     """Resolve project routing metadata and return one bounded session card."""
+    if max_chars < MIN_MAX_CHARS:
+        raise ValueError(f"max_chars must be at least {MIN_MAX_CHARS}")
     root = root.resolve()
     profile_path = root / PROFILE_DEFAULT
     profile_text = read_text(profile_path)
@@ -384,7 +419,7 @@ def build_packet(
             )
     elif task or state_ticket:
         card.warnings.append(
-            f"Ticket could not be resolved from {one_line(task or state_ticket)!r}."
+            f"No ticket inside the project resolves from {one_line(task or state_ticket)!r}."
         )
     else:
         card.add("Governing agreement", state.get("governing_spec", ""), state_path)
@@ -403,7 +438,10 @@ def build_packet(
     diary_date = latest_date(diary_path)
     if not state_as_of:
         card.warnings.append("State has no state_as_of date; freshness is unknown.")
-    elif diary_date and diary_date > state_as_of:
+    elif not diary_date:
+        # Saying "current" here would report a comparison that never happened.
+        card.warnings.append(f"No diary entry to compare against; state_as_of={state_as_of}.")
+    elif diary_date > state_as_of:
         card.warnings.append(
             f"State is stale: state_as_of={state_as_of}, newest diary entry={diary_date}."
         )
@@ -442,8 +480,8 @@ def parser() -> argparse.ArgumentParser:
 def main() -> int:
     """Validate CLI-only limits, print the packet, and return a shell status."""
     args = parser().parse_args()
-    if args.max_chars < 800:
-        print("--max-chars must be at least 800", file=sys.stderr)
+    if args.max_chars < MIN_MAX_CHARS:
+        print(f"--max-chars must be at least {MIN_MAX_CHARS}", file=sys.stderr)
         return 2
     print(
         build_packet(
