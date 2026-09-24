@@ -39,6 +39,15 @@ for DEST in "${DESTS[@]}"; do
         ;;
     esac
   fi
+  # `mkdir -p` fails on a path that exists but is not a directory, and on a symlink
+  # with nothing behind it. Reaching that failure in the linking loop below would put
+  # it after the other destination had already been rewritten, so catch it here.
+  # -e is false for a dangling symlink, which is why -L is tested as well.
+  if { [ -e "$DEST" ] || [ -L "$DEST" ]; } && [ ! -d "$DEST" ]; then
+    echo "error: $DEST is not a directory." >&2
+    echo "Move it aside or remove it yourself, then re-run." >&2
+    exit 1
+  fi
   for dir in "${PERSONAL_DIRS[@]}"; do
     for src in "$REPO/$dir"/*/; do
       target="$DEST/$(basename "${src%/}")"
