@@ -109,8 +109,10 @@ def section_fields(text: str, section: str | None = None) -> dict[str, str]:
 def git_value(root: Path, *args: str) -> str:
     """Run a bounded, read-only git query and return an empty string on failure."""
     try:
+        # S607: `git` is resolved from PATH on purpose. This script runs in whatever
+        # workspace a host repo checks it out into, so an absolute path is not portable.
         result = subprocess.run(  # noqa: S603
-            ["git", *args],
+            ["git", *args],  # noqa: S607
             cwd=root,
             capture_output=True,
             text=True,
