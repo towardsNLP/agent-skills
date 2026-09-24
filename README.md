@@ -1,7 +1,7 @@
 # Agent skills
 
-Twenty-two skills for Claude Code and Codex, grouped by what they are for. Some I wrote, some I
-adapted, some are vendored unchanged with attribution.
+Twenty-two skills for Claude Code, Codex and other hosts, grouped by what they are for. Some I
+wrote, some I adapted, some are vendored unchanged with attribution.
 
 ```
 session/     start-session  end-session  sync-progress  wrap-day
@@ -84,7 +84,7 @@ its description; `"off"` hides it.
 
 | Skill | Invocation | What it is for |
 |---|---|---|
-| `start-session` | user | Load the minimum context the task needs and produce a task brief. Read-only. |
+| `start-session` | user | Return a bounded session card through host-provided isolation or a deterministic helper. Read-only. |
 | `end-session` | user | Log the session to your own diary and regenerate your own state file. |
 | `sync-progress` | user | Consolidate diaries into the shared planning documents. Lead only. |
 | `wrap-day` | user | Run `end-session` then `sync-progress`, aborting if the first fails. |
@@ -173,10 +173,11 @@ archetypes duplicated across five repositories, each fork accumulating its own e
 learned in one place reached the others only when someone hand-carried it. Deduplicated in
 September 2026.
 
-`start-session`'s subagent fallback and the one-writer-per-file rule come from pstack's
+`start-session`'s isolated-worker path and the one-writer-per-file rule come from pstack's
 `principle-guard-the-context-window` and `principle-separate-before-serializing-shared-state`:
-route bulk reading to subagents and keep summaries in the main thread; eliminate a shared write
-target rather than trying to lock it.
+route discovery outside the main context and return only a bounded card; eliminate a shared write
+target rather than trying to lock it. The skill names no worker type or model. Claude Code, Codex
+and other hosts may use different isolation mechanisms without changing the workflow contract.
 
 Codex `agents/openai.yaml` sidecars were dropped throughout — they configure a Cursor-side policy
 that does not apply here.

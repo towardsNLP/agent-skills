@@ -15,8 +15,8 @@ test:
 # and chasing whichever preview rules this machine's ruff happens to enable produces
 # churn that no host asked for. The gate that matters is the host's.
 lint:
-	ruff check tools/ tests/ --select E,F,W,I --line-length 100
-	ruff format --check tools/ tests/ --line-length 100
+	ruff check tools/ session/start-session/scripts/ tests/ --select E,F,W,I --line-length 100
+	ruff format --check tools/ session/start-session/scripts/ tests/ --line-length 100
 
 # Copy the status script into a project that vendors it. The project's CI should
 # diff its copy against this source; a silent fork is how one repo ends up

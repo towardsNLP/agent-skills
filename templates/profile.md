@@ -22,10 +22,11 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **diary_dir:** e.g. `planning/diaries/`
 - **diary_filename:** e.g. `<first>-diary.md`; say how name collisions are disambiguated
 - **diary_header_text:** the boilerplate a new diary opens with
+- **state_dir:** `planning/agent/state/` — one generated file per contributor, `<first>.md`
+- **shared_state_path:** `planning/STATE.md` — optional derived index written by `/sync-progress`
 
 ## Shared planning documents
 
-- **state_path:** `planning/STATE.md` — the generated file `/start-session` reads
 - **progress_log_path:**
 - **progress_log_ordering:** `append` (oldest first) or `prepend` (newest first)
 - **plan_path:** the master plan
@@ -94,7 +95,8 @@ second copy of their content.
 - **branch_convention:** the format and the allowed types or owner prefixes
 - **trunk_and_pointers:** trunk, integration, release and deploy branches, and what merging
   to each one means
-- **git_scope_for_backfill:** how `/start-session` and `/sync-progress` scope `git log`
+- **git_scope_for_backfill:** how `/sync-progress` scopes `git log`; session startup never runs a
+  backfill scan
 
 ## Gates and scope
 
@@ -112,8 +114,9 @@ second copy of their content.
 
 ## Reading map
 
-- **task_category_map:** task category to the documents `/start-session` should load for it.
-  This is the main lever on how much context a session costs — keep each category short.
+- **task_category_map:** task category to the exact documents or headings a confirmed task may
+  load on demand. `/start-session` returns these as pointers; it does not load them. This is the
+  main lever on context cost, so prefer section anchors over whole documents.
 - **open_questions_source:** where unresolved questions are tracked
 
 ## Schedule and stakeholders

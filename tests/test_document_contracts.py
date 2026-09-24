@@ -54,9 +54,17 @@ def test_ticket_template_does_not_ship_a_pr_placeholder():
 
 def test_start_session_reads_the_real_freshness_fields():
     skill = read("session/start-session/SKILL.md")
-    assert "state_as_of" in skill
-    assert "tail -1" in skill
+    helper = read("session/start-session/scripts/context_packet.py")
+    assert "state_as_of" in helper
+    assert "_DATE_HEADING" in helper
     assert "grep -m1 -h '^## 20'" not in skill
+
+
+def test_profile_separates_personal_state_from_shared_index():
+    profile = read("templates/profile.md")
+    assert "**state_dir:**" in profile
+    assert "**shared_state_path:**" in profile
+    assert "**state_path:**" not in profile
 
 
 def test_portable_skills_do_not_name_the_claude_skill_tool_or_transcript_path():

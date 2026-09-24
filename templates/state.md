@@ -16,7 +16,7 @@ The shared `planning/STATE.md` is an **index, not a store**: one line per thread
 where the detail lives. Because it is derived, a merge conflict is resolved by regenerating
 it, never by hand-merging.
 
-It has a hard budget: **400 words**. Past that it stops being a summary and becomes another
+It has a hard budget: **300 words**. Past that it stops being a summary and becomes another
 document to read. Anything that does not fit is a pointer, not prose.
 
 Copy the shape below.
@@ -33,7 +33,9 @@ Copy the shape below.
 - **Branch:** `<current topic branch>`
 - **Phase / workstream:** `<id — short name>`
 - **Work kind:** `<build | experiment | knowledge-revision>`
+- **Ticket:** `<path, or "none">`
 - **Governing spec:** `<path, or "none — gap">`
+- **Context anchors:** `<exact headings or sections needed next; omit when ticket.Governs supplies them>`
 - **Question:** `<active hypothesis or competency question; omit for ordinary build work>`
 - **Evidence context:** `<dataset/model/ontology/artifact versions, or "none">`
 - **Last verified:** `<command plus artifact or commit, or "none">`
@@ -49,7 +51,7 @@ Copy the shape below.
 
 ## Open
 
-<!-- at most five. A blocker with no owner and no date is not a blocker, it is a worry. -->
+<!-- at most three. A blocker with no owner and no date is not a blocker, it is a worry. -->
 
 - `<blocker>` — owner, waiting since YYYY-MM-DD
 - `<open question>` → `<where it is tracked>`
@@ -77,10 +79,11 @@ Copy the shape below.
 - **Write only the file you own.** See the table above.
 
 - **Rewrite it whole.** It is a snapshot, not a log. Never append.
-- **Set `state_as_of`** to the date of the newest entry it reflects, not today's date. This
-  is what lets `/start-session` detect staleness with one `grep` rather than a read.
+- **Set `state_as_of`** to the date of the newest entry it reflects, not today's date. The
+  startup helper compares this field with diary headings without loading either file into the
+  model context.
 - **Link, never quote.** A line that quotes the progress log will drift from it.
-- **Three recent entries, five open items.** Cut oldest first.
+- **Three recent entries, three open items.** Cut oldest first.
 - **No narrative.** If a sentence explains rather than states, it belongs in the diary.
 - The word budget is the point. A `STATE.md` that has grown to 1,500 words has recreated the
   problem it was written to solve.

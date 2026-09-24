@@ -68,11 +68,12 @@ Don't pad empty sections. Friction matters more than form here.
 
 Rewrite `planning/agent/state/<contributor>.md` whole, to the shape in the plugin's
 `templates/state.md`. Set `state_as_of` to the date of the entry you just wrote. Keep it
-under 400 words, link rather than quote, and cut oldest first.
+under 300 words, link rather than quote, and cut oldest first.
 
-Record the work kind, active hypothesis or competency question, evidence versions and last
-verified command when they apply. "The run completed" is an observation. A hypothesis result is a
-separate statement tied to its registered predicate.
+Record the ticket path and exact context anchors along with the work kind, active hypothesis or
+competency question, evidence versions and last verified command when they apply. Prefer the
+ticket's `Governs` field over restating anchors in state. "The run completed" is an observation.
+A hypothesis result is a separate statement tied to its registered predicate.
 
 **Write only your own file**, the same rule as diaries. Never write another contributor's
 state file, and never write a shared one. One writer per file is what lets parallel sessions
