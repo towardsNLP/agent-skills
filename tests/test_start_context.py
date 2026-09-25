@@ -316,3 +316,49 @@ def test_skill_is_model_neutral_and_runs_the_script_without_delegating() -> None
     assert "Do not delegate this command" in skill
     assert "isolated worker, subagent or fork" in skill
     assert "vendor-specific agent type" in skill
+
+
+@pytest.mark.parametrize("none_word", ["none", "None", "—", "-", "n/a"])
+def test_a_none_word_ticket_is_not_reported_as_unresolvable(tmp_path: Path, none_word: str) -> None:
+    """`templates/state.md` says to write `<path, or "none">`, so "none" must not warn.
+
+    `resolve_ticket` has always treated a none-word as absent; the warning branch tested the raw
+    string's truthiness instead, so a state file written exactly as the template instructs reported
+    a defect on every session card. That is the normal condition of a repository before its first
+    ticket is cut — AISE sat there for a whole migration.
+    """
+    root = project(tmp_path)
+    state = root / "planning/agent/state/dana.md"
+    state.write_text(
+        state.read_text(encoding="utf-8").replace(
+            "- **Ticket:** `planning/tickets/P2.3-vocabulary/03-revise-parent-term.md`",
+            f"- **Ticket:** {none_word}",
+        ),
+        encoding="utf-8",
+    )
+
+    packet = context_packet.build_packet(root, contributor=CONTRIBUTOR)
+
+    assert "No ticket inside the project resolves" not in packet
+    # The governing agreement is what the else-branch offers instead, so prove the branch it
+    # fell through to is the useful one rather than merely silent.
+    assert "spec.md" in packet
+
+
+def test_an_unresolvable_ticket_path_still_warns(tmp_path: Path) -> None:
+    """Mutation guard for the test above: the warning must survive for a real bad path.
+
+    Without this, widening the none-word check to swallow every value would pass.
+    """
+    root = project(tmp_path)
+    state = root / "planning/agent/state/dana.md"
+    state.write_text(
+        state.read_text(encoding="utf-8").replace(
+            "03-revise-parent-term.md", "99-does-not-exist.md"
+        ),
+        encoding="utf-8",
+    )
+
+    assert "No ticket inside the project resolves" in context_packet.build_packet(
+        root, contributor=CONTRIBUTOR
+    )
