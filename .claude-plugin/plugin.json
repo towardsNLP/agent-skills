@@ -1,7 +1,7 @@
 {
   "name": "sdd",
-  "version": "0.5.0",
-  "description": "Spec-driven workflow skills: deconstruct a project into specs, record decisions and write a spec, cut it into tickets, implement one per session, plus session management. Ships the three skills the workflow refuses to proceed without \u2014 grilling before a spec's scope, domain modelling before a glossary term, and test-first before an implementation. Project-neutral; each repo supplies its own planning/agent/profile.md.",
+  "version": "0.6.0",
+  "description": "Spec-driven workflow skills: deconstruct a project into specs, record decisions and write a spec, cut it into tickets, implement one per session, plus session management. Ships the three skills the workflow refuses to proceed without \u2014 grilling before a spec's scope, domain modelling before a glossary term, and test-first before an implementation \u2014 and, since 0.6.0, the whole craft/ and thinking/ set as well, so a team installs one plugin rather than one plugin plus a symlink script. Project-neutral; each repo supplies its own planning/agent/profile.md.",
   "author": {
     "name": "Ahmad Hashemi"
   },
@@ -30,6 +30,15 @@
     "./thinking/grill-me",
     "./knowledge/domain-modeling",
     "./craft/tdd",
-    "./craft/codebase-design"
+    "./craft/codebase-design",
+    "./thinking/grilling",
+    "./thinking/grill-with-docs",
+    "./thinking/research",
+    "./thinking/teach",
+    "./thinking/to-questionnaire",
+    "./thinking/writing-for-agents",
+    "./craft/handoff",
+    "./craft/show-me-your-work",
+    "./craft/unslop"
   ]
 }
