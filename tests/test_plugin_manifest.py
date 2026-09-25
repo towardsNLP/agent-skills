@@ -15,6 +15,7 @@ Two properties, both cheap, neither previously asserted:
 The second is the one that matters. It is what makes the manifest a closed set rather than a
 list someone remembers to extend.
 """
+
 from __future__ import annotations
 
 import json
@@ -68,8 +69,11 @@ def test_a_declared_skill_never_depends_on_an_undeclared_one():
         text = (ROOT / skill / "SKILL.md").read_text(encoding="utf-8")
         refs = set(re.findall(r"`/([a-z][a-z0-9-]+)`", text))
         # `domain-modeling` is referred to by bare name rather than as a slash-command.
-        refs |= {m for m in re.findall(r"`([a-z][a-z0-9-]*-[a-z0-9-]+)`", text) if m in
-                 {d.split("/")[-1] for d in _all_skill_dirs()}}
+        refs |= {
+            m
+            for m in re.findall(r"`([a-z][a-z0-9-]*-[a-z0-9-]+)`", text)
+            if m in {d.split("/")[-1] for d in _all_skill_dirs()}
+        }
         refs -= {Path(skill).name}
         refs -= set(NOT_OURS)
         undeclared = refs - names
@@ -83,8 +87,7 @@ def test_a_declared_skill_never_depends_on_an_undeclared_one():
 
 def _all_skill_dirs() -> list[str]:
     groups = ("session", "sdd", "thinking", "knowledge", "craft")
-    return [str(p.parent.relative_to(ROOT))
-            for g in groups for p in (ROOT / g).rglob("SKILL.md")]
+    return [str(p.parent.relative_to(ROOT)) for g in groups for p in (ROOT / g).rglob("SKILL.md")]
 
 
 def test_the_dependency_check_would_notice_an_undeclared_skill():

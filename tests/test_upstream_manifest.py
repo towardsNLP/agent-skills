@@ -38,6 +38,23 @@ def test_skill_entries_resolve_and_use_known_statuses():
         assert skill["changes"]
 
 
+def test_notice_accounts_for_every_borrowed_skill():
+    """A hand-maintained attribution list is one that quietly goes wrong.
+
+    NOTICE is what the upstream MIT licences actually require to travel with a copy,
+    so an entry added to the manifest and forgotten here is a licensing defect, not a
+    formatting one.
+    """
+    notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
+    data = load_manifest()
+
+    missing = sorted({s["local_path"] for s in data["skills"]} - set(notice.split()))
+    assert not missing, f"borrowed skills absent from NOTICE: {missing}"
+
+    for source in data["sources"]:
+        assert source["repository"] in notice, source["id"]
+
+
 def test_vendored_skill_files_keep_the_pinned_content():
     for skill in load_manifest()["skills"]:
         if skill["status"] != "vendored":

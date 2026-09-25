@@ -2,6 +2,10 @@ MIT License
 
 Copyright (c) 2026 Ahmad Hashemi
 
+This copyright covers the original work in this repository. Parts of it are vendored
+or adapted from other MIT-licensed projects and remain the copyright of their authors;
+NOTICE lists those parts and reproduces the notices their licence requires.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -22,5 +26,5 @@ SOFTWARE.
 
 ---
 
-Some skills in this repository are adapted from third-party sources under their
-own terms. See the Origins table in README.md for per-skill attribution.
+Third-party attribution: NOTICE (copyright notices, per-skill), UPSTREAM.toml (source
+commit and content hash, machine-readable), README.md (the Origins table, in prose).
