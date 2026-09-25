@@ -1,7 +1,7 @@
 {
   "name": "sdd",
-  "version": "0.4.1",
-  "description": "Spec-driven workflow skills: deconstruct a project into specs, record decisions and write a spec, cut it into tickets, implement one per session, plus session management. Project-neutral; each repo supplies its own planning/agent/profile.md.",
+  "version": "0.5.0",
+  "description": "Spec-driven workflow skills: deconstruct a project into specs, record decisions and write a spec, cut it into tickets, implement one per session, plus session management. Ships the three skills the workflow refuses to proceed without \u2014 grilling before a spec's scope, domain modelling before a glossary term, and test-first before an implementation. Project-neutral; each repo supplies its own planning/agent/profile.md.",
   "author": {
     "name": "Ahmad Hashemi"
   },
@@ -12,7 +12,10 @@
     "planning",
     "specs",
     "progress",
-    "conventions"
+    "conventions",
+    "grilling",
+    "domain-modeling",
+    "tdd"
   ],
   "skills": [
     "./session/start-session",
@@ -23,6 +26,10 @@
     "./sdd/deconstruct",
     "./sdd/adr-spec",
     "./sdd/tickets",
-    "./sdd/implement"
+    "./sdd/implement",
+    "./thinking/grill-me",
+    "./knowledge/domain-modeling",
+    "./craft/tdd",
+    "./craft/codebase-design"
   ]
 }

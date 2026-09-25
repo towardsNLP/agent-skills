@@ -20,10 +20,21 @@ templates/   profile.md  state.md
 The grouping is not cosmetic: **`session/` and `sdd/` are project-scope, the other three are
 personal-scope**, and the two install completely differently.
 
-| Scope | Directories | How it installs | Who gets it |
+| Scope | What | How it installs | Who gets it |
 |---|---|---|---|
-| **Project** | `session/` `sdd/` | as a plugin, declared in a repo's `.claude/settings.json` | everyone who clones that repo |
-| **Personal** | `thinking/` `knowledge/` `craft/` | `bin/link.sh` symlinks them into `~/.claude/skills` and `~/.agents/skills` | me, in every project |
+| **Project** | the **13 skills `plugin.json` declares** — all of `session/` and `sdd/`, plus `grill-me`, `domain-modeling`, `tdd` and `codebase-design` | as a plugin, declared in a repo's `.claude/settings.json` | everyone who clones that repo |
+| **Personal** | everything in `thinking/` `knowledge/` `craft/` | `bin/link.sh` symlinks them into `~/.claude/skills` and `~/.agents/skills` | me, in every project |
+
+**Four skills are in both, and that is deliberate as of 0.5.0.** `adr-spec` refuses to write a
+spec's scope without a grilling and tells the user to run `/grill-me`; `deconstruct` refuses to
+author a glossary term and hands the gap to `domain-modeling`; `implement` says to use `/tdd`; and
+`tdd` sends the reader to `codebase-design` for the module and seam vocabulary. Declaring only the
+nine shipped a workflow that **stopped at its first real step** for anyone without the personal
+set. `tests/test_plugin_manifest.py` now refuses a manifest whose skills depend on a skill it does
+not ship — the fourth of the four was found by that test, not by reading.
+
+Being in both costs nothing: `bin/link.sh` makes symlinks, so a personal copy and the plugin copy
+are the same bytes, and the plugin's namespacing (`/sdd:tdd`) keeps the two invocations distinct.
 
 Claude Code resolves same-named skills in this order:
 
