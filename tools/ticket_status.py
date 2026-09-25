@@ -324,7 +324,14 @@ def main(argv: list[str] | None = None) -> int:
                     drift.append(f"{t.ident}: blocked by {b!r}, which does not exist")
 
     planned = parse_spec_map(spec_map)
-    written = {p.name for p in spec_root.iterdir() if p.is_dir()} if spec_root.is_dir() else set()
+    # Dot-directories are not specs -- the same rule the ticket root applies above.
+    # `.ipynb_checkpoints` beside a spec tree is Jupyter litter, and counting it
+    # reports "spec written, no tickets cut" against a directory nobody authored.
+    written = (
+        {p.name for p in spec_root.iterdir() if p.is_dir() and not p.name.startswith(".")}
+        if spec_root.is_dir()
+        else set()
+    )
     for ident in planned:
         if not any(name.split("-", 1)[0] == ident or name == ident for name in written):
             drift.append(f"{ident}: planned in the spec map, no spec written")
