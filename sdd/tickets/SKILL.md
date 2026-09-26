@@ -10,7 +10,7 @@ A **ticket is a tracking record used to manage the work**, not a design document
 becomes true, what gates it, what proves it done, and who has it. The design lives in the spec and
 the contracts; the implementation is discovered while building.
 
-Read `planning/agent/profile.md` for `spec_dir`, `ticket_dir`, `contracts_path`, `sme_register_path`
+Read `planning/agent/profile.md` for `spec_dir`, `spec_path_pattern`, `ticket_dir`, `contracts_path`, `sme_register_path`
 and `ticket_status_command`.
 
 Runs straight after `/adr-spec`, in the same context window: the seams are settled, and **you
@@ -18,7 +18,8 @@ cannot size a ticket until you know where it gets verified.**
 
 ## Step 1 — Load one spec, and only one
 
-Read `spec_dir/<spec-id>/spec.md`, then `amendments.md` in the same directory when it exists, then
+Read the spec at the path **`spec_path_pattern` declares** — never assume
+`spec_dir/<spec-id>/spec.md` — then `amendments.md` in the same directory when it exists, then
 the contract sections its Anchors cite. Nothing else. The effective agreement is the frozen spec
 followed by approved amendments in date order. If it has no Seams section filled in, stop: there
 is nothing to size against.

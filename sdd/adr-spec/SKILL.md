@@ -96,7 +96,10 @@ wait for the user.**
 
 ## Step 5 — Write the spec
 
-For a new spec, create `spec_dir/<spec-id>/spec.md`. Read `spec_template_path` and use it verbatim;
+For a new spec, create the file at the path **`spec_path_pattern` declares**, substituting each
+placeholder it names. Do not assume `spec_dir/<spec-id>/spec.md`: that is one project's answer, and a
+project whose pattern carries a slug gets a spec in the wrong place and a tree that no longer matches
+its own decision record. Read `spec_template_path` and use it verbatim;
 if the profile names none, use [`references/spec-skeleton.md`](references/spec-skeleton.md). The
 project's template always wins where one exists.
 

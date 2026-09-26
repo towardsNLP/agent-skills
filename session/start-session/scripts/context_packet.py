@@ -130,6 +130,65 @@ def contributor_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", first.casefold())
 
 
+def roster_names(profile_text: str) -> list[str]:
+    """Full contributor names from the profile roster, or ``[]`` when none is declared."""
+    match = re.search(
+        r"^## Identity and people\s*$([\s\S]*?)(?=^## |\Z)", profile_text, re.MULTILINE
+    )
+    if not match:
+        return []
+    section = match.group(1)
+    start = section.casefold().find("**contributors:**")
+    if start < 0:
+        return []
+    names: list[str] = []
+    for line in section[start:].splitlines()[1:]:
+        if not line.strip():
+            continue
+        if not line.startswith((" ", "\t")):
+            break  # dedented back to another profile key
+        entry = line.strip()
+        if not entry.startswith("- "):
+            continue
+        # "Dana Okafor — platform, handing off" -> "Dana Okafor". An em dash separates
+        # the name from the role; a plain hyphen does not, because names contain them.
+        names.append(entry[2:].split("—")[0].strip())
+    return [name for name in names if name]
+
+
+def full_name_slug(name: str) -> str:
+    """The surname-disambiguated slug the profile convention declares.
+
+    ``Dana Okafor`` -> ``dana-okafor``; ``Maria Del Rio`` -> ``maria-delrio``.
+    First name, hyphen, then the remaining parts run together — which is the form the
+    profile already gives as its own example, so the script matches the declared
+    convention rather than inventing a second one.
+    """
+    parts = [re.sub(r"[^a-z0-9]+", "", part.casefold()) for part in name.split()]
+    parts = [part for part in parts if part]
+    if len(parts) < 2:
+        return ""
+    return f"{parts[0]}-{''.join(parts[1:])}"
+
+
+def ambiguous_first_names(profile_text: str) -> set[str]:
+    """Slugs that more than one roster name reduces to.
+
+    **The convention is first-name-based and the roster is not.** `state_dir/<first>.md`
+    and `<first>-diary.md` both key on the first name, so two contributors sharing one --
+    `Dana Okafor` and `Dana Whitfield`, say -- resolve to the same files. The
+    resolvers below refuse rather than guess, because the failure is silent otherwise: the
+    card loads, names the right contributor, and carries someone else's state and work.
+    That also breaks the one-writer rule the state convention rests on.
+    """
+    counts: dict[str, int] = {}
+    for name in roster_names(profile_text):
+        slug = contributor_slug(name)
+        if slug:
+            counts[slug] = counts.get(slug, 0) + 1
+    return {slug for slug, count in counts.items() if count > 1}
+
+
 def roster_contains(profile_text: str, contributor: str) -> bool | None:
     """Check the contributor roster, or return ``None`` when no roster is declared."""
     if not contributor:
@@ -146,33 +205,80 @@ def roster_contains(profile_text: str, contributor: str) -> bool | None:
     return re.search(bounded, match.group(1), re.IGNORECASE) is not None
 
 
-def resolve_state(root: Path, profile: dict[str, str], contributor: str) -> Path | None:
-    """Resolve one contributor state file without opening every candidate."""
+def resolve_state(
+    root: Path,
+    profile: dict[str, str],
+    contributor: str,
+    ambiguous: set[str] | None = None,
+) -> Path | None:
+    """Resolve one contributor state file without opening every candidate.
+
+    Returns ``None`` when the first name is shared on the roster: a wrong state file is
+    worse than none, because nothing downstream can tell it apart from the right one.
+    """
     state_dir_value = path_value(profile.get("state_dir", "planning/agent/state/"))
     state_dir = root / state_dir_value
     slug = contributor_slug(contributor)
 
+    # The profile declares the rule -- "collisions disambiguated by surname" -- so try the
+    # surname-disambiguated name first, whether or not this first name collides. A project
+    # that has never had a collision is unaffected; one that has gets the right file.
+    full = full_name_slug(contributor)
+    if full and full != slug and (state_dir / f"{full}.md").is_file():
+        return state_dir / f"{full}.md"
+    if slug and slug in (ambiguous or set()):
+        return None
+
     if slug and (state_dir / f"{slug}.md").is_file():
         return state_dir / f"{slug}.md"
 
-    candidates = sorted(path for path in state_dir.glob("*.md") if not path.name.startswith("."))
-    if slug:
-        matching = [path for path in candidates if slug in path.stem.casefold()]
-        if len(matching) == 1:
-            return matching[0]
-    return candidates[0] if len(candidates) == 1 else None
+    # **NO SINGLETON FALLBACK** [2026-09-25]. This used to end
+    # `return candidates[0] if len(candidates) == 1 else None`, so in a repository with one
+    # state file *every* contributor resolved to it. Reproduced on a live roster: two
+    # contributors with no state file of their own each received a third's branch,
+    # evidence and next action, on a card headed with their own name. A convenience for
+    # the first contributor turns into silent misattribution for the second, and the state
+    # convention's one-writer rule cannot survive it.
+    #
+    # The substring match below stays: it is bounded by the slug, so `dana` finds
+    # `dana-okafor.md` but `maria` finds nothing. An empty result is the right answer --
+    # a missing state file is normal before a contributor's first `/end-session`, and the
+    # card says so.
+    if not slug:
+        return None
+    matching = [path for path in sorted(state_dir.glob("*.md"))
+                if not path.name.startswith(".") and path.stem.casefold().startswith(slug)]
+    return matching[0] if len(matching) == 1 else None
 
 
-def resolve_diary(root: Path, profile: dict[str, str], contributor: str) -> Path | None:
+def resolve_diary(
+    root: Path,
+    profile: dict[str, str],
+    contributor: str,
+    ambiguous: set[str] | None = None,
+) -> Path | None:
     """Resolve the contributor diary used only for the freshness comparison."""
     diary_dir = root / path_value(profile.get("diary_dir", "planning/diaries/"))
     slug = contributor_slug(contributor)
     pattern = path_value(profile.get("diary_filename", "<first>-diary.md"))
+
+    full = full_name_slug(contributor)
+    if full and full != slug:
+        disambiguated = diary_dir / pattern.replace("<first>", full).replace("<name>", full)
+        if disambiguated.is_file():
+            return disambiguated
+    if slug and slug in (ambiguous or set()):
+        return None
+
     candidate = diary_dir / pattern.replace("<first>", slug).replace("<name>", slug)
     if candidate.is_file():
         return candidate
 
-    candidates = sorted(diary_dir.glob(f"*{slug}*.md")) if slug else []
+    # Anchored, not `*{slug}*`: a substring glob matches a name that merely contains the
+    # slug. Same class as the singleton fallback removed from `resolve_state` above, and
+    # cheaper to fix than to reason about each time the roster changes.
+    candidates = sorted(p for p in diary_dir.glob("*.md")
+                        if p.stem.casefold().startswith(slug)) if slug else []
     return candidates[0] if len(candidates) == 1 else None
 
 
@@ -376,14 +482,26 @@ def build_packet(
     else:
         card.warnings.append(f"Missing {PROFILE_DEFAULT}; project-specific routing is unavailable.")
 
+    ambiguous = ambiguous_first_names(profile_text)
+    shared_first_name = contributor_slug(contributor) in ambiguous
+
     # Only the ``Now`` section becomes candidate output; historical state is ignored.
-    state_path = resolve_state(root, profile, contributor)
+    state_path = resolve_state(root, profile, contributor, ambiguous)
     state_text = read_text(state_path) if state_path else ""
     state = section_fields(state_text, "Now")
     state_as_of_match = re.search(r"^\*\*state_as_of:\*\*\s*(\d{4}-\d{2}-\d{2})", state_text, re.M)
     state_as_of = state_as_of_match.group(1) if state_as_of_match else ""
     if state_path:
         card.sources.append(state_path)
+    elif shared_first_name:
+        sharing = [n for n in roster_names(profile_text)
+                   if contributor_slug(n) == contributor_slug(contributor)]
+        card.warnings.append(
+            f"{contributor or 'This user'} shares a first name with "
+            f"{', '.join(n for n in sharing if n != contributor) or 'another contributor'} "
+            f"on the roster, and state and diary files key on the first name. Refusing to "
+            f"guess which is yours -- name the task explicitly."
+        )
     else:
         card.warnings.append("Contributor state is missing or ambiguous; name the task explicitly.")
 
@@ -438,17 +556,42 @@ def build_packet(
 
     # The diary is reduced to date headings inside this process. Its entries never
     # become part of the generated card.
-    diary_path = resolve_diary(root, profile, contributor)
+    diary_path = resolve_diary(root, profile, contributor, ambiguous)
     diary_date = latest_date(diary_path)
+    # **The diary is not the only thing that moves.** Comparing state only against diary
+    # headings reported "current" across seven commits that reversed a decision the state
+    # file still described, because no diary entry had been written in between. Committed
+    # work is the other clock, and it is the one that makes state wrong.
+    # **Revision identity, not a calendar date** [2026-09-25]. This was `--format=%cs`, which
+    # reduces freshness to `YYYY-MM-DD`: state committed at 20:11 and a HEAD three commits
+    # later at 20:27 compared equal, so a card presented "no SOURCE.lock" and "20 commits"
+    # as current on a tree that had both. Most stale state is same-day -- that is what a
+    # working session looks like -- so a day-resolution clock misses the common case and
+    # catches only the one somebody would already have noticed.
+    #
+    # Asking whether HEAD has moved past the state file's own last commit answers it at
+    # any resolution. Empty outside git, or before the file is committed; both fall
+    # through to the diary comparison rather than claiming freshness.
+    state_rev = (git_value(root, "log", "-1", "--format=%H", "--", str(state_path))
+                 if state_path else "")
+    head_rev = git_value(root, "rev-parse", "HEAD")
+    commits_since = ""
+    if state_rev and head_rev and state_rev != head_rev:
+        commits_since = git_value(root, "rev-list", "--count", f"{state_rev}..{head_rev}")
     if not state_as_of:
         card.warnings.append("State has no state_as_of date; freshness is unknown.")
-    elif not diary_date:
-        # Saying "current" here would report a comparison that never happened.
-        card.warnings.append(f"No diary entry to compare against; state_as_of={state_as_of}.")
-    elif diary_date > state_as_of:
+    elif diary_date and diary_date > state_as_of:
         card.warnings.append(
             f"State is stale: state_as_of={state_as_of}, newest diary entry={diary_date}."
         )
+    elif commits_since and commits_since != "0":
+        card.warnings.append(
+            f"State predates the work: {commits_since} commit(s) have landed since "
+            f"{state_rev[:8]}, which last wrote it. state_as_of={state_as_of}."
+        )
+    elif not diary_date:
+        # Saying "current" here would report a comparison that never happened.
+        card.warnings.append(f"No diary entry to compare against; state_as_of={state_as_of}.")
     else:
         card.add("State freshness", f"current as of {state_as_of}")
 

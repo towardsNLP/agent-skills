@@ -220,10 +220,39 @@ def test_dangling_blocking_edge_is_drift(project, capsys):
     assert "does not exist" in capsys.readouterr().err
 
 
-def test_planned_component_with_no_spec_is_drift(project, capsys):
+def test_planned_component_with_no_spec_is_reported_but_does_not_fail(project, capsys):
+    """The backlog is the work queue, not drift.
+
+    It used to exit 1. Every line is expected and the number only goes down, so a repo
+    mid-adoption was permanently red -- and a permanently red target is one people stop
+    reading, taking the four integrity findings with it. Reported on stdout; the exit code
+    answers integrity only.
+    """
     root = project({"P1-thing": [{}]}, map_rows=["| P1 | a thing | — |", "| P2 | unwritten | P1 |"])
+    assert status(root) == 0
+    out = capsys.readouterr()
+    assert "no spec written" in out.out
+    assert "no spec written" not in out.err
+
+
+def test_require_all_planned_makes_the_backlog_fail(project, capsys):
+    """The opt-in, for the day the backlog is meant to be empty."""
+    root = project({"P1-thing": [{}]}, map_rows=["| P1 | a thing | — |", "| P2 | unwritten | P1 |"])
+    assert status(root, "--require-all-planned") == 1
+    assert "planned component" in capsys.readouterr().err
+
+
+def test_a_backlog_never_masks_real_drift(project, capsys):
+    """The change must not soften the findings it sits beside.
+
+    A dangling blocking edge still fails by default, with a backlog present.
+    """
+    root = project(
+        {"P1-thing": [{"blocked": "P9-absent/03"}]},
+        map_rows=["| P1 | a thing | — |", "| P2 | unwritten | P1 |"],
+    )
     assert status(root) == 1
-    assert "no spec written" in capsys.readouterr().err
+    assert "does not exist" in capsys.readouterr().err
 
 
 def test_spec_with_no_tickets_is_drift(project, capsys):

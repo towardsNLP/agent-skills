@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 One ticket, one session. Open the bracket by claiming it, close it by recording what happened.
 
-Read `planning/agent/profile.md` for `ticket_dir`, `spec_dir`, `contracts_path`,
+Read `planning/agent/profile.md` for `ticket_dir`, `spec_dir`, `spec_path_pattern`, `contracts_path`,
 `ticket_status_command`, `branch_convention`, `sme_register_path` and the optional research or
 knowledge paths used by this ticket's work kind.
 
@@ -21,7 +21,8 @@ taking the same work.**
 
 ## Step 2 — Load exactly what the ticket names
 
-The ticket, its spec at `spec_dir/<spec-id>/spec.md`, `amendments.md` beside it when present, and
+The ticket, its spec at the path **`spec_path_pattern` declares** (never assumed to be
+`spec_dir/<spec-id>/spec.md`), `amendments.md` beside it when present, and
 the contract sections under **Governs**. Apply amendments in date order. Nothing else. That list
 is deliberate: a ticket is self-contained so a fresh session can execute it without reading the
 other tickets or the whole constitution.
@@ -86,7 +87,8 @@ identifier points at that path, and the divergence record is the ticket's most d
 
 ## Step 7 — If this was the last ticket, close the spec
 
-When every ticket for the spec has an Outcome, write `spec_dir/<spec-id>/acceptance.md`: one
+When every ticket for the spec has an Outcome, write `acceptance.md` **beside the spec**, in the
+directory `spec_path_pattern` resolves to: one
 compliance line per requirement in the effective agreement, which is `spec.md` followed by
 `amendments.md` in date order. Use PASS / MODIFIED / PARTIAL / SKIPPED / FAIL, with a reason for
 anything that is not PASS.

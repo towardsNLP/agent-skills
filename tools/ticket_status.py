@@ -6,13 +6,19 @@ own check, because a status someone has to remember to update is a status that
 goes stale: across three repositories, 95 acceptance boxes were written into specs
 and not one was ever ticked.
 
-The exit code is the point. It is non-zero when:
+The exit code is the point. It is non-zero on INTEGRITY drift:
 
   1. a ticket carries an Outcome but its check fails      -- closed on a lie
   2. a CLOSED ticket's check no longer resolves            -- the path moved
   3. a ticket is blocked by a ticket that does not exist  -- a dangling edge
-  4. a component in the spec map has no spec              -- planned, unwritten
-  5. a spec directory has no tickets                      -- written, uncut
+  4. a spec directory has no tickets                      -- written, uncut
+
+A component planned in the spec map with **no spec written** is reported and does
+NOT fail [2026-09-25]. It is the work queue, not a defect: every line is expected
+and the number only goes down. Counting it as drift made the target permanently
+red, which is the shape that teaches a reader to ignore an exit code -- and the
+four findings above go with it once ignored. `--require-all-planned` restores the
+old behaviour for the day the backlog is meant to be empty.
 
 A repo adopting this workflow mid-flight will have specs that predate ticketing
 and will never have tickets. Name them in the profile's `pre_workflow_specs`
@@ -106,6 +112,38 @@ class Ticket:
     @property
     def ident(self) -> str:
         return f"{self.spec_id}/{self.number}"
+
+
+def pad(number: str) -> str:
+    """Ticket numbers compare zero-padded, or `1` and `01` are different tickets."""
+    n = number.strip()
+    return n.zfill(2) if n.isdigit() else n
+
+
+def resolve_reference(citing_spec: str, ref: str) -> str:
+    """Resolve a `blocked_by` reference to the identity it names.
+
+    **Two defects, one line** [found by review 2026-09-25, both unexercised because no
+    ticket has ever been cut].
+
+    It was ``f"{t.spec_id}/{b.split('/')[-1].zfill(2)}"``. `split('/')[-1]` throws away
+    the spec segment of a *qualified* reference and the citing ticket's own spec is
+    substituted for it, so a ticket in `P2-consumer/` declaring
+    `blocked_by: P7-producer/03` was checked against `P2-consumer/03`.
+    Either it reports drift that does not exist, or -- worse -- it resolves against an
+    unrelated ticket that happens to share the number, and a genuinely dangling edge goes
+    unreported. Dangling blocking edges are one of the three defect classes this script
+    exists to catch, so the failure was silent in exactly the place it must not be.
+
+    The second is narrower: `known` holds numbers as written in the `# NN -- title`
+    heading, so a ticket titled `# 1` registers as `spec/1` while a reference to `1` was
+    padded to `01` and missed. Both sides are padded now.
+    """
+    ref = ref.strip()
+    if "/" in ref:
+        spec, _, number = ref.rpartition("/")
+        return f"{spec.strip()}/{pad(number)}"
+    return f"{citing_spec}/{pad(ref)}"
 
 
 def parse_ticket(path: Path, spec_id: str) -> Ticket:
@@ -288,6 +326,11 @@ def main(argv: list[str] | None = None) -> int:
         help="structure only: resolve paths and edges, run no checks",
     )
     ap.add_argument("--timeout", type=int, default=300, help="seconds per check")
+    ap.add_argument(
+        "--require-all-planned",
+        action="store_true",
+        help="also fail when a component planned in the spec map has no spec written",
+    )
     a = ap.parse_args(argv)
 
     root = a.root.resolve()
@@ -299,8 +342,9 @@ def main(argv: list[str] | None = None) -> int:
     spec_map = root / cfg.get("spec_map_path", "planning/spec-map.md")
 
     by_spec = collect(root, ticket_root)
-    known = {t.ident for ts in by_spec.values() for t in ts}
+    known = {f"{t.spec_id}/{pad(t.number)}" for ts in by_spec.values() for t in ts}
     drift: list[str] = []
+    backlog: list[str] = []
 
     for tickets in by_spec.values():
         for t in tickets:
@@ -320,7 +364,7 @@ def main(argv: list[str] | None = None) -> int:
                     + (f" -- {t.detail}" if t.detail else "")
                 )
             for b in t.blocked_by:
-                if f"{t.spec_id}/{b.split('/')[-1].zfill(2)}" not in known:
+                if resolve_reference(t.spec_id, b) not in known:
                     drift.append(f"{t.ident}: blocked by {b!r}, which does not exist")
 
     planned = parse_spec_map(spec_map)
@@ -332,9 +376,15 @@ def main(argv: list[str] | None = None) -> int:
         if spec_root.is_dir()
         else set()
     )
+    # **THE BACKLOG IS NOT DRIFT** [2026-09-25]. A component planned in the spec map with
+    # no spec written is the work queue, not a defect: it only ever goes down, and every
+    # line is expected. Counting it as drift made the target exit non-zero permanently,
+    # which is the shape that teaches people to ignore an exit code -- and once ignored,
+    # the integrity findings below go with it. Reported either way; it fails only under
+    # `--require-all-planned`, for the day the backlog is meant to be empty.
     for ident in planned:
         if not any(name.split("-", 1)[0] == ident or name == ident for name in written):
-            drift.append(f"{ident}: planned in the spec map, no spec written")
+            backlog.append(f"{ident}: planned in the spec map, no spec written")
     raw_exempt = re.split(r"[,\s]+", cfg.get("pre_workflow_specs", ""))
     grandfathered = {s.strip() for s in raw_exempt if s.strip()}
     exempt = []
@@ -367,14 +417,25 @@ def main(argv: list[str] | None = None) -> int:
     if exempt:
         print(f"{len(exempt)} predate ticketing and are exempt: {', '.join(exempt)}")
 
-    if not drift:
-        print("no drift")
+    if backlog:
+        # stdout, not stderr: it is a report, and it does not decide the exit status
+        # unless asked to.
+        print(f"\nspec backlog ({len(backlog)}) — planned, not yet written:")
+        for b in backlog:
+            print(f"  {b}")
+
+    if not drift and not (a.require_all_planned and backlog):
+        print("\nno drift" + (f"; {len(backlog)} in the backlog" if backlog else ""))
         return 0
 
     sys.stdout.flush()  # so the report lands above the drift, not interleaved with it
-    print(f"\ndrift ({len(drift)}):", file=sys.stderr)
-    for d in drift:
-        print(f"  {d}", file=sys.stderr)
+    if drift:
+        print(f"\ndrift ({len(drift)}):", file=sys.stderr)
+        for d in drift:
+            print(f"  {d}", file=sys.stderr)
+    if a.require_all_planned and backlog:
+        print(f"\n--require-all-planned: {len(backlog)} planned component(s) have no spec",
+              file=sys.stderr)
     return 1
 
 
