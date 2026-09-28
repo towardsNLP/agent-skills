@@ -70,6 +70,26 @@ def scalar(raw: str) -> str:
     return raw.strip().strip("`").rstrip(".").strip()
 
 
+def same_component(a: str, b: str) -> bool:
+    """Whether two directory names denote the same component.
+
+    The spec tree and the ticket tree may disagree about the form -- `B.9` in one,
+    `B.9-report-readiness` in the other -- and both are legitimate, because the
+    profile's `ticket_dir` pattern says `<spec-id>` without saying which form that
+    is. Comparing raw names keys one side by slug and the other by id, so a lookup
+    across the two trees can never hit.
+
+    The shorter name must be the id prefix of the longer AND stop on a hyphen
+    boundary. That boundary is the whole point: splitting at the first hyphen
+    instead would make `foo-bar` and `foo-baz` the same component, and `B.9` would
+    have to be told apart from `B.90-other` by luck.
+    """
+    if a == b:
+        return True
+    short, long = sorted((a, b), key=len)
+    return long.startswith(short + "-")
+
+
 def base_dir(pattern: str) -> str:
     """The fixed prefix of a path pattern, above the first placeholder.
 
@@ -402,15 +422,18 @@ def main(argv: list[str] | None = None) -> int:
         else set()
     )
     for ident in planned:
-        if not any(name.split("-", 1)[0] == ident or name == ident for name in written):
+        if not any(same_component(name, ident) for name in written):
             drift.append(f"{ident}: planned in the spec map, no spec written")
     raw_exempt = re.split(r"[,\s]+", cfg.get("pre_workflow_specs", ""))
     grandfathered = {s.strip() for s in raw_exempt if s.strip()}
+    # A ticket directory that exists but holds no ticket is NOT cut work, so the
+    # truthiness matters: an empty directory must still read as "no tickets cut".
+    ticketed = [name for name, tickets in by_spec.items() if tickets]
     exempt = []
     for name in sorted(written):
-        if by_spec.get(name):
+        if any(same_component(name, t) for t in ticketed):
             continue
-        if name in grandfathered or name.split("-", 1)[0] in grandfathered:
+        if any(same_component(name, g) for g in grandfathered):
             exempt.append(name)
         else:
             drift.append(f"{name}: spec written, no tickets cut")

@@ -132,6 +132,27 @@ def test_split_runner_separates_the_env_prefix_from_the_argv(command, argv, env)
     assert ts.split_runner(command) == (argv, env)
 
 
+@pytest.mark.parametrize(
+    "a,b,expected",
+    [
+        ("P1-thing", "P1-thing", True),
+        ("P1", "P1", True),
+        ("P1", "P1-thing", True),  # the id form denotes the slug form
+        ("P1-thing", "P1", True),  # and symmetrically
+        ("B.9", "B.9-report-readiness", True),
+        # The hyphen boundary is the point. Splitting at the first hyphen instead
+        # would call these pairs the same component.
+        ("foo-bar", "foo-baz", False),
+        ("B.9", "B.90-other", False),
+        ("P1", "P10", False),
+        ("P1-thing", "P2-thing", False),
+    ],
+)
+def test_same_component_matches_on_the_hyphen_boundary(a, b, expected):
+    assert ts.same_component(a, b) is expected
+    assert ts.same_component(b, a) is expected  # symmetric
+
+
 def test_profile_parsing_reads_prose_values(tmp_path):
     p = tmp_path / "profile.md"
     p.write_text(PROFILE.format(extra=""))
@@ -362,6 +383,58 @@ def test_one_spec_is_not_pluralised(project, capsys):
 
 def test_pre_workflow_spec_is_exempt_from_the_no_tickets_check(project, capsys):
     """A repo adopting this mid-flight has specs that will never have tickets."""
+    root = project(
+        {"P1-thing": [{}]},
+        specs=("P1-thing", "P0.9-legacy"),
+        map_rows=["| P1 | a thing | — |", "| P0.9 | legacy | — |"],
+        profile_extra="- **pre_workflow_specs:** `P0.9`",
+    )
+    assert status(root) == 0
+    assert "predate ticketing" in capsys.readouterr().out
+
+
+def test_tickets_cut_under_the_bare_id_clear_the_spec_line(project, capsys):
+    """The regression: cutting a ticket did not clear "spec written, no tickets cut".
+
+    `ticket_dir` is `planning/tickets/<spec-id>/` and the profile never says which
+    form `<spec-id>` takes, so a repo may name the ticket directory `P1` while the
+    spec directory carries the slug. Keying one side by each made the lookup miss,
+    and the line stayed up no matter how many tickets were cut.
+    """
+    root = project({"P1": [{}]}, specs=("P1-thing",))
+    assert status(root) == 0
+    assert "no tickets cut" not in capsys.readouterr().err
+
+
+def test_the_reverse_naming_also_resolves(project, capsys):
+    """Spec directory on the bare id, ticket directory carrying the slug."""
+    root = project({"P1-thing": [{}]}, specs=("P1",), map_rows=["| P1 | a thing | — |"])
+    assert status(root) == 0
+    assert "no tickets cut" not in capsys.readouterr().err
+
+
+def test_a_neighbouring_slug_is_not_credited_with_another_spec_s_tickets(project, capsys):
+    """`foo-bar` and `foo-baz` share a first hyphen, not a component."""
+    root = project(
+        {"foo-bar": [{}]},
+        specs=("foo-bar", "foo-baz"),
+        map_rows=["| foo-bar | a | — |", "| foo-baz | b | — |"],
+    )
+    assert status(root) == 1
+    err = capsys.readouterr().err
+    assert "foo-baz: spec written, no tickets cut" in err
+    assert "foo-bar: spec written" not in err
+
+
+def test_an_empty_ticket_directory_is_still_uncut(project, capsys):
+    """A directory someone made and never filled is not cut work."""
+    root = project({"P1-thing": []}, specs=("P1-thing",))
+    assert status(root) == 1
+    assert "P1-thing: spec written, no tickets cut" in capsys.readouterr().err
+
+
+def test_exemption_resolves_across_the_two_name_forms(project, capsys):
+    """`pre_workflow_specs` names an id; the spec directory carries the slug."""
     root = project(
         {"P1-thing": [{}]},
         specs=("P1-thing", "P0.9-legacy"),
