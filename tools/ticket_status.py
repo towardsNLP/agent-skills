@@ -70,24 +70,29 @@ def scalar(raw: str) -> str:
     return raw.strip().strip("`").rstrip(".").strip()
 
 
-def same_component(a: str, b: str) -> bool:
-    """Whether two directory names denote the same component.
+def component_of(name: str, ids: set[str]) -> str:
+    """The declared component id that a spec or ticket directory name carries.
 
-    The spec tree and the ticket tree may disagree about the form -- `B.9` in one,
-    `B.9-report-readiness` in the other -- and both are legitimate, because the
-    profile's `ticket_dir` pattern says `<spec-id>` without saying which form that
-    is. Comparing raw names keys one side by slug and the other by id, so a lookup
-    across the two trees can never hit.
+    The two trees may name one component differently -- `B.9` for the ticket
+    directory, `B.9-report-readiness` for the spec -- because the profile's
+    `ticket_dir` pattern says `<spec-id>` without saying which form that is.
+    Comparing raw names keys one side by slug and the other by id, so the lookup
+    can never hit and cutting a ticket never clears the spec's line.
 
-    The shorter name must be the id prefix of the longer AND stop on a hyphen
-    boundary. That boundary is the whole point: splitting at the first hyphen
-    instead would make `foo-bar` and `foo-baz` the same component, and `B.9` would
-    have to be told apart from `B.90-other` by luck.
+    Resolve both sides against the ids the repo has DECLARED rather than guessing
+    from the string's shape. Guessing is what a hyphen split does, and it cannot
+    tell `foo-bar-baz` apart from a longer slug for `foo-bar`: it would credit one
+    spec with another's tickets and turn that spec's drift line off. A drift
+    detector that under-reports has failed at the only thing it does, so a name
+    matching no declared id resolves to itself and pairs with nothing but its
+    exact twin.
+
+    The longest declared id wins, so `B.8.1-engine` resolves to `B.8.1`, not `B.8`.
     """
-    if a == b:
-        return True
-    short, long = sorted((a, b), key=len)
-    return long.startswith(short + "-")
+    if name in ids:
+        return name
+    carried = [i for i in ids if name.startswith(i + "-")]
+    return max(carried, key=len) if carried else name
 
 
 def base_dir(pattern: str) -> str:
@@ -421,19 +426,29 @@ def main(argv: list[str] | None = None) -> int:
         if spec_root.is_dir()
         else set()
     )
+    # The vocabulary of component ids, and the spec map is the authority on it: its
+    # ID column is where a repo says what its components ARE. Ticket directory names
+    # stand in only when there is no map, because `ticket_dir` is `<spec-id>` and so
+    # names an id by construction -- but they are the weaker source, since a repo may
+    # spell them with the full slug, and admitting those alongside a map would make a
+    # slug compete with the id it elaborates. Spec directory names never join: they
+    # carry slugs, and every spec would then resolve only to itself.
+    ids = set(planned) or set(by_spec)
+    written_ids = {component_of(name, ids) for name in written}
     for ident in planned:
-        if not any(same_component(name, ident) for name in written):
+        if ident not in written_ids:
             drift.append(f"{ident}: planned in the spec map, no spec written")
     raw_exempt = re.split(r"[,\s]+", cfg.get("pre_workflow_specs", ""))
-    grandfathered = {s.strip() for s in raw_exempt if s.strip()}
+    grandfathered = {component_of(s.strip(), ids) for s in raw_exempt if s.strip()}
     # A ticket directory that exists but holds no ticket is NOT cut work, so the
     # truthiness matters: an empty directory must still read as "no tickets cut".
-    ticketed = [name for name, tickets in by_spec.items() if tickets]
+    ticketed = {component_of(name, ids) for name, tickets in by_spec.items() if tickets}
     exempt = []
     for name in sorted(written):
-        if any(same_component(name, t) for t in ticketed):
+        component = component_of(name, ids)
+        if component in ticketed:
             continue
-        if any(same_component(name, g) for g in grandfathered):
+        if component in grandfathered:
             exempt.append(name)
         else:
             drift.append(f"{name}: spec written, no tickets cut")
