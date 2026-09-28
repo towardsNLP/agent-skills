@@ -133,24 +133,28 @@ def test_split_runner_separates_the_env_prefix_from_the_argv(command, argv, env)
 
 
 @pytest.mark.parametrize(
-    "a,b,expected",
+    "name,ids,expected",
     [
-        ("P1-thing", "P1-thing", True),
-        ("P1", "P1", True),
-        ("P1", "P1-thing", True),  # the id form denotes the slug form
-        ("P1-thing", "P1", True),  # and symmetrically
-        ("B.9", "B.9-report-readiness", True),
-        # The hyphen boundary is the point. Splitting at the first hyphen instead
-        # would call these pairs the same component.
-        ("foo-bar", "foo-baz", False),
-        ("B.9", "B.90-other", False),
-        ("P1", "P10", False),
-        ("P1-thing", "P2-thing", False),
+        # A declared id names itself; a slug elaborating one resolves to it.
+        ("P1", {"P1"}, "P1"),
+        ("P1-thing", {"P1"}, "P1"),
+        ("B.9-report-readiness", {"B.9"}, "B.9"),
+        # A name matching no declared id resolves to ITSELF, so it pairs with
+        # nothing but its exact twin. This is what keeps the detector from going
+        # quiet: guessing here is how one spec gets credited with another's work.
+        ("foo-bar-baz", {"foo-bar", "foo-bar-baz"}, "foo-bar-baz"),
+        ("foo-bar-baz", set(), "foo-bar-baz"),
+        # The hyphen boundary, which a first-hyphen split would get wrong.
+        ("foo-baz", {"foo-bar"}, "foo-baz"),
+        ("B.90-other", {"B.9"}, "B.90-other"),
+        ("P10", {"P1"}, "P10"),
+        # The longest declared id wins, so a dotted child is not read as its parent.
+        ("B.8.1-engine", {"B.8", "B.8.1"}, "B.8.1"),
+        ("P1-thing-x", {"P1", "P1-thing"}, "P1-thing"),
     ],
 )
-def test_same_component_matches_on_the_hyphen_boundary(a, b, expected):
-    assert ts.same_component(a, b) is expected
-    assert ts.same_component(b, a) is expected  # symmetric
+def test_component_of_resolves_against_declared_ids(name, ids, expected):
+    assert ts.component_of(name, ids) == expected
 
 
 def test_profile_parsing_reads_prose_values(tmp_path):
@@ -424,6 +428,48 @@ def test_a_neighbouring_slug_is_not_credited_with_another_spec_s_tickets(project
     err = capsys.readouterr().err
     assert "foo-baz: spec written, no tickets cut" in err
     assert "foo-bar: spec written" not in err
+
+
+def test_a_longer_slug_is_not_credited_with_a_shorter_one_s_tickets(project, capsys):
+    """`foo-bar-baz` is its own component, not a longer slug for `foo-bar`.
+
+    Resolving by string shape would pair them and clear the line for a spec that
+    has no tickets at all -- trading the false positive this branch fixes for a
+    false negative, which in a drift detector is the worse of the two: a wrong
+    line gets investigated, a missing one never does.
+    """
+    root = project(
+        {"foo-bar": [{}]},
+        specs=("foo-bar", "foo-bar-baz"),
+        map_rows=["| foo-bar | a | — |", "| foo-bar-baz | b | — |"],
+    )
+    assert status(root) == 1
+    err = capsys.readouterr().err
+    assert "foo-bar-baz: spec written, no tickets cut" in err
+    assert "foo-bar: spec written" not in err
+
+
+def test_a_planned_component_whose_spec_is_missing_is_still_reported(project, capsys):
+    """The same over-reach on the other condition: a written `foo-bar` must not
+    answer for a planned `foo-bar-baz` that nobody wrote."""
+    root = project(
+        {"foo-bar": [{}]},
+        specs=("foo-bar",),
+        map_rows=["| foo-bar | a | — |", "| foo-bar-baz | b | — |"],
+    )
+    assert status(root) == 1
+    assert "foo-bar-baz: planned in the spec map, no spec written" in capsys.readouterr().err
+
+
+def test_ticket_directory_names_stand_in_when_there_is_no_spec_map(project, capsys):
+    """`ticket_dir` is `<spec-id>`, so those names are ids by construction.
+
+    Without a map there is no declared vocabulary, and falling back to them is what
+    keeps the two name forms pairing for a repo that has not written one.
+    """
+    root = project({"P1": [{}]}, specs=("P1-thing",), map_rows=[])
+    assert status(root) == 0
+    assert "no tickets cut" not in capsys.readouterr().err
 
 
 def test_an_empty_ticket_directory_is_still_uncut(project, capsys):
