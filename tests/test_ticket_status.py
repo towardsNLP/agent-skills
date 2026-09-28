@@ -437,6 +437,32 @@ def test_unlaunchable_runner_is_named_and_not_blamed_on_the_test(project, capsys
     assert "BROKEN" in out and "todo" not in out
 
 
+def test_runner_that_exits_127_is_not_reported_as_a_missing_runner(project, capsys):
+    """127 is a status a process returns, not only one execvp implies.
+
+    A wrapper script -- which the profile template recommends for anything needing a
+    shell -- exits 127 when ITS command is missing. The wrapper is not missing, so
+    blaming it names a file that is sitting right there, and because an unlaunchable
+    runner is malformed, it would fail the board over that false claim.
+    """
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": "tests/x.py::test_y"}]},
+        profile_extra="""- **test_command:** `sh -c 'exit 127'`""",
+    )
+    assert status(root) == 0  # open ticket whose test is not written: not drift
+    out, err = capsys.readouterr()
+    assert "not found" not in err
+    assert "todo" in out
+
+
+def test_unlaunchable_is_raised_not_returned_as_a_status(tmp_path):
+    """The seam finding #1 turned on: exec failure cannot collide with an exit code."""
+    with pytest.raises(ts.Unlaunchable):
+        ts.run(["definitely-not-a-runner-xyz"], tmp_path, 30)
+    # A real 127 still comes back as an ordinary status.
+    assert ts.run("exit 127", tmp_path, 30)[0] == ts.SHELL_COMMAND_NOT_FOUND
+
+
 def test_empty_test_command_is_named_not_crashed_on(project, capsys):
     """`shlex.split("")` is `[]`, and `runner[0]` on that used to be an IndexError."""
     root = project(
