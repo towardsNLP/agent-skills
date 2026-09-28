@@ -61,9 +61,12 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **sme_register_path:** the file a `check_type: sme` ticket points a row at, or omit
 - **ticket_status_command:** what derives doneness — e.g. `make ticket-status`. Exits non-zero
   when a ticket carries an Outcome but its check fails, when a check no longer resolves, when a
-  planned component has no spec, or when a spec has no tickets.
+  planned component has no spec, when a spec has no tickets, or when `test_command` itself
+  cannot be launched.
 - **test_command:** the runner prepended to a `check_type: test` node ID, e.g. `uv run pytest`;
-  omit to use `pytest`
+  omit to use `pytest`. A leading `VAR=value` prefix is applied to the environment, so
+  `PYTHONPATH=. python3 -m pytest` works; everything after it is exec'd without a shell, so
+  pipes, redirections and `&&` are not available here — put those in a wrapper script.
 - **spec_template_path:**
 - **spec_owner:** default owner written into new spec frontmatter
 - **spec_initial_status:** e.g. `Drafted`

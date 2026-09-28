@@ -13,6 +13,14 @@ The exit code is the point. It is non-zero when:
   3. a ticket is blocked by a ticket that does not exist  -- a dangling edge
   4. a component in the spec map has no spec              -- planned, unwritten
   5. a spec directory has no tickets                      -- written, uncut
+  6. a ticket or the profile is MALFORMED                 -- the board is blind
+
+Condition 6 is the open-ended one, and deliberately not enumerated above: no check
+named, a check written as a full command, an `sme` row absent from the register, an
+unknown `check_type`, a `test_command` naming no runner or one that cannot be
+launched. What they share is that the board cannot report on the ticket at all, so
+-- unlike a check that has simply not been written yet -- they are drift whatever
+state the ticket is in.
 
 A repo adopting this workflow mid-flight will have specs that predate ticketing
 and will never have tickets. Name them in the profile's `pre_workflow_specs`
@@ -26,6 +34,7 @@ and a vendored file with dependencies is a burden on every one of them.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shlex
 import subprocess
@@ -40,6 +49,12 @@ _PROFILE_LINE = re.compile(r"^\s*-\s+\*\*([A-Za-z_][A-Za-z0-9_]*):\*\*\s*(.*)$")
 _FIELD = re.compile(r"^\*\*([A-Za-z_][A-Za-z0-9_ ]*):\*\*\s*(.*)$")
 _TITLE = re.compile(r"^#\s*(\d+)\s*[-—]+\s*(.+)$")
 _MAP_ROW = re.compile(r"^\|\s*([A-Za-z0-9.\-]+)\s*\|([^|]*)\|([^|]*)\|")
+_ENV_ASSIGN = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
+
+# What a shell returns for a command IT could not find. Only the command branch reads
+# this, where the shell did run and the thing it could not find is the ticket's own
+# check. An argv that will not exec is a different event -- see Unlaunchable.
+SHELL_COMMAND_NOT_FOUND = 127
 
 NONE_WORDS = {"none", "none (can start immediately)", "-", "—", ""}
 COMMAND_CHECK_TYPES = {"gate", "metric", "dataset", "query", "artifact"}
@@ -176,7 +191,39 @@ def parse_spec_map(path: Path) -> list[str]:
     return ids
 
 
-def run(cmd: list[str] | str, root: Path, timeout: int) -> tuple[int, str]:
+def split_runner(test_command: str) -> tuple[list[str], dict[str, str]]:
+    """Split `VAR=value prog args` into an argv and the environment it asked for.
+
+    A `test` check runs without a shell, so a profile that writes its runner the way
+    it would be typed at a prompt -- `PYTHONPATH=. python3 -m pytest` -- would
+    otherwise be exec'd as a program named literally `PYTHONPATH=.`. Pinning an
+    interpreter's path or a config file through the environment is the ordinary way
+    to name a runner, so honour the prefix rather than making every host repo
+    discover the same failure separately.
+    """
+    argv = shlex.split(test_command)
+    env: dict[str, str] = {}
+    while argv and (m := _ENV_ASSIGN.match(argv[0])):
+        env[m.group(1)] = m.group(2)
+        argv.pop(0)
+    return argv, env
+
+
+class Unlaunchable(Exception):
+    """argv[0] does not exist, so nothing ran.
+
+    Raised rather than returned as a status, because 127 is a status a process can
+    genuinely exit with: a wrapper script returns it when ITS command is missing.
+    Folding the two together would report `test_command not found: 'sh'` about an
+    `sh` that is sitting right there, and -- since an unlaunchable runner is
+    malformed -- would fail the board over a file that is not missing.
+    """
+
+
+def run(
+    cmd: list[str] | str, root: Path, timeout: int, env: dict[str, str] | None = None
+) -> tuple[int, str]:
+    """Run a check. Raises Unlaunchable if the program itself cannot be exec'd."""
     try:
         # S603: running the check a ticket names IS the job. The checks come from
         # files in the repo, at the same trust level as the code being tested.
@@ -187,11 +234,12 @@ def run(cmd: list[str] | str, root: Path, timeout: int) -> tuple[int, str]:
             text=True,
             timeout=timeout,
             shell=isinstance(cmd, str),
+            env={**os.environ, **env} if env else None,
         )
     except subprocess.TimeoutExpired:
         return 124, f"timed out after {timeout}s"
     except FileNotFoundError as exc:
-        return 127, str(exc)
+        raise Unlaunchable(str(exc)) from exc
     tail = (p.stderr or p.stdout or "").strip().splitlines()
     return p.returncode, tail[-1] if tail else ""
 
@@ -232,7 +280,10 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
         return
 
     if t.check_type == "test":
-        runner = shlex.split(cfg.get("test_command", "pytest"))
+        runner, runner_env = split_runner(cfg.get("test_command", "pytest"))
+        if not runner:
+            t.state, t.detail, t.malformed = "unresolved", "test_command names no runner", True
+            return
         # The check is a NODE ID. The runner comes from test_command, so a check that
         # repeats it produces `pytest ... "uv run pytest tests/..."` and fails with a
         # collection error that explains nothing. Name the mistake instead.
@@ -241,14 +292,32 @@ def evaluate(t: Ticket, root: Path, cfg: dict[str, str], timeout: int, execute: 
             t.detail = "check is a full command; it should be a test node id"
             t.malformed = True
             return
-        code, _ = run([*runner, "--collect-only", "-q", t.check], root, timeout)
-        if code != 0:
-            t.state, t.detail = "unresolved", "does not collect"
+        # A runner that will not launch is a broken profile, not an unwritten test, and
+        # it hits every `test` ticket at once. Folding it into "does not collect" reads
+        # the whole board as merely not-started-yet and hides the one line that explains
+        # why -- so it is malformed, and therefore drift whatever state the tickets are
+        # in. Contrast the command branch below, where the thing not found is the
+        # ticket's own check and not-yet-written is the honest reading.
+        try:
+            code, _ = run([*runner, "--collect-only", "-q", t.check], root, timeout, runner_env)
+            if code != 0:
+                # Including a runner that exits 127 of its own accord: it launched, so
+                # what it could not find is the test, not itself.
+                t.state, t.detail = "unresolved", "does not collect"
+                return
+            code, msg = run([*runner, "-q", t.check], root, timeout, runner_env)
+        except Unlaunchable:
+            t.state = "unresolved"
+            t.detail = f"test_command not found: {runner[0]!r}"
+            t.malformed = True
             return
-        code, msg = run([*runner, "-q", t.check], root, timeout)
     elif t.check_type in COMMAND_CHECK_TYPES:
-        code, msg = run(t.check, root, timeout)
-        if code == 127:
+        try:
+            code, msg = run(t.check, root, timeout)
+        except Unlaunchable:  # shell=True, so this is the shell itself missing
+            t.state, t.detail = "unresolved", "command not found"
+            return
+        if code == SHELL_COMMAND_NOT_FOUND:
             t.state, t.detail = "unresolved", "command not found"
             return
     else:

@@ -114,6 +114,24 @@ def test_base_dir_finds_the_fixed_prefix(pattern, expected):
     assert ts.base_dir(pattern) == expected
 
 
+@pytest.mark.parametrize(
+    "command,argv,env",
+    [
+        ("pytest", ["pytest"], {}),
+        ("uv run pytest", ["uv", "run", "pytest"], {}),
+        ("PYTHONPATH=. python3 -m pytest", ["python3", "-m", "pytest"], {"PYTHONPATH": "."}),
+        ("A=1 B=2 pytest", ["pytest"], {"A": "1", "B": "2"}),
+        # Only a LEADING run of assignments is environment; the shell stops there too,
+        # so a `-p no:x=y` style argument stays an argument.
+        ("pytest -o addopts=-q", ["pytest", "-o", "addopts=-q"], {}),
+        ("FOO= pytest", ["pytest"], {"FOO": ""}),
+        ("", [], {}),
+    ],
+)
+def test_split_runner_separates_the_env_prefix_from_the_argv(command, argv, env):
+    assert ts.split_runner(command) == (argv, env)
+
+
 def test_profile_parsing_reads_prose_values(tmp_path):
     p = tmp_path / "profile.md"
     p.write_text(PROFILE.format(extra=""))
@@ -387,6 +405,72 @@ def test_test_check_written_as_a_full_command_is_named_as_malformed(project, cap
     )
     assert status(root) == 1
     assert "should be a test node id" in capsys.readouterr().err
+
+
+def test_runner_env_prefix_reaches_the_runner(project, capsys):
+    """`VAR=value prog` is how a runner is written; the checks run without a shell."""
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": "tests/x.py::test_y"}]},
+        profile_extra="""- **test_command:** `FOO=bar sh -c 'test "$FOO" = bar'`""",
+    )
+    assert status(root) == 0
+    # The count, not the word: `[0/1 done]` prints on every board, so a substring
+    # match on "done" alone passes even when the runner never launched.
+    assert "[1/1 done]" in capsys.readouterr().out  # only reachable if FOO arrived set
+
+
+def test_unlaunchable_runner_is_named_and_not_blamed_on_the_test(project, capsys):
+    """The regression: exec'ing `PYTHONPATH=. python3` read as "the test is missing".
+
+    A runner that cannot start fails every `test` ticket identically, so reporting it
+    as a collection failure renders a whole board as todo and says nothing about why.
+    It is the profile that is broken, so it is drift even with no ticket closed.
+    """
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": "tests/x.py::test_y"}]},
+        profile_extra="- **test_command:** `definitely-not-a-runner-xyz`",
+    )
+    assert status(root) == 1
+    out, err = capsys.readouterr()
+    assert "test_command not found: 'definitely-not-a-runner-xyz'" in err
+    assert "does not collect" not in err
+    assert "BROKEN" in out and "todo" not in out
+
+
+def test_runner_that_exits_127_is_not_reported_as_a_missing_runner(project, capsys):
+    """127 is a status a process returns, not only one execvp implies.
+
+    A wrapper script -- which the profile template recommends for anything needing a
+    shell -- exits 127 when ITS command is missing. The wrapper is not missing, so
+    blaming it names a file that is sitting right there, and because an unlaunchable
+    runner is malformed, it would fail the board over that false claim.
+    """
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": "tests/x.py::test_y"}]},
+        profile_extra="""- **test_command:** `sh -c 'exit 127'`""",
+    )
+    assert status(root) == 0  # open ticket whose test is not written: not drift
+    out, err = capsys.readouterr()
+    assert "not found" not in err
+    assert "todo" in out
+
+
+def test_unlaunchable_is_raised_not_returned_as_a_status(tmp_path):
+    """The seam finding #1 turned on: exec failure cannot collide with an exit code."""
+    with pytest.raises(ts.Unlaunchable):
+        ts.run(["definitely-not-a-runner-xyz"], tmp_path, 30)
+    # A real 127 still comes back as an ordinary status.
+    assert ts.run("exit 127", tmp_path, 30)[0] == ts.SHELL_COMMAND_NOT_FOUND
+
+
+def test_empty_test_command_is_named_not_crashed_on(project, capsys):
+    """`shlex.split("")` is `[]`, and `runner[0]` on that used to be an IndexError."""
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": "tests/x.py::test_y"}]},
+        profile_extra="- **test_command:** `` ",
+    )
+    assert status(root) == 1
+    assert "names no runner" in capsys.readouterr().err
 
 
 def test_dot_directories_are_not_specs(project, capsys):
