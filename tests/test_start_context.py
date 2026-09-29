@@ -345,6 +345,34 @@ def test_a_none_word_ticket_is_not_reported_as_unresolvable(tmp_path: Path, none
     assert "spec.md" in packet
 
 
+def test_a_claim_that_carries_its_branch_is_still_this_contributor(tmp_path: Path) -> None:
+    """`docs/sdd-workflow.md` writes the claim `<name — branch>`, so the name is not the field.
+
+    Comparing the whole field against the contributor made every ticket claimed the documented way
+    report a foreign claim, and the warning printed the same person on both sides of "not".
+    """
+    root = project(tmp_path, claimant=f"{CONTRIBUTOR} — `dana-vocabulary-31`")
+
+    packet = context_packet.build_packet(
+        root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31"
+    )
+
+    assert "claimed by" not in packet
+    # The card still shows the branch the claim carries; only the comparison drops it.
+    assert f"{CONTRIBUTOR} — dana-vocabulary-31" in packet
+
+
+def test_a_foreign_claim_that_carries_its_branch_still_warns(tmp_path: Path) -> None:
+    """Mutation guard for the test above: dropping the commentary must not drop the comparison."""
+    root = project(tmp_path, claimant=f"{OTHER_CONTRIBUTOR} — `morgan-vocabulary-12`")
+
+    packet = context_packet.build_packet(
+        root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31"
+    )
+
+    assert f"claimed by {OTHER_CONTRIBUTOR} — morgan-vocabulary-12" in packet
+
+
 def test_an_unresolvable_ticket_path_still_warns(tmp_path: Path) -> None:
     """Mutation guard for the test above: the warning must survive for a real bad path.
 
