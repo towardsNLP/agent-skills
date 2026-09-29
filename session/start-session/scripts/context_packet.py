@@ -239,9 +239,15 @@ def extract_branch(value: str) -> str:
 
 
 def claim_name(claimed_by: str) -> str:
-    """The person part of a claim, which by convention carries its branch after an em dash."""
+    """The person part of a claim, which by convention carries its branch after an em dash.
+
+    The em dash is matched bare, so a tight ``<name>—<branch>`` ends the name too. That is how
+    ``tools/ticket_status.py`` reads the same field, and a reader that required the spaces would
+    disagree with the board about where the name ends for a claim written without them -- which
+    is the defect this helper exists to close, in a narrower form.
+    """
     value = one_line(claimed_by)
-    for separator in (" — ", " -- "):
+    for separator in ("—", " -- "):
         if separator in value:
             return value.split(separator, 1)[0].strip()
     return value
