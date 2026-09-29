@@ -238,9 +238,23 @@ def extract_branch(value: str) -> str:
     return value.split()[0] if value.split() else ""
 
 
+def claim_name(claimed_by: str) -> str:
+    """The person part of a claim, which by convention carries its branch after an em dash."""
+    value = one_line(claimed_by)
+    for separator in (" — ", " -- "):
+        if separator in value:
+            return value.split(separator, 1)[0].strip()
+    return value
+
+
 def same_person(claimed_by: str, contributor: str) -> bool:
-    """Compare a claim against full-name, first-name, and state-file conventions."""
-    claim = one_line(claimed_by).casefold()
+    """Compare a claim against full-name, first-name, and state-file conventions.
+
+    The claim is a field, not a name: `docs/sdd-workflow.md` writes it `<name — branch>`, so the
+    branch is dropped before comparing. Keeping it made every ticket claimed the documented way
+    read as foreign, and printed the same person on both sides of "not".
+    """
+    claim = claim_name(claimed_by).casefold()
     person = one_line(contributor).casefold()
     if claim in _NONE:
         return True
