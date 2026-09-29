@@ -165,6 +165,11 @@ drift (1):
 `open` and `FAIL` are different claims. Open means not built yet, which is most of a live board.
 FAIL means the Outcome asserts work the check does not support — the one this exists to catch.
 
+A spec and its tickets pair under either name form: `planning/tickets/B.9/` and
+`planning/tickets/B.9-report-readiness/` both belong to the spec directory carrying that slug.
+The spec map's ID column is what makes them equivalent, so declare a component there and the
+two trees may spell it either way.
+
 Standard library only, so vendoring is a single file copy: `make sync-tools TO=<project root>`,
 and the project's CI diffs its copy against this source. `make test` runs the suite.
 

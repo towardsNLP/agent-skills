@@ -70,7 +70,7 @@ def scalar(raw: str) -> str:
     return raw.strip().strip("`").rstrip(".").strip()
 
 
-def component_of(name: str, ids: set[str]) -> str:
+def component_of(name: str, ids: set[str], implied: set[str] = frozenset()) -> str:
     """The declared component id that a spec or ticket directory name carries.
 
     The two trees may name one component differently -- `B.9` for the ticket
@@ -88,11 +88,34 @@ def component_of(name: str, ids: set[str]) -> str:
     exact twin.
 
     The longest declared id wins, so `B.8.1-engine` resolves to `B.8.1`, not `B.8`.
+
+    ``implied`` is a second, weaker vocabulary, consulted only for a name the declared
+    one does not account for: ticket directory names, which name an id by construction
+    but may also be spelled with the full slug. A map that declares some components
+    and not others is the ordinary state of a board mid-migration, and with a single
+    vocabulary every undeclared component fell back to comparing raw names -- the
+    defect this function exists to close, still open for whatever the map had not
+    reached yet.
+
+    ``name in ids`` is checked before the fallback and cannot be folded into it: a
+    return value equal to ``name`` means either "declared exactly" or "not declared at
+    all", and handing the first case to a weaker vocabulary is how `foo-bar-baz` gets
+    absorbed into a declared `foo-bar` and loses its own drift line.
+
+    Resolution runs one way only -- a name may carry an id, never elaborate into one.
+    Matching in reverse would pair a bare `B.9` spec directory with a `B.9-report`
+    ticket directory, and was measured against the case that forbids it: two spec
+    directories `foo-bar` and `foo-bar-baz` with tickets under the longer one only,
+    where reverse matching credits `foo-bar` with its sibling's tickets and drops a
+    true line. The remedy for either name form is the same, and is declaration: an id
+    in the map's ID column pairs both spellings in both directions.
     """
     if name in ids:
         return name
     carried = [i for i in ids if name.startswith(i + "-")]
-    return max(carried, key=len) if carried else name
+    if carried:
+        return max(carried, key=len)
+    return component_of(name, implied) if implied else name
 
 
 def base_dir(pattern: str) -> str:
@@ -428,24 +451,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     # The vocabulary of component ids, and the spec map is the authority on it: its
     # ID column is where a repo says what its components ARE. Ticket directory names
-    # stand in only when there is no map, because `ticket_dir` is `<spec-id>` and so
-    # names an id by construction -- but they are the weaker source, since a repo may
-    # spell them with the full slug, and admitting those alongside a map would make a
+    # are the weaker source, consulted per name for whatever the map does not account
+    # for -- `ticket_dir` is `<spec-id>`, so they name an id by construction, but a
+    # repo may spell them with the full slug, and admitting them as equals would let a
     # slug compete with the id it elaborates. Spec directory names never join: they
     # carry slugs, and every spec would then resolve only to itself.
-    ids = set(planned) or set(by_spec)
-    written_ids = {component_of(name, ids) for name in written}
+    ids, implied = set(planned), set(by_spec)
+    written_ids = {component_of(name, ids, implied) for name in written}
     for ident in planned:
         if ident not in written_ids:
             drift.append(f"{ident}: planned in the spec map, no spec written")
     raw_exempt = re.split(r"[,\s]+", cfg.get("pre_workflow_specs", ""))
-    grandfathered = {component_of(s.strip(), ids) for s in raw_exempt if s.strip()}
+    grandfathered = {component_of(s.strip(), ids, implied) for s in raw_exempt if s.strip()}
     # A ticket directory that exists but holds no ticket is NOT cut work, so the
     # truthiness matters: an empty directory must still read as "no tickets cut".
-    ticketed = {component_of(name, ids) for name, tickets in by_spec.items() if tickets}
+    ticketed = {component_of(name, ids, implied) for name, tickets in by_spec.items() if tickets}
     exempt = []
     for name in sorted(written):
-        component = component_of(name, ids)
+        component = component_of(name, ids, implied)
         if component in ticketed:
             continue
         if component in grandfathered:
