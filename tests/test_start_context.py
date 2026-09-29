@@ -353,9 +353,7 @@ def test_a_claim_that_carries_its_branch_is_still_this_contributor(tmp_path: Pat
     """
     root = project(tmp_path, claimant=f"{CONTRIBUTOR} — `dana-vocabulary-31`")
 
-    packet = context_packet.build_packet(
-        root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31"
-    )
+    packet = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
 
     assert "claimed by" not in packet
     # The card still shows the branch the claim carries; only the comparison drops it.
@@ -366,9 +364,7 @@ def test_a_foreign_claim_that_carries_its_branch_still_warns(tmp_path: Path) -> 
     """Mutation guard for the test above: dropping the commentary must not drop the comparison."""
     root = project(tmp_path, claimant=f"{OTHER_CONTRIBUTOR} — `morgan-vocabulary-12`")
 
-    packet = context_packet.build_packet(
-        root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31"
-    )
+    packet = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
 
     assert f"claimed by {OTHER_CONTRIBUTOR} — morgan-vocabulary-12" in packet
 
