@@ -360,6 +360,21 @@ def test_a_claim_that_carries_its_branch_is_still_this_contributor(tmp_path: Pat
     assert f"{CONTRIBUTOR} — dana-vocabulary-31" in packet
 
 
+def test_a_claim_whose_em_dash_carries_no_spaces_is_read_the_way_the_board_reads_it(
+    tmp_path: Path,
+) -> None:
+    """`tools/ticket_status.py` splits the field on a bare em dash, so this reader must too.
+
+    Requiring the spaces left the two readers of one field disagreeing about where the name
+    ends -- the same defect as comparing the whole field, for a claim typed without them.
+    """
+    root = project(tmp_path, claimant=f"{CONTRIBUTOR}—`dana-vocabulary-31`")
+
+    packet = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
+
+    assert "claimed by" not in packet
+
+
 def test_a_foreign_claim_that_carries_its_branch_still_warns(tmp_path: Path) -> None:
     """Mutation guard for the test above: dropping the commentary must not drop the comparison."""
     root = project(tmp_path, claimant=f"{OTHER_CONTRIBUTOR} — `morgan-vocabulary-12`")
