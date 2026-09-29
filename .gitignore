@@ -3,3 +3,7 @@
 Icon?
 __pycache__/
 *.pyc
+
+# Per-machine permission grants: real names and absolute home paths. A global gitignore
+# was covering this one, which protects one machine rather than the repository.
+.claude/settings.local.json

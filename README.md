@@ -153,8 +153,8 @@ by one that does not exist, when a planned component has no spec, or when a spec
 
 ```
 P1-rule-engine  [2/5 done]
-   01 the YAML loader rejects an ungoverned predic done    gate    ahmad
-   03 the evaluator fires rules in priority order  open    gate    ahmad
+   01 the YAML loader rejects an ungoverned predic done    gate    dana
+   03 the evaluator fires rules in priority order  open    gate    dana
    04 the contradiction post-pass defeats the weak FAIL    gate    -
    05 the SME confirms the tier assignment for fam manual  manual  -
 
