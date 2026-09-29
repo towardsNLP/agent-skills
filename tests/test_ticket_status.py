@@ -198,12 +198,12 @@ def test_outcome_counts_once_it_names_a_pr(tmp_path):
             blocked="none",
             ctype="gate",
             check="true",
-            claim="ahmad",
+            claim="dana",
             outcome="**PR:** #12\n**Diverged:** nothing",
         )
     )
     t = ts.parse_ticket(f, "P1-thing")
-    assert t.has_outcome and t.claimed_by == "ahmad"
+    assert t.has_outcome and t.claimed_by == "dana"
 
 
 # --- the exit code, which is the point ------------------------------------
