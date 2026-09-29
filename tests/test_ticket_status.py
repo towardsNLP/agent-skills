@@ -157,6 +157,36 @@ def test_component_of_resolves_against_declared_ids(name, ids, expected):
     assert ts.component_of(name, ids) == expected
 
 
+@pytest.mark.parametrize(
+    "name,ids,implied,expected",
+    [
+        # A name the map does not account for falls through to the weaker vocabulary,
+        # which is what makes a PARTIALLY written map resolve per component instead of
+        # all-or-nothing. A map naming some components is the normal state of a board.
+        ("B.9-report", set(), {"B.9"}, "B.9"),
+        ("B.9-report", {"P1"}, {"B.9"}, "B.9"),
+        # The declared tier wins outright: a prefix match there beats an exact match in
+        # the weaker one, or a slug spelled into a ticket directory would compete with
+        # the id it elaborates.
+        ("P1-thing", {"P1"}, {"P1-thing"}, "P1"),
+        # Declared exactly, so the fallback is never consulted. Folding this into the
+        # "resolved == name" test is how `foo-bar-baz` gets absorbed into `foo-bar`.
+        ("foo-bar-baz", {"foo-bar", "foo-bar-baz"}, {"foo-bar"}, "foo-bar-baz"),
+        # Resolution runs one way. A name carries an id; it never elaborates into one,
+        # so a bare spec directory cannot reach a slugged ticket directory. Matching in
+        # reverse would credit `foo-bar` with a sibling `foo-bar-baz`'s tickets.
+        ("B.9", set(), {"B.9-report"}, "B.9"),
+        ("P1", {"P1-thing"}, set(), "P1"),
+        # The boundary rules hold in the weaker tier too.
+        ("foo-baz", set(), {"foo-bar"}, "foo-baz"),
+        ("B.90-other", set(), {"B.9"}, "B.90-other"),
+        ("P1-thing", set(), set(), "P1-thing"),
+    ],
+)
+def test_component_of_falls_back_to_the_implied_vocabulary(name, ids, implied, expected):
+    assert ts.component_of(name, ids, implied) == expected
+
+
 def test_profile_parsing_reads_prose_values(tmp_path):
     p = tmp_path / "profile.md"
     p.write_text(PROFILE.format(extra=""))
@@ -468,6 +498,72 @@ def test_ticket_directory_names_stand_in_when_there_is_no_spec_map(project, caps
     keeps the two name forms pairing for a repo that has not written one.
     """
     root = project({"P1": [{}]}, specs=("P1-thing",), map_rows=[])
+    assert status(root) == 0
+    assert "no tickets cut" not in capsys.readouterr().err
+
+
+def test_a_partly_written_map_resolves_the_components_it_does_not_name(project, capsys):
+    """A map naming some components and not others is the normal state of a board.
+
+    The vocabulary is chosen per name rather than all-or-nothing: `B.9` is not in the
+    map, so it falls through to the ticket directory names, which name an id by
+    construction. Taking the map's presence as proof that it is complete left every
+    component it had not reached yet comparing raw names -- the whole defect, still
+    open for exactly the specs a migration has not got to.
+    """
+    root = project(
+        {"P1": [{}], "B.9": [{}]},
+        specs=("P1-thing", "B.9-report"),
+        map_rows=["| P1 | a thing | — |"],
+    )
+    assert status(root) == 0
+    assert "no tickets cut" not in capsys.readouterr().err
+
+
+def test_a_bare_spec_directory_does_not_reach_a_slugged_ticket_directory(project, capsys):
+    """Resolution runs one way: a name carries an id, it never elaborates into one.
+
+    So the reverse spelling -- bare spec directory, slugged ticket directory -- pairs
+    only once the map declares the id, which the next test shows. Matching in reverse
+    would close this case and cost more than it pays: with specs `foo-bar` and
+    `foo-bar-baz` and tickets under the longer one, it credits `foo-bar` with its
+    sibling's tickets and drops a true line. The remedy is declaration, not a wider
+    guess; `templates/profile.md` says so where the ambiguity is born.
+    """
+    root = project({"P1-thing": [{}]}, specs=("P1",), map_rows=[])
+    assert status(root) == 1
+    assert "P1: spec written, no tickets cut" in capsys.readouterr().err
+
+
+def test_declaring_the_id_resolves_the_reverse_spelling(project, capsys):
+    """The remedy for either name form, and the reason the map is the authority."""
+    root = project({"P1-thing": [{}]}, specs=("P1",), map_rows=["| P1 | a thing | — |"])
+    assert status(root) == 0
+    assert "no tickets cut" not in capsys.readouterr().err
+
+
+def test_a_sibling_slug_keeps_its_line_when_the_tickets_are_under_the_longer_name(project, capsys):
+    """The case that forbids reverse matching, without a map to lean on.
+
+    `foo-bar` has no tickets of its own and must say so. This is the line reverse
+    resolution would have swallowed, which is why it stays one-way.
+    """
+    root = project({"foo-bar-baz": [{}]}, specs=("foo-bar", "foo-bar-baz"), map_rows=[])
+    assert status(root) == 1
+    assert "foo-bar: spec written, no tickets cut" in capsys.readouterr().err
+
+
+def test_without_a_map_a_sibling_slug_is_absorbed(project, capsys):
+    """The price of the implied vocabulary, paid knowingly and pinned here.
+
+    With no map, `foo-bar` is an id by construction and `foo-bar-baz` reads as a longer
+    spelling of it, so a spec with no tickets of its own goes unreported. Nothing in
+    the tree distinguishes the two readings -- only the ID column can, and
+    `test_a_longer_slug_is_not_credited_with_a_shorter_one_s_tickets` is this same tree
+    with a map. A test says so out loud, because the alternative is discovering the
+    trade by accident and closing it with the worse one.
+    """
+    root = project({"foo-bar": [{}]}, specs=("foo-bar", "foo-bar-baz"), map_rows=[])
     assert status(root) == 0
     assert "no tickets cut" not in capsys.readouterr().err
 

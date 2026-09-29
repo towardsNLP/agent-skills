@@ -57,9 +57,12 @@ placeholder value is worse than a missing one, because a skill will act on it.
   outside `spec_dir`: where a project ships specs to a client, that keeps the internal/shared
   line a directory boundary rather than a per-spec manifest entry that ships by omission.
   `<spec-id>` may be the bare id (`B.9`) or carry the slug (`B.9-report-readiness`); both pair
-  with the spec directory, resolved through the ID column of `spec_map_path`. Pick one and keep
-  it — the id column is what makes the two forms equivalent, so a component that is not in the
-  map pairs only with a directory spelled exactly the same way.
+  with the spec directory, resolved through the ID column of `spec_map_path`. A component the map
+  does not name falls back to the ticket directory names, which name an id by construction, so a
+  partly written map resolves per component rather than all or nothing. That fallback reads one
+  way only: a name carries an id, it never elaborates into one, so a bare `B.9` spec directory
+  beside a `B.9-report` ticket directory pairs only once `B.9` is in the map. Declaring the id is
+  the remedy for either spelling, and the only thing that tells two sibling slugs apart.
 - **decision_records:** `planning/adr/` — `NNNN-slug.md`; the bar and format live in that
   directory's README
 - **sme_register_path:** the file a `check_type: sme` ticket points a row at, or omit
