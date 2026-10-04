@@ -147,7 +147,11 @@ def roster_contains(profile_text: str, contributor: str) -> bool | None:
 
 
 def resolve_state(root: Path, profile: dict[str, str], contributor: str) -> Path | None:
-    """Resolve one contributor state file without opening every candidate."""
+    """Resolve one contributor state file without opening every candidate.
+
+    Returns ``None`` rather than guessing. A wrong state file is worse than none, because
+    nothing downstream can tell it apart from the right one.
+    """
     state_dir_value = path_value(profile.get("state_dir", "planning/agent/state/"))
     state_dir = root / state_dir_value
     slug = contributor_slug(contributor)
@@ -160,7 +164,19 @@ def resolve_state(root: Path, profile: dict[str, str], contributor: str) -> Path
         matching = [path for path in candidates if slug in path.stem.casefold()]
         if len(matching) == 1:
             return matching[0]
-    return candidates[0] if len(candidates) == 1 else None
+
+    # NO SINGLETON FALLBACK. This used to end `return candidates[0] if len(candidates) == 1
+    # else None`, so in a repository holding one state file *every* contributor resolved to
+    # it. Measured on a three-person roster: two teammates each received the third person's
+    # branch, evidence and next action, on a card headed with their own name. A convenience
+    # for the first contributor turns into silent misattribution for the second, and the
+    # state convention's one-writer rule cannot survive it.
+    #
+    # The slug-bounded match above stays: a contributor whose slug is `dana` still finds
+    # `dana-reed.md`, while one whose slug appears in no filename finds nothing. An empty
+    # result is the right answer, because a missing state file is the normal condition
+    # before a contributor has written one.
+    return None
 
 
 def resolve_diary(root: Path, profile: dict[str, str], contributor: str) -> Path | None:
@@ -460,15 +476,39 @@ def build_packet(
     # become part of the generated card.
     diary_path = resolve_diary(root, profile, contributor)
     diary_date = latest_date(diary_path)
+
+    # The diary is not the only clock, and it is not the one that makes state wrong.
+    # Comparing state against diary headings alone reported "current" across commits that
+    # had reversed the decision the state file still described, because no diary entry had
+    # been written in between. Committed work is the other clock.
+    #
+    # Revision identity, not a calendar date. Asking whether HEAD has moved past the state
+    # file's own last commit answers this at any resolution; a `%cs` date reduces it to a
+    # day, and most stale state is same-day because that is what a working session looks
+    # like. Empty outside git, or before the file is committed, and both fall through to
+    # the diary comparison rather than claiming freshness.
+    state_rev = (
+        git_value(root, "log", "-1", "--format=%H", "--", str(state_path)) if state_path else ""
+    )
+    head_rev = git_value(root, "rev-parse", "HEAD")
+    commits_since = ""
+    if state_rev and head_rev and state_rev != head_rev:
+        commits_since = git_value(root, "rev-list", "--count", f"{state_rev}..{head_rev}")
+
     if not state_as_of:
         card.warnings.append("State has no state_as_of date; freshness is unknown.")
-    elif not diary_date:
-        # Saying "current" here would report a comparison that never happened.
-        card.warnings.append(f"No diary entry to compare against; state_as_of={state_as_of}.")
-    elif diary_date > state_as_of:
+    elif diary_date and diary_date > state_as_of:
         card.warnings.append(
             f"State is stale: state_as_of={state_as_of}, newest diary entry={diary_date}."
         )
+    elif commits_since and commits_since != "0":
+        card.warnings.append(
+            f"State predates the work: {commits_since} commit(s) have landed since "
+            f"{state_rev[:8]}, which last wrote it. state_as_of={state_as_of}."
+        )
+    elif not diary_date:
+        # Saying "current" here would report a comparison that never happened.
+        card.warnings.append(f"No diary entry to compare against; state_as_of={state_as_of}.")
     else:
         card.add("State freshness", f"current as of {state_as_of}")
 

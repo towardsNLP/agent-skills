@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -285,6 +287,111 @@ def test_freshness_is_not_claimed_without_a_diary_to_compare(tmp_path: Path) -> 
     assert "No diary entry to compare against" in output
 
 
+def test_the_only_state_file_is_not_handed_to_every_contributor(tmp_path: Path) -> None:
+    """A repo holding one state file must not resolve it for someone who did not write it.
+
+    This is the defect, not a style point: a convenience for the first contributor becomes
+    silent misattribution for the second, and the card is headed with the *reader's* name
+    while carrying the writer's branch, evidence and next action. Nothing downstream can
+    tell that card apart from a correct one.
+    """
+    root = project(tmp_path)
+    assert len(list((root / "planning/agent/state").glob("*.md"))) == 1
+
+    assert context_packet.resolve_state(root, {}, CONTRIBUTOR) is not None
+    assert context_packet.resolve_state(root, {}, OTHER_CONTRIBUTOR) is None
+
+
+def test_a_slug_bounded_match_still_resolves(tmp_path: Path) -> None:
+    """Removing the fallback must not cost the substring match, which is slug-bounded."""
+    root = project(tmp_path)
+    (root / "planning/agent/state/dana.md").rename(root / "planning/agent/state/dana-reed.md")
+
+    resolved = context_packet.resolve_state(root, {}, CONTRIBUTOR)
+    assert resolved is not None and resolved.name == "dana-reed.md"
+    assert context_packet.resolve_state(root, {}, OTHER_CONTRIBUTOR) is None
+
+
+def test_state_that_predates_committed_work_is_flagged_without_a_diary_entry(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Committed work is the other clock, and it is the one that makes state wrong.
+
+    The diary comparison alone reports "current" across commits that reversed the decision
+    the state file still describes, because no diary entry was written in between.
+    """
+    root = project(tmp_path)
+    (root / "planning/diaries/dana-diary.md").unlink()
+
+    def fake_git(_root: Path, *args: str) -> str:
+        if args[:2] == ("log", "-1"):
+            return "a" * 40
+        if args[0] == "rev-parse":
+            return "b" * 40
+        if args[0] == "rev-list":
+            return "3"
+        return ""
+
+    monkeypatch.setattr(context_packet, "git_value", fake_git)
+    output = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
+
+    assert "State freshness" not in output
+    assert "State predates the work: 3 commit(s)" in output
+    # The weaker warning must not also fire; one cause, one line.
+    assert "No diary entry to compare against" not in output
+
+
+def test_a_stale_diary_outranks_the_commit_clock(tmp_path: Path, monkeypatch) -> None:
+    """Both clocks can be wrong at once. Report the diary, which names a date."""
+    root = project(tmp_path)
+    write(root / "planning/diaries/dana-diary.md", "# Diary\n\n## 2026-09-30 — Later work\n")
+    monkeypatch.setattr(
+        context_packet, "git_value", lambda _r, *a: "9" if a[0] == "rev-list" else ""
+    )
+
+    output = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
+
+    assert "State is stale" in output
+    assert "State predates the work" not in output
+
+
+def test_freshness_survives_outside_a_git_checkout(tmp_path: Path) -> None:
+    """`git_value` returns empty off a checkout, and that must read as current, not stale."""
+    output = context_packet.build_packet(
+        project(tmp_path), contributor=CONTRIBUTOR, branch="dana-vocabulary-31"
+    )
+
+    assert "State freshness" in output
+    assert "State predates the work" not in output
+
+
+def test_the_commit_clock_query_is_one_git_understands(tmp_path: Path) -> None:
+    """The monkeypatched tests above prove the branching; this proves the arguments.
+
+    It must drive `build_packet` rather than call `git_value` with its own literal
+    arguments. `git_value` returns empty on any git failure, so a typo in the production
+    `rev-list` call fails closed and every card silently claims freshness. A test that
+    passes its own correct arguments cannot see that, which a mutation run proved: renaming
+    `--count` to `--kount` left an earlier version of this test green.
+    """
+    root = project(tmp_path)
+    (root / "planning/diaries/dana-diary.md").unlink()
+    git = ["git", "-c", "user.name=T", "-c", "user.email=t@e", "-c", "commit.gpgsign=false"]
+    run = partial(subprocess.run, cwd=root, capture_output=True, check=True)
+    run([*git, "init", "-q", "-b", "main"])
+    run([*git, "add", "-A"])
+    run([*git, "commit", "-qm", "state"])
+
+    (root / "later.txt").write_text("work that reverses the decision\n", encoding="utf-8")
+    run([*git, "add", "-A"])
+    run([*git, "commit", "-qm", "later"])
+
+    output = context_packet.build_packet(root, contributor=CONTRIBUTOR, branch="dana-vocabulary-31")
+
+    assert "State predates the work: 1 commit(s)" in output
+    assert "State freshness" not in output
+
+
 def test_a_budget_too_small_for_the_blocked_card_is_refused(tmp_path: Path) -> None:
     """Below the floor even the fixed refusal overflows, so the ceiling cannot be honoured."""
     with pytest.raises(ValueError):
@@ -325,7 +432,7 @@ def test_a_none_word_ticket_is_not_reported_as_unresolvable(tmp_path: Path, none
     `resolve_ticket` has always treated a none-word as absent; the warning branch tested the raw
     string's truthiness instead, so a state file written exactly as the template instructs reported
     a defect on every session card. That is the normal condition of a repository before its first
-    ticket is cut — AISE sat there for a whole migration.
+    ticket is cut, and a repository can sit there for a whole migration.
     """
     root = project(tmp_path)
     state = root / "planning/agent/state/dana.md"
