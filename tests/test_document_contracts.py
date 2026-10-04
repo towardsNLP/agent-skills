@@ -42,6 +42,30 @@ def test_check_contracts_uses_profile_key_names():
     assert "branch_naming" not in skill
 
 
+def test_a_skill_that_names_the_default_spec_path_also_names_the_key():
+    """`spec_path_pattern` is a declared profile key, so no skill may assume its default.
+
+    `templates/profile.md` offers `planning/specs/<spec-id>/spec.md` as one project's
+    answer, and the key exists so a project can declare another. A project whose pattern
+    carries a slug got its spec written to a second tree that matched neither the profile
+    nor its own decision record, while `tools/ticket_status.py` had already been built to
+    accept slug-named spec directories (`component_of` resolves them against the map's ID
+    column). So the tool honoured the choice and three skills did not.
+
+    The path may still appear as the counterexample it is. What it may not do is appear
+    without the key that overrides it.
+    """
+    for manifest in skill_manifests():
+        body = manifest.read_text(encoding="utf-8")
+        if "spec_dir/<spec-id>/" not in body:
+            continue
+        assert "spec_path_pattern" in body, (
+            f"{manifest.relative_to(ROOT)} names the default spec path "
+            "`spec_dir/<spec-id>/...` without naming `spec_path_pattern`. State the key that "
+            "decides the path, or do not state a path."
+        )
+
+
 def test_effective_agreement_is_visible_to_ticketing_and_implementation():
     assert "amendments.md" in read("sdd/tickets/SKILL.md")
     assert "amendments.md" in read("sdd/implement/SKILL.md")

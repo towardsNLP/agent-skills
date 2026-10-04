@@ -1,6 +1,6 @@
 """This repository is publishable. Nothing in it may identify a client or a colleague.
 
-Two guards, because a name enters in two different shapes.
+Three guards, because a name enters in three different shapes.
 
 `test_fixture_identities_are_invented` reads **shape**: every capitalised name-shaped pair
 inside `tests/` must be declared here. It is an allow-list, not a deny-list, and that choice
@@ -14,6 +14,23 @@ where it sat. The claim field, the contributor argument, a state file, a diary f
 each of those positions holds a person by definition, so whatever sits there must resolve to
 a declared invented person, in any capitalisation and at any word count.
 
+`test_the_authors_name_appears_only_where_authorship_is_declared` reads **location**, and it
+exists because shape and position together still missed a leak. A prose comment in
+`session/start-session/scripts/context_packet.py` illustrated slug matching with the author's
+own first name and surname slug, lowercase. Shape could not see it (shape is scoped to
+`tests/`), and position could not see it (a code comment is not an identity field). What is
+checkable is *where* the name is allowed: four files declare authorship, and the name may
+appear in those and nowhere else. That is still an allow-list, of locations rather than
+names, so it publishes nothing the LICENSE does not already say.
+
+**What none of the three catches, stated plainly rather than left to be discovered:** a
+colleague's or client's name that is lowercase, one word, and sits outside `tests/` and
+outside an identity field. "A project sat there for a whole migration" read as prose in a
+docstring in this suite for weeks, with a real project named instead of "a project". No
+committable guard can close that, for the reason the allow-list note above gives: the
+deny-list would have to spell out the names. **Screen it before committing, from a list kept
+outside this repository.**
+
 Shape stays scoped to `tests/`, because that is where identifying data actually enters: a
 fixture wants a realistic contributor, and the nearest realistic name is a colleague's. That
 is exactly how a real one reached this suite once. Position is scoped repo-wide, since the
@@ -24,6 +41,7 @@ forking them.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -81,15 +99,24 @@ _IDENTITY_POSITIONS = (
 def declared_handles() -> set[str]:
     """Every way a fixture writes a declared person: full name, first name, state slug.
 
-    The same three forms `same_person` compares a claim against, so a name this guard
-    accepts is one the helper can still recognise.
+    The forms `same_person` compares a claim against, so a name this guard accepts is one
+    the helper can still recognise. The hyphenated full name is here because
+    `templates/profile.md` documents it as the state convention's own answer to a first-name
+    collision, so `dana-reed.md` is a filename the convention produces rather than a new
+    identity. **This widens nothing on its own:** the loop reads only names already declared
+    invented, so a real person still has to be declared before any of their forms pass.
     """
     handles = {name.casefold() for name in DECLARED_NON_PEOPLE}
     for name in DECLARED_FIXTURE_NAMES:
-        first = name.split()[0] if name.split() else ""
-        handles.update(
-            {name.casefold(), first.casefold(), re.sub(r"[^a-z0-9]+", "", first.casefold())}
-        )
+        words = name.split()
+        # The unstripped first name is kept as well as the stripped one. Dropping it would
+        # narrow the guard for any declared name whose first part carries punctuation:
+        # `D'Arcy Vale` would stop accepting `d'arcy` and start failing on its own fixture.
+        # No declared name has that shape today, which is exactly why it would go unnoticed.
+        first = words[0].casefold() if words else ""
+        parts = [re.sub(r"[^a-z0-9]+", "", word.casefold()) for word in words]
+        parts = [part for part in parts if part]
+        handles.update({name.casefold(), first, *parts[:1], "-".join(parts)})
     return handles
 
 
@@ -131,6 +158,41 @@ def scanned_files() -> list[Path]:
         if not any(part.startswith(".") for part in path.relative_to(ROOT).parts)
         and not any(directory in path.parents for directory in vendored)
     ]
+
+
+def test_the_authors_name_appears_only_where_authorship_is_declared() -> None:
+    """The author's name is metadata, not content, and it belongs only in the metadata.
+
+    Read from `plugin.json` rather than written here, so this guard adds no occurrence of
+    its own. `LICENSE`, `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
+    carry it legitimately and are outside `scanned_files()` already; `docs/sdd-workflow.md`
+    is inside it and carries an Authors line, so it is named below.
+
+    Both the full name and each of its parts are checked, case-insensitively, because the
+    leak this closes was a lowercase first name and a lowercase surname inside a code
+    comment: `<first>` finds `<first>-<surname>.md`, written as an example of slug matching.
+    An example in a shipped skill must use a declared invented identity, like every fixture.
+    """
+    author = json.loads((ROOT / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
+    parts = [part for part in author["author"]["name"].split() if len(part) > 2]
+    assert parts, "plugin.json declares no author name to check against"
+
+    allowed = {ROOT / "docs/sdd-workflow.md"}
+    offenders: dict[str, list[str]] = {}
+    for path in scanned_files():
+        if path in allowed:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for part in parts:
+            for match in re.finditer(rf"(?<![\w-]){re.escape(part)}(?![\w-])", text, re.I):
+                line = text.count("\n", 0, match.start()) + 1
+                offenders.setdefault(f"{path.relative_to(ROOT)}:{line}", []).append(part)
+
+    assert not offenders, (
+        f"the author's name appears outside the files that declare authorship: {offenders}. "
+        "Use a declared invented identity from DECLARED_FIXTURE_NAMES instead. If a new file "
+        "genuinely declares authorship, add it to `allowed` here and say why."
+    )
 
 
 def test_fixture_identities_are_invented() -> None:
