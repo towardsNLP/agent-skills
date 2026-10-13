@@ -840,3 +840,125 @@ def test_edge_key_tolerates_surrounding_whitespace_on_both_sides():
 
     assert edge_key("  S1/01  ", "S2") == "S1/01"
     assert edge_key(" 01 ", "S2") == "S2/01"
+
+
+def test_a_cross_spec_edge_resolves_when_ticket_dirs_carry_the_full_slug(tmp_path):
+    """The half the earlier `blocked_by` fix did not reach.
+
+    `known` was keyed by raw TICKET DIRECTORY NAME while `edge_key` returned whatever
+    the author typed, so the two sides of the comparison were spelled in different
+    vocabularies. A repo whose ticket directories carry the full slug registers
+    `S1-alpha/01`, an edge naming the declared id builds `S1/01`, and a valid edge
+    reported as dangling against a ticket sitting right there.
+
+    The test above this one passes only because it names its ticket directories `S1/`
+    and `S2/` -- the one spelling where raw comparison happens to work. A check written
+    with the spelling that works is not a check.
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-alpha/spec.md", "# S1\n")
+    _mk(tmp_path, "planning/specs/S2-beta/spec.md", "# S2\n")
+    _mk(tmp_path, "planning/tickets/S1-alpha/01-first.md", _ticket("01", "First"))
+    _mk(tmp_path, "planning/tickets/S2-beta/01-second.md", _ticket("01", "Second", "S1/01"))
+    out = _run(tmp_path)
+    assert "which does not exist" not in out, out
+
+
+def test_a_dangling_edge_still_dangles_when_ticket_dirs_carry_the_full_slug(tmp_path):
+    """The mirror of the fix above: resolving through the vocabulary must not
+    make every cross-spec edge pass. `S1/99` does not exist in any spelling."""
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-alpha/spec.md", "# S1\n")
+    _mk(tmp_path, "planning/specs/S2-beta/spec.md", "# S2\n")
+    _mk(tmp_path, "planning/tickets/S1-alpha/01-first.md", _ticket("01", "First"))
+    _mk(tmp_path, "planning/tickets/S2-beta/01-second.md", _ticket("01", "Second", "S1/99"))
+    assert "blocked by 'S1/99', which does not exist" in _run(tmp_path)
+
+
+def test_a_spec_directory_holding_only_litter_is_not_a_written_spec(tmp_path):
+    """`any(p.iterdir())` was satisfied by anything at all.
+
+    So `mkdir planning/specs/S2-x/.ipynb_checkpoints` turned off the "planned, no spec
+    written" line without a spec existing -- the same defect the empty-directory fix
+    addressed, one layer down, and reachable by a tool the author never ran deliberately.
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    _mk(tmp_path, "planning/specs/S2-x/.ipynb_checkpoints/spec-checkpoint.md", "junk\n")
+    out = _run(tmp_path)
+    assert "S2: planned in the spec map, no spec written" in out, out
+    assert "S2-x: spec written, no tickets cut" not in out, out
+
+
+def test_a_dotfile_alone_is_not_a_written_spec_either(tmp_path):
+    """The macOS half of the same hole: `.DS_Store` appears without anyone authoring it."""
+    _profile(tmp_path)
+    _map(tmp_path, ["S1"])
+    _mk(tmp_path, "planning/specs/S1-a/.DS_Store", "\0\0")
+    assert "S1: planned in the spec map, no spec written" in _run(tmp_path)
+
+
+def test_a_spec_file_not_named_spec_md_still_counts_as_written(tmp_path):
+    """The guard above must not tighten into "a file called spec.md".
+
+    The spec path pattern is a profile key and a repo may name the file anything; the
+    condition is that a human wrote SOMETHING there.
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1"])
+    _mk(tmp_path, "planning/specs/S1-a/agreement.md", "# S1\n")
+    assert "S1: planned in the spec map, no spec written" not in _run(tmp_path)
+
+
+def test_the_spec_map_reads_only_its_component_table(tmp_path):
+    """Every 3+ column row in the file was a component, header rows included.
+
+    A map carrying a second table -- "Vocabulary gaps", "Needs not yet covered", any
+    table at all -- reported one phantom planned component per row plus its header, as
+    drift lines naming things nobody planned. The report's whole value is being
+    trustworthy when it is red.
+    """
+    path = tmp_path / "spec-map.md"
+    path.write_text(
+        "| ID | Kind | Covers |\n"
+        "|---|---|---|\n"
+        "| S1 | build | loader |\n"
+        "\n"
+        "## Vocabulary gaps\n"
+        "\n"
+        "| Term | Why it is unsettled | Owner |\n"
+        "|---|---|---|\n"
+        "| sponsor | two meanings in one document | Dana Reed |\n"
+        "| intake | ambiguous between the two | Morgan Vale |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1"]
+
+
+def test_a_map_whose_id_column_is_headed_differently_still_parses(tmp_path):
+    """Reading one table too few is as wrong as reading one too many, and quieter.
+
+    Scoping to a literal `ID` header alone would parse a `Component`-headed map to zero
+    ids, and the "planned, no spec written" condition would stop firing in silence.
+    """
+    path = tmp_path / "spec-map.md"
+    path.write_text(
+        "| Component | Kind | Covers |\n"
+        "|---|---|---|\n"
+        "| S1 | build | loader |\n"
+        "| S2 | experiment | comparison |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1", "S2"]
+
+
+def test_the_id_table_wins_wherever_it_sits_in_the_file(tmp_path):
+    """The fallback must not beat an explicit ID header that comes later."""
+    path = tmp_path / "spec-map.md"
+    path.write_text(
+        "| Term | Why | Owner |\n|---|---|---|\n| sponsor | unsettled | Dana Reed |\n"
+        "\n"
+        "| ID | Kind | Covers |\n|---|---|---|\n| S1 | build | loader |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1"]

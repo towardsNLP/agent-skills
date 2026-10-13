@@ -118,8 +118,25 @@ def component_of(name: str, ids: set[str], implied: set[str] = frozenset()) -> s
     return component_of(name, implied) if implied else name
 
 
-def edge_key(blocked_by: str, citing_spec: str) -> str:
+def edge_key(
+    blocked_by: str,
+    citing_spec: str,
+    ids: set[str] | frozenset[str] = frozenset(),
+    implied: set[str] | frozenset[str] = frozenset(),
+) -> str:
     """The `known` key a `Blocked by:` value names.
+
+    **The spec side is resolved through the component vocabulary**, the same way every
+    other spec-to-ticket join in this file is, because the two sides of this comparison
+    are written by different hands: `known` is keyed by TICKET DIRECTORY NAME, and a
+    `Blocked by:` value is whatever an author typed. A repo whose ticket directories
+    carry the full slug (`S1-alpha/`) registers `S1-alpha/01` while an edge naming the
+    declared id builds `S1/01`, so a valid edge reported as dangling -- the same class
+    of defect as the discarded prefix below, in the half the earlier fix did not reach,
+    and missed because its test used the bare-id spelling that happens to work.
+
+    With empty vocabularies this is the identity on the spec side, which is what makes
+    the two-argument call still meaningful in isolation.
 
     Two defects lived in the one expression this replaces,
     `f"{t.spec_id}/{b.split('/')[-1].zfill(2)}"`:
@@ -135,7 +152,8 @@ def edge_key(blocked_by: str, citing_spec: str) -> str:
     ticket set could fail the board for nothing. Both sides are normalised now.
     """
     spec, _, number = blocked_by.strip().rpartition("/")
-    return f"{spec.strip() or citing_spec}/{norm_number(number)}"
+    named = spec.strip() or citing_spec
+    return f"{component_of(named, set(ids), set(implied))}/{norm_number(number)}"
 
 
 def norm_number(number: str) -> str:
@@ -241,7 +259,7 @@ def parse_ticket(path: Path, spec_id: str) -> Ticket:
     return t
 
 
-def collect(root: Path, ticket_root: Path) -> dict[str, list[Ticket]]:
+def collect(ticket_root: Path) -> dict[str, list[Ticket]]:
     out: dict[str, list[Ticket]] = {}
     if not ticket_root.is_dir():
         return out
@@ -258,19 +276,59 @@ def collect(root: Path, ticket_root: Path) -> dict[str, list[Ticket]]:
 
 
 def parse_spec_map(path: Path) -> list[str]:
-    """Component IDs from the map's table. Header and separator rows are skipped."""
+    """Component IDs from the map's component table, and from NO OTHER TABLE.
+
+    Scoped to one table: the one whose header's first column is `ID`, falling back to
+    the first table in the file when no header says so. Previously every 3+ column row
+    anywhere in the file was a component, which minted one per row of any other table a
+    map happened to carry -- and the only rows skipped by name were `id` and `---`, so a
+    second table contributed its HEADER as a component too. A map with a
+    "Vocabulary gaps | Term | Why | Owner" table reported `Term`, `sponsor` and `intake`
+    as components planned with no spec written: three drift lines naming nothing, in the
+    report whose whole job is to be trusted when it is red.
+
+    Falling back to the first table rather than to nothing matters: a repo whose map
+    heads its column `Component` would otherwise parse to zero ids and silently stop
+    producing the "planned, no spec written" condition altogether. Reading one table too
+    few is as wrong as reading one too many, and quieter.
+
+    `_MAP_ROW` requires THREE OR MORE columns and is deliberately left that way. A
+    component row carries an id plus at least two attributes in every map this has seen,
+    and widening the pattern would make the fallback likelier to seize a narrow table
+    that is not the component list -- trading a loud wrong answer for a quiet one.
+    """
     if not path.is_file():
         return []
-    ids: list[str] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        m = _MAP_ROW.match(line.strip())
+    tables: list[list[str]] = []
+    header_is_id: list[bool] = []
+    open_table = False
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line.startswith("|"):
+            open_table = False  # a table ends at the first line that is not a row
+            continue
+        m = _MAP_ROW.match(line)
         if not m:
             continue
         ident = m.group(1).strip()
+        if not open_table:
+            # A markdown table's first row IS its header -- the syntax requires one --
+            # so it is never a component, whatever it is called. The old parser skipped
+            # a header only when it read `id`, which is why a differently-headed second
+            # table contributed `Term` as a planned component.
+            tables.append([])
+            header_is_id.append(ident.lower() == "id")
+            open_table = True
+            continue
         if ident.lower() in {"id", "---"} or set(ident) <= {"-", ":"}:
             continue
-        ids.append(ident)
-    return ids
+        tables[-1].append(ident)
+    if not tables:
+        return []
+    for rows, is_id in zip(tables, header_is_id):
+        if is_id:
+            return rows
+    return tables[0]
 
 
 def split_runner(test_command: str) -> tuple[list[str], dict[str, str]]:
@@ -449,8 +507,24 @@ def main(argv: list[str] | None = None) -> int:
     spec_root = root / base_dir(spec_pattern)
     spec_map = root / cfg.get("spec_map_path", "planning/spec-map.md")
 
-    by_spec = collect(root, ticket_root)
-    known = {t.ident for ts in by_spec.values() for t in ts}
+    by_spec = collect(ticket_root)
+    planned = parse_spec_map(spec_map)
+    # The vocabulary of component ids, and the spec map is the authority on it: its
+    # ID column is where a repo says what its components ARE. Ticket directory names
+    # are the weaker source, consulted per name for whatever the map does not account
+    # for -- `ticket_dir` is `<spec-id>`, so they name an id by construction, but a
+    # repo may spell them with the full slug, and admitting them as equals would let a
+    # slug compete with the id it elaborates. Spec directory names never join: they
+    # carry slugs, and every spec would then resolve only to itself.
+    #
+    # Built HERE, above the ticket loop, because the blocking edges need it too: both
+    # sides of that comparison have to be spelled in one vocabulary, and keying `known`
+    # by raw directory name is what made a cross-spec edge dangle against a ticket
+    # sitting right there.
+    ids, implied = set(planned), set(by_spec)
+    known = {
+        f"{component_of(t.spec_id, ids, implied)}/{t.number}" for ts in by_spec.values() for t in ts
+    }
     drift: list[str] = []
 
     for tickets in by_spec.values():
@@ -471,10 +545,9 @@ def main(argv: list[str] | None = None) -> int:
                     + (f" -- {t.detail}" if t.detail else "")
                 )
             for b in t.blocked_by:
-                if edge_key(b, t.spec_id) not in known:
+                if edge_key(b, t.spec_id, ids, implied) not in known:
                     drift.append(f"{t.ident}: blocked by {b!r}, which does not exist")
 
-    planned = parse_spec_map(spec_map)
     # Dot-directories are not specs -- the same rule the ticket root applies above.
     # `.ipynb_checkpoints` beside a spec tree is Jupyter litter, and counting it
     # reports "spec written, no tickets cut" against a directory nobody authored.
@@ -483,23 +556,24 @@ def main(argv: list[str] | None = None) -> int:
     # produce -- the exact asymmetry the ticket side already guards below ("an empty
     # directory must still read as 'no tickets cut'"). A spec directory counts once it
     # holds at least one file, checked without assuming the file is named `spec.md`.
+    #
+    # LITTER IS NOT A FILE, either. `any(p.iterdir())` was satisfied by anything at all,
+    # including a lone `.ipynb_checkpoints/` or `.DS_Store` -- so `mkdir` plus whatever
+    # the machine drops in a directory still turned the line off, which is the same
+    # defect one layer down. The dot rule that already excludes litter DIRECTORIES from
+    # being specs is applied to the contents too: a spec is written when the directory
+    # holds a non-dot file, and nothing a tool or an OS leaves behind qualifies.
     written = (
         {
             p.name
             for p in spec_root.iterdir()
-            if p.is_dir() and not p.name.startswith(".") and any(p.iterdir())
+            if p.is_dir()
+            and not p.name.startswith(".")
+            and any(f.is_file() and not f.name.startswith(".") for f in p.iterdir())
         }
         if spec_root.is_dir()
         else set()
     )
-    # The vocabulary of component ids, and the spec map is the authority on it: its
-    # ID column is where a repo says what its components ARE. Ticket directory names
-    # are the weaker source, consulted per name for whatever the map does not account
-    # for -- `ticket_dir` is `<spec-id>`, so they name an id by construction, but a
-    # repo may spell them with the full slug, and admitting them as equals would let a
-    # slug compete with the id it elaborates. Spec directory names never join: they
-    # carry slugs, and every spec would then resolve only to itself.
-    ids, implied = set(planned), set(by_spec)
     written_ids = {component_of(name, ids, implied) for name in written}
     for ident in planned:
         if ident not in written_ids:

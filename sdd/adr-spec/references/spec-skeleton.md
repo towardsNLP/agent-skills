@@ -7,7 +7,15 @@ and compliance codes, which this cannot.
 Three files may exist per spec. `spec.md` is frozen at approval. `amendments.md` holds approved
 changes to the agreement. `acceptance.md` records what happened at close.
 
-## `planning/specs/<spec-id>/spec.md`
+**The headings below name the files, not the paths.** Where each one goes is
+`spec_path_pattern` in the profile, and **every placeholder in it is substituted** — a pattern
+reading `planning/specs/<spec-id>-<slug>/spec.md` carries two. Writing the directory with one half
+missing is not a cosmetic slip: the status board joins specs to tickets on the directory name, so a
+spec at a path the pattern does not describe stops resolving, and the symptom is a silently longer
+drift list rather than an error. The sibling files sit beside `spec.md`, whatever that directory is
+called.
+
+## `spec.md`
 
 ```markdown
 # Spec <ID> — <Title>
@@ -73,7 +81,7 @@ What could make this wrong, late or unusable, and what would show it early.
 Paths to the documents, data and code this depends on.
 ```
 
-## `planning/specs/<spec-id>/amendments.md`
+## `amendments.md` — beside `spec.md`
 
 ```markdown
 # Amendments — Spec <ID>
@@ -90,7 +98,7 @@ say so.
 **Why:** what was learned, and where it came from — a ticket, an ADR, an SME ruling.
 ```
 
-## `planning/specs/<spec-id>/acceptance.md`
+## `acceptance.md` — beside `spec.md`
 
 ```markdown
 # Acceptance — Spec <ID>
