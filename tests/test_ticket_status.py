@@ -962,3 +962,126 @@ def test_the_id_table_wins_wherever_it_sits_in_the_file(tmp_path):
         "| ID | Kind | Covers |\n|---|---|---|\n| S1 | build | loader |\n"
     )
     assert ts.parse_spec_map(path) == ["S1"]
+
+
+def test_a_fenced_example_table_is_documentation_not_the_component_list(tmp_path):
+    """The regression that turned the board GREEN WITH EXIT 0.
+
+    A map that shows its own row format in a ``` fence: the fence's table was the first
+    `ID`-headed one, so positional scoping picked it, its single row read `| S<n> | ... |`
+    which `_MAP_ROW` rejects, and the winning table was EMPTY. Zero components planned,
+    no drift, exit 0 -- a drift detector going silent, which is the worst outcome it has.
+
+    `deconstruct/references/spec-map-skeleton.md` is itself a fenced spec map, so this is
+    a shape a repo is likely to copy.
+    """
+    path = tmp_path / "spec-map.md"
+    # The example rows carry REAL-SHAPED ids, which is what the shipped skeleton does --
+    # `F1`, `F2`, `B1`. A first version of this test used `S<n>`, which `_MAP_ROW` rejects
+    # anyway, so it passed with fence-skipping disabled: the union fix alone was carrying
+    # it. Mutation-testing caught the test passing for the wrong reason.
+    path.write_text(
+        "A row looks like this:\n\n"
+        "```\n"
+        "| ID | Kind | Covers |\n|---|---|---|\n"
+        "| F1 | build | the need, one line |\n| F2 | knowledge-revision | ... |\n"
+        "```\n\n"
+        "## Components\n\n"
+        "| ID | Kind | Covers |\n|---|---|---|\n| S1 | build | one |\n| S2 | build | two |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1", "S2"], (
+        "a fenced example is documentation; its rows are not planned components"
+    )
+
+
+def test_a_header_carrying_markup_or_a_space_still_names_the_id_column(tmp_path):
+    """A header is not a row and does not obey a row's content rules.
+
+    `_MAP_ROW` requires a first cell of alphanumerics, dots and dashes, so `Spec ID` and
+    `**ID**` failed it -- the header line was skipped entirely, the SEPARATOR row became
+    the table's "header" flagged not-ID, and with another table ahead of it the wrong
+    table won: real ids vanished AND foreign ids were minted as planned components.
+    """
+    for head in ("| ID |", "| **ID** |", "| Spec ID |", "| `id` |", "| ID# |"):
+        path = tmp_path / "m.md"
+        path.write_text(
+            "## Vocabulary gaps\n\n"
+            "| Term | Why | Owner |\n|---|---|---|\n| sponsor | unsettled | Dana Reed |\n\n"
+            "## Components\n\n"
+            f"{head} Kind | Covers |\n|---|---|---|\n| S1 | build | one |\n"
+        )
+        assert ts.parse_spec_map(path) == ["S1"], f"header {head!r} lost the real component"
+
+
+def test_a_component_list_split_over_two_id_tables_keeps_both(tmp_path):
+    """Positional scoping returned on the first match and dropped the rest."""
+    path = tmp_path / "m.md"
+    path.write_text(
+        "| ID | Kind | Covers |\n|---|---|---|\n| S1 | build | one |\n\n"
+        "| ID | Kind | Covers |\n|---|---|---|\n| S2 | build | two |\n| S3 | build | three |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1", "S2", "S3"]
+
+
+def test_an_unrecognised_header_falls_back_to_every_table_never_to_nothing(tmp_path):
+    """Rule 1: never lose a real id.
+
+    A phantom component is a loud extra line. A LOST component silently stops producing
+    the "planned, no spec written" condition for something real. So where no header names
+    an ID column, the fallback is the union of every table -- never narrower than reading
+    the whole file was, which is what the first attempt at scoping got backwards.
+    """
+    path = tmp_path / "m.md"
+    path.write_text(
+        "| Component | Kind | Covers |\n|---|---|---|\n| S1 | build | one |\n\n"
+        "| Thing | Kind | Covers |\n|---|---|---|\n| S2 | build | two |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1", "S2"]
+
+
+def test_an_empty_file_is_not_a_written_spec(tmp_path):
+    """`touch spec.md` turned off the "planned, no spec written" line.
+
+    The third layer of the same hole, and the only one that happens BY ACCIDENT: a
+    scaffolding step or an interrupted write leaves exactly a 0-byte `spec.md`.
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    (tmp_path / "planning/specs/S2-b").mkdir(parents=True)
+    (tmp_path / "planning/specs/S2-b/spec.md").write_text("")
+    out = _run(tmp_path)
+    assert "S2: planned in the spec map, no spec written" in out, out
+
+
+def test_an_unreadable_spec_directory_does_not_crash_the_board(tmp_path):
+    """A traceback in a drift detector loses the other fifteen lines along with this one."""
+    import os
+    import stat
+
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    blocked = tmp_path / "planning/specs/S2-b"
+    blocked.mkdir(parents=True)
+    (blocked / "spec.md").write_text("# S2\n")
+    os.chmod(blocked, 0)
+    try:
+        out = _run(tmp_path)
+        assert "Traceback" not in out, out
+        assert "S2: planned in the spec map, no spec written" in out, out
+    finally:
+        os.chmod(blocked, stat.S_IRWXU)
+
+
+def test_a_non_decimal_unicode_digit_does_not_crash_norm_number():
+    """`isdigit()` is True for category-No characters that `int()` rejects.
+
+    A superscript two in a ticket heading or a `Blocked by:` value raised ValueError and
+    took the whole board down. Both are author-typed text.
+    """
+    from ticket_status import norm_number
+
+    assert norm_number("²") == "²"
+    assert norm_number("⅕") == "⅕"
+    assert norm_number("7") == "07"

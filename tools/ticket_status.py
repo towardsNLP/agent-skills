@@ -167,7 +167,12 @@ def norm_number(number: str) -> str:
     # Compare by VALUE, not by spelling. `zfill` pads but never truncates, so `001`
     # stayed `001` while `1` became `01` -- two keys for one ticket, and every edge
     # naming `1` dangled against a file headed `# 001 -`.
-    return f"{int(n):02d}" if n.isdigit() else n
+    #
+    # `isdecimal`, not `isdigit`: `isdigit` is True for category-No characters such as a
+    # superscript two, which `int()` then REJECTS with ValueError -- so a ticket number or
+    # a `Blocked by:` value carrying one crashed the board instead of being left alone.
+    # Both are author-typed text, so both are reachable.
+    return f"{int(n):02d}" if n.isdecimal() else n
 
 
 def base_dir(pattern: str) -> str:
@@ -275,60 +280,126 @@ def collect(ticket_root: Path) -> dict[str, list[Ticket]]:
     return out
 
 
+def is_written_spec(p: Path) -> bool:
+    """Has somebody actually written a spec in this directory?
+
+    A DIRECTORY IS NOT A SPEC: counting an empty one as written let `mkdir` turn off the
+    "planned in the spec map, no spec written" line the map exists to produce.
+
+    LITTER IS NOT A FILE: `any(p.iterdir())` was satisfied by anything at all, including
+    a lone `.ipynb_checkpoints/` or `.DS_Store`, so the same hole survived one layer down.
+
+    AND AN EMPTY FILE IS NOT A SPEC: `touch spec.md` also turned the line off, and that is
+    the one of the three that happens BY ACCIDENT -- a scaffolding step or an interrupted
+    write leaves exactly a 0-byte `spec.md`. So a spec is written when the directory holds
+    a non-dot file with CONTENT in it, checked without assuming the file is named
+    `spec.md`, because that name comes from the profile's `spec_path_pattern`.
+
+    An unreadable directory reads as not-written rather than crashing: a traceback in a
+    drift detector loses the other fifteen lines along with this one. Note `is_file` and
+    `is_dir` FOLLOW SYMLINKS, so a symlink to a file elsewhere counts as a written spec
+    and a broken symlink does not -- stated here because it is a choice, not an accident.
+    """
+    if not p.is_dir() or p.name.startswith("."):
+        return False
+    try:
+        return any(
+            f.is_file() and not f.name.startswith(".") and f.stat().st_size > 0 for f in p.iterdir()
+        )
+    except OSError:
+        return False
+
+
 def parse_spec_map(path: Path) -> list[str]:
-    """Component IDs from the map's component table, and from NO OTHER TABLE.
+    """Component IDs from the map's component table(s).
 
-    Scoped to one table: the one whose header's first column is `ID`, falling back to
-    the first table in the file when no header says so. Previously every 3+ column row
-    anywhere in the file was a component, which minted one per row of any other table a
-    map happened to carry -- and the only rows skipped by name were `id` and `---`, so a
-    second table contributed its HEADER as a component too. A map with a
-    "Vocabulary gaps | Term | Why | Owner" table reported `Term`, `sponsor` and `intake`
-    as components planned with no spec written: three drift lines naming nothing, in the
-    report whose whole job is to be trusted when it is red.
+    Three rules, in order of how much damage getting them wrong does:
 
-    Falling back to the first table rather than to nothing matters: a repo whose map
-    heads its column `Component` would otherwise parse to zero ids and silently stop
-    producing the "planned, no spec written" condition altogether. Reading one table too
-    few is as wrong as reading one too many, and quieter.
+    **1. Never lose a real id.** This is a DRIFT DETECTOR: a phantom component produces a
+    noisy extra line, which is loud and gets fixed, while a lost component silently stops
+    producing the "planned, no spec written" condition for a real component. The first
+    attempt at scoping inverted that -- it took the first `ID`-headed table positionally,
+    and against three ordinary map shapes it dropped real ids, one of which turned the
+    whole board GREEN WITH EXIT 0. So the fallback here is the UNION OF EVERY TABLE, which
+    is never narrower than reading the whole file was.
 
-    `_MAP_ROW` requires THREE OR MORE columns and is deliberately left that way. A
-    component row carries an id plus at least two attributes in every map this has seen,
-    and widening the pattern would make the fallback likelier to seize a narrow table
-    that is not the component list -- trading a loud wrong answer for a quiet one.
+    **2. A fenced block is documentation, not data.** A map that shows its own row format
+    in a ``` fence was the exit-0 case: the fence's table came first, its one row read
+    `| S<n> | ...` which is not an id, and an empty table won. Fences are skipped.
+
+    **3. A header is not a row, so it is not matched with the row pattern.** `_MAP_ROW`
+    requires a first cell of alphanumerics, dots and dashes, which `Spec ID` and `**ID**`
+    both fail -- so the
+    header line was skipped entirely, the SEPARATOR row became the table's "header" flagged
+    not-ID, and a different table won. Headers are split on `|` and normalised instead:
+    markup stripped, lower-cased, and a cell counts as an ID column when its words include
+    `id`. A header this does not recognise costs nothing, because of rule 1.
+
+    Scoping still does its job: a map with an `ID`-headed component table and a
+    "Vocabulary gaps | Term | Why | Owner" table reads only the first, instead of minting
+    `Term`, `sponsor` and `intake` as planned components.
     """
     if not path.is_file():
         return []
+
+    # Group into tables: maximal runs of pipe-prefixed lines outside fenced blocks.
     tables: list[list[str]] = []
-    header_is_id: list[bool] = []
-    open_table = False
+    run: list[str] = []
+    fenced = False
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
-        if not line.startswith("|"):
-            open_table = False  # a table ends at the first line that is not a row
+        if line.startswith("```") or line.startswith("~~~"):
+            fenced = not fenced
+            if run:
+                tables.append(run)
+                run = []
             continue
-        m = _MAP_ROW.match(line)
-        if not m:
+        if fenced:
             continue
-        ident = m.group(1).strip()
-        if not open_table:
-            # A markdown table's first row IS its header -- the syntax requires one --
-            # so it is never a component, whatever it is called. The old parser skipped
-            # a header only when it read `id`, which is why a differently-headed second
-            # table contributed `Term` as a planned component.
-            tables.append([])
-            header_is_id.append(ident.lower() == "id")
-            open_table = True
-            continue
-        if ident.lower() in {"id", "---"} or set(ident) <= {"-", ":"}:
-            continue
-        tables[-1].append(ident)
-    if not tables:
-        return []
-    for rows, is_id in zip(tables, header_is_id):
-        if is_id:
-            return rows
-    return tables[0]
+        if line.startswith("|"):
+            run.append(line)
+        elif run:
+            tables.append(run)
+            run = []
+    if run:
+        tables.append(run)
+
+    declared: list[str] = []
+    everything: list[str] = []
+    for rows in tables:
+        # Markdown requires a header row, so the run's first line is one, never a component.
+        head, body = rows[0], rows[1:]
+        ids: list[str] = []
+        for line in body:
+            m = _MAP_ROW.match(line)
+            if not m:
+                continue
+            ident = m.group(1).strip()
+            if ident.lower() in {"id", "---"} or set(ident) <= {"-", ":"}:
+                continue
+            ids.append(ident)
+        everything.extend(ids)
+        if _is_id_header(head):
+            declared.extend(ids)
+
+    chosen = declared or everything
+    seen: set[str] = set()
+    return [i for i in chosen if not (i in seen or seen.add(i))]
+
+
+def _is_id_header(line: str) -> bool:
+    """Does this header row's FIRST cell name an ID column?
+
+    Split on `|` rather than matched with `_MAP_ROW`, because a header is not a row and
+    does not obey a row's content rules: `Spec ID` carries a space and `**ID**` carries
+    markup, and both failed the row pattern. Markup is stripped, so `ID`, `**ID**`,
+    `Spec ID`, `` `id` `` and `ID#` all count.
+    """
+    cells = line.strip().strip("|").split("|")
+    if not cells:
+        return False
+    first = re.sub(r"[^a-z0-9 ]+", " ", cells[0].strip().lower())
+    return "id" in first.split()
 
 
 def split_runner(test_command: str) -> tuple[list[str], dict[str, str]]:
@@ -564,15 +635,7 @@ def main(argv: list[str] | None = None) -> int:
     # being specs is applied to the contents too: a spec is written when the directory
     # holds a non-dot file, and nothing a tool or an OS leaves behind qualifies.
     written = (
-        {
-            p.name
-            for p in spec_root.iterdir()
-            if p.is_dir()
-            and not p.name.startswith(".")
-            and any(f.is_file() and not f.name.startswith(".") for f in p.iterdir())
-        }
-        if spec_root.is_dir()
-        else set()
+        {p.name for p in spec_root.iterdir() if is_written_spec(p)} if spec_root.is_dir() else set()
     )
     written_ids = {component_of(name, ids, implied) for name in written}
     for ident in planned:

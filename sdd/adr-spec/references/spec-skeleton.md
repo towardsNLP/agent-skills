@@ -9,11 +9,19 @@ changes to the agreement. `acceptance.md` records what happened at close.
 
 **The headings below name the files, not the paths.** Where each one goes is
 `spec_path_pattern` in the profile, and **every placeholder in it is substituted** — a pattern
-reading `planning/specs/<spec-id>-<slug>/spec.md` carries two. Writing the directory with one half
-missing is not a cosmetic slip: the status board joins specs to tickets on the directory name, so a
-spec at a path the pattern does not describe stops resolving, and the symptom is a silently longer
-drift list rather than an error. The sibling files sit beside `spec.md`, whatever that directory is
-called.
+reading `planning/specs/<spec-id>-<slug>/spec.md` carries two.
+
+**Get the directory name wrong and the two halves fail differently, which is why you check it by
+eye rather than by running the board.** Measured against a pattern carrying both placeholders:
+
+| what you write | what the board does |
+|---|---|
+| `S12-some-slug/` — both substituted | resolves |
+| `some-slug/` — the **id** missing | **two drift lines**: the id reports no spec written, the directory reports no tickets cut |
+| `S12/` — the **slug** missing | **nothing.** A bare declared id resolves exactly as a correct directory does, and no line says the path is malformed |
+
+So the loud half is caught by running the board and the quiet half is not caught at all. The sibling
+files sit beside `spec.md`, whatever the directory ends up called.
 
 ## `spec.md`
 
