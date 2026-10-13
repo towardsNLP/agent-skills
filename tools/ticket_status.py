@@ -122,8 +122,15 @@ def component_of(name: str, ids: set[str], implied: set[str] = frozenset()) -> s
     argument that settled the spec-map table scoping and the fenced-example exit-0.
 
     The remedy stays the one declaration always buys: an id in the map's ID column pairs
-    both spellings in both directions. `test_an_undeclared_slug_ticket_directory_still_
-    over_reports_its_edges` pins this limit, so it cannot move without saying so.
+    both spellings in both directions. This limit is pinned by
+
+        test_an_undeclared_slug_ticket_directory_still_over_reports_its_edges
+
+    so it cannot move without saying so. On its own line because the wrapped version was
+    not greppable: a reader copying the name got zero hits and would have concluded the
+    test does not exist, landing back on believing the prose -- which is what citing a
+    test was meant to end. **A pointer that looks like it works and resolves to nothing**
+    is this file's recurring defect, in its own documentation this time.
 
     ``name in ids`` is checked before the fallback and cannot be folded into it: a
     return value equal to ``name`` means either "declared exactly" or "not declared at
