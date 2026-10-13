@@ -104,12 +104,26 @@ def component_of(name: str, ids: set[str], implied: set[str] = frozenset()) -> s
     registers `S1-alpha/01` while an edge naming `S1/01` builds exactly that, and the two
     never meet -- the edge is reported dangling against a ticket that exists.
 
-    That is a live over-report, measured, not a hypothetical. It is left alone on purpose:
-    closing it needs reverse matching, which the paragraph after next rejects on a
-    measured counter-case, and the failure direction is the acceptable one -- a spurious
-    drift line is loud and has an obvious remedy, which is declaring the id in the map.
-    An under-report would be silent. The remedy is the same one declaration always buys:
-    an id in the map's ID column pairs both spellings in both directions.
+    That is a live over-report, measured, not a hypothetical. It is left alone on purpose,
+    and the reason is sharper than "reverse matching costs more than it pays" -- which is
+    what this paragraph used to say, on the strength of the counter-case being WRITTEN DOWN
+    rather than run.
+
+    **Measured twice, independently, 2026-10-13.** Giving `component_of` reverse matching
+    fails five tests, and the direction is what settles it: the two counter-case tests
+    assert the PRESENCE of a drift line --
+
+        assert "foo-bar: spec written, no tickets cut" in ...err
+        assert "P1: spec written, no tickets cut"      in ...err
+
+    -- so reverse matching makes those lines DISAPPEAR. The trade is therefore not one fix
+    against four regressions. It is **closing a loud false positive by opening a silent
+    false negative**, which is the one direction this file forbids outright, and the same
+    argument that settled the spec-map table scoping and the fenced-example exit-0.
+
+    The remedy stays the one declaration always buys: an id in the map's ID column pairs
+    both spellings in both directions. `test_an_undeclared_slug_ticket_directory_still_
+    over_reports_its_edges` pins this limit, so it cannot move without saying so.
 
     ``name in ids`` is checked before the fallback and cannot be folded into it: a
     return value equal to ``name`` means either "declared exactly" or "not declared at
