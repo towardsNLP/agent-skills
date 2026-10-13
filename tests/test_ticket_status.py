@@ -818,3 +818,25 @@ def test_an_empty_spec_directory_does_not_clear_the_planned_no_spec_line(tmp_pat
     (tmp_path / "planning/specs/S2-empty").mkdir(parents=True)
     out = _run(tmp_path)
     assert "S2: planned in the spec map, no spec written" in out, out
+
+
+def test_norm_number_treats_001_and_1_as_the_same_ticket():
+    """`zfill` pads but never truncates, so `001` stayed `001` while `1` became `01`.
+
+    The docstring claimed all three spellings were one ticket; they were two. A ticket
+    file `001-slug.md` headed `# 001 -` would therefore dangle every edge naming `1`.
+    """
+    from ticket_status import norm_number
+
+    assert norm_number("1") == norm_number("01") == norm_number("001") == "01"
+    assert norm_number("010") == norm_number("10") == "10"
+    assert norm_number("x") == "x"
+    assert norm_number("1.5") == "1.5"
+
+
+def test_edge_key_tolerates_surrounding_whitespace_on_both_sides():
+    """The number side was stripped by `norm_number`; the spec side was not."""
+    from ticket_status import edge_key
+
+    assert edge_key("  S1/01  ", "S2") == "S1/01"
+    assert edge_key(" 01 ", "S2") == "S2/01"

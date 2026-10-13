@@ -134,8 +134,8 @@ def edge_key(blocked_by: str, citing_spec: str) -> str:
     writes both as `NN` without saying the heading must be zero-padded, so the first real
     ticket set could fail the board for nothing. Both sides are normalised now.
     """
-    spec, _, number = blocked_by.rpartition("/")
-    return f"{spec or citing_spec}/{norm_number(number)}"
+    spec, _, number = blocked_by.strip().rpartition("/")
+    return f"{spec.strip() or citing_spec}/{norm_number(number)}"
 
 
 def norm_number(number: str) -> str:
@@ -146,7 +146,10 @@ def norm_number(number: str) -> str:
     than silently mangled.
     """
     n = number.strip()
-    return n.zfill(2) if n.isdigit() else n
+    # Compare by VALUE, not by spelling. `zfill` pads but never truncates, so `001`
+    # stayed `001` while `1` became `01` -- two keys for one ticket, and every edge
+    # naming `1` dangled against a file headed `# 001 -`.
+    return f"{int(n):02d}" if n.isdigit() else n
 
 
 def base_dir(pattern: str) -> str:
