@@ -696,3 +696,125 @@ def test_dot_directories_are_not_specs(project, capsys):
     (junk / "README-checkpoint.md").write_text("# stale\n")
     assert status(root) == 0
     assert ".ipynb_checkpoints" not in capsys.readouterr().out
+
+
+# --- Regressions found by a code review of a downstream repo, 2026-10-13 -------------
+
+
+def _mk(root, rel, text):
+    p = root / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def _ticket(num, title, blocked_by=None):
+    return (
+        f"# {num} — {title}\n\n"
+        "**What becomes true:** something.\n\n"
+        f"**Blocked by:** {blocked_by or 'none (can start immediately)'}\n"
+        "**check_type:** manual\n"
+        "**check:** look at it\n"
+        "**Claimed by:** unclaimed\n\n"
+        "## Outcome\n\n**PR:**\n**Diverged:**\n"
+    )
+
+
+def _profile(root):
+    return _mk(
+        root,
+        "planning/agent/profile.md",
+        "- **spec_dir:** planning/specs/\n"
+        "- **ticket_dir:** `planning/tickets/<spec-id>/`\n"
+        "- **spec_map_path:** planning/spec-map.md\n",
+    )
+
+
+def _map(root, ids):
+    rows = "\n".join(f"| {i} | build | thing | — | — |" for i in ids)
+    return _mk(
+        root,
+        "planning/spec-map.md",
+        "# Spec map\n\n## Components\n\n| ID | Kind | Covers | Blocked by | Requires |\n"
+        "|---|---|---|---|---|\n" + rows + "\n",
+    )
+
+
+def _run(root):
+    import subprocess
+    import sys
+
+    here = Path(__file__).resolve().parents[1]
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(here / "tools" / "ticket_status.py"),
+            "--root",
+            str(root),
+            "--profile",
+            str(root / "planning/agent/profile.md"),
+            "--no-run",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    return r.stdout + r.stderr
+
+
+def test_a_cross_spec_blocked_by_edge_resolves_against_the_spec_it_names(tmp_path):
+    """`S2/05 blocked by S1/01` must look up S1/01, not S2/01.
+
+    The prefix was discarded and replaced with the blocking ticket's OWN spec_id, so a
+    valid cross-spec edge reported as dangling -- and worse, when a same-numbered ticket
+    happened to exist under the citing spec, a genuinely dangling edge passed silently.
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    _mk(tmp_path, "planning/specs/S2-b/spec.md", "# S2\n")
+    _mk(tmp_path, "planning/tickets/S1/01-first.md", _ticket("01", "First"))
+    _mk(tmp_path, "planning/tickets/S2/05-needs-s1.md", _ticket("05", "Needs S1", "S1/01"))
+    out = _run(tmp_path)
+    assert "blocked by 'S1/01', which does not exist" not in out, out
+
+
+def test_a_dangling_cross_spec_edge_is_still_reported(tmp_path):
+    """The mirror: the fix must not make every cross-spec edge pass."""
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    _mk(tmp_path, "planning/specs/S2-b/spec.md", "# S2\n")
+    _mk(tmp_path, "planning/tickets/S1/01-first.md", _ticket("01", "First"))
+    _mk(tmp_path, "planning/tickets/S2/05-needs.md", _ticket("05", "Needs", "S1/99"))
+    assert "blocked by 'S1/99', which does not exist" in _run(tmp_path)
+
+
+def test_an_unpadded_ticket_heading_does_not_dangle_every_edge_into_it(tmp_path):
+    """`.zfill(2)` was applied to the blocked_by side only.
+
+    A ticket headed `# 1 —` registers as `S1/1` while an edge naming it builds `S1/01`,
+    so the board reports drift for a ticket set that is entirely well-formed. The
+    template writes both as `NN` without saying the heading must be zero-padded.
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    _mk(tmp_path, "planning/tickets/S1/01-first.md", _ticket("1", "First"))
+    _mk(tmp_path, "planning/tickets/S1/02-second.md", _ticket("2", "Second", "1"))
+    out = _run(tmp_path)
+    assert "which does not exist" not in out, out
+
+
+def test_an_empty_spec_directory_does_not_clear_the_planned_no_spec_line(tmp_path):
+    """`mkdir` must not turn off the drift line the spec map exists to produce.
+
+    `written` counted any directory under the spec root with no `spec.md` requirement,
+    so an empty directory read as a written spec. The ticket side guards the symmetric
+    case explicitly ("an empty directory must still read as 'no tickets cut'").
+    """
+    _profile(tmp_path)
+    _map(tmp_path, ["S1", "S2"])
+    _mk(tmp_path, "planning/specs/S1-a/spec.md", "# S1\n")
+    (tmp_path / "planning/specs/S2-empty").mkdir(parents=True)
+    out = _run(tmp_path)
+    assert "S2: planned in the spec map, no spec written" in out, out

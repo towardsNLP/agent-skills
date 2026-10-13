@@ -455,11 +455,18 @@ def build_packet(
             card.warnings.append(
                 f"Ticket is claimed by {one_line(claimed_by)}, not {contributor or 'this user'}."
             )
-    elif (named := (task or state_ticket)) and named.casefold() not in _NONE:
+    elif (named := (task or state_ticket)) and path_value(named).casefold() not in _NONE:
         # A none-word is a filled field saying there is no ticket, which is the normal state
         # of a repo before the first one is cut -- and `templates/state.md` tells the writer to
         # put "none" there. `resolve_ticket` already treats it as absent; warning on it made a
         # correctly-written state file report a defect on every session card.
+        #
+        # NORMALISE THE SAME WAY `resolve_ticket` DOES. This tested the RAW value, so the
+        # moment a writer appended the reason -- `none -- planning/tickets/ is empty` --
+        # the string stopped matching `_NONE` and the warning came back. Worse, taking
+        # this branch skips the `else`, so `Governing agreement` and `Context anchors`
+        # were dropped from the card: the session lost exactly the anchors a state file
+        # supplies WHEN THERE IS NO TICKET, which is when it needs them most.
         card.warnings.append(f"No ticket inside the project resolves from {one_line(named)!r}.")
     else:
         card.add("Governing agreement", state.get("governing_spec", ""), state_path)

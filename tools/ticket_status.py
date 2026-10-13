@@ -118,6 +118,37 @@ def component_of(name: str, ids: set[str], implied: set[str] = frozenset()) -> s
     return component_of(name, implied) if implied else name
 
 
+def edge_key(blocked_by: str, citing_spec: str) -> str:
+    """The `known` key a `Blocked by:` value names.
+
+    Two defects lived in the one expression this replaces,
+    `f"{t.spec_id}/{b.split('/')[-1].zfill(2)}"`:
+
+    **It discarded the spec a cross-spec edge named.** `S2/05` blocked by `S1/01` took
+    `01` and re-prefixed it with the CITING ticket's spec, looking up `S2/01`. A valid
+    edge reported as dangling; worse, where `S2/01` happened to exist the edge validated
+    against the wrong ticket and a genuinely dangling edge passed silently.
+
+    **It padded one side only.** A ticket headed `# 1 -` registers as `S1/1`, while an
+    edge naming `1` built `S1/01`, so a well-formed set reported drift. The template
+    writes both as `NN` without saying the heading must be zero-padded, so the first real
+    ticket set could fail the board for nothing. Both sides are normalised now.
+    """
+    spec, _, number = blocked_by.rpartition("/")
+    return f"{spec or citing_spec}/{norm_number(number)}"
+
+
+def norm_number(number: str) -> str:
+    """A ticket number compared the same way wherever it is read.
+
+    Applied to the ticket's own heading AND to every edge naming it, so `1`, `01` and
+    `001` are one ticket rather than three. A non-decimal number is left alone rather
+    than silently mangled.
+    """
+    n = number.strip()
+    return n.zfill(2) if n.isdigit() else n
+
+
 def base_dir(pattern: str) -> str:
     """The fixed prefix of a path pattern, above the first placeholder.
 
@@ -180,7 +211,7 @@ def parse_ticket(path: Path, spec_id: str) -> Ticket:
             number, title = m.group(1), m.group(2).strip()
             break
 
-    t = Ticket(path=path, spec_id=spec_id, number=number, title=title)
+    t = Ticket(path=path, spec_id=spec_id, number=norm_number(number), title=title)
     body, _, outcome = text.partition("## Outcome")
 
     for line in body.splitlines():
@@ -437,15 +468,24 @@ def main(argv: list[str] | None = None) -> int:
                     + (f" -- {t.detail}" if t.detail else "")
                 )
             for b in t.blocked_by:
-                if f"{t.spec_id}/{b.split('/')[-1].zfill(2)}" not in known:
+                if edge_key(b, t.spec_id) not in known:
                     drift.append(f"{t.ident}: blocked by {b!r}, which does not exist")
 
     planned = parse_spec_map(spec_map)
     # Dot-directories are not specs -- the same rule the ticket root applies above.
     # `.ipynb_checkpoints` beside a spec tree is Jupyter litter, and counting it
     # reports "spec written, no tickets cut" against a directory nobody authored.
+    # A DIRECTORY IS NOT A SPEC. Counting an empty one as written let `mkdir` turn off
+    # the "planned in the spec map, no spec written" line that the map exists to
+    # produce -- the exact asymmetry the ticket side already guards below ("an empty
+    # directory must still read as 'no tickets cut'"). A spec directory counts once it
+    # holds at least one file, checked without assuming the file is named `spec.md`.
     written = (
-        {p.name for p in spec_root.iterdir() if p.is_dir() and not p.name.startswith(".")}
+        {
+            p.name
+            for p in spec_root.iterdir()
+            if p.is_dir() and not p.name.startswith(".") and any(p.iterdir())
+        }
         if spec_root.is_dir()
         else set()
     )

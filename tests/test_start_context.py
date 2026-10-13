@@ -508,3 +508,48 @@ def test_an_unresolvable_ticket_path_still_warns(tmp_path: Path) -> None:
     assert "No ticket inside the project resolves" in context_packet.build_packet(
         root, contributor=CONTRIBUTOR
     )
+
+
+def test_a_none_word_with_commentary_neither_warns_nor_drops_the_anchors(tmp_path):
+    """`Ticket: none — <why>` is a correctly-written field, not a defect.
+
+    The guard casefolded the RAW value, which is not in `_NONE` once a writer appends
+    the reason the template invites. Two consequences, both wrong: the card reported a
+    defect on a well-formed state file, and taking that branch skipped the `else`, so
+    `Governing agreement` and `Context anchors` vanished -- the session lost exactly the
+    anchors the state file supplies when there is no ticket. Found 2026-10-13 against a
+    real repo whose Ticket field reads
+    "none — planning/tickets/ is empty; /tickets needs an APPROVED spec".
+    """
+    import subprocess
+    import sys
+
+    (tmp_path / "planning/agent/state").mkdir(parents=True)
+    (tmp_path / "planning/agent/profile.md").write_text(
+        "- **state_dir:** planning/agent/state/\n- **contributors:** Dana Reed — lead\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "planning/agent/state/dana.md").write_text(
+        "# State\n\n**state_as_of:** 2026-10-13\n\n## Now\n\n"
+        "- **Branch:** `topic-1`\n"
+        "- **Ticket:** `none — planning/tickets/ is empty; nothing approved yet`\n"
+        "- **Governing spec:** `planning/specs/S1-thing/spec.md`\n"
+        "- **Context anchors:** `§4 Inputs and outputs`\n"
+        "- **Next action:** `do the thing`\n",
+        encoding="utf-8",
+    )
+    here = Path(__file__).resolve().parents[1]
+    out = subprocess.run(
+        [
+            sys.executable,
+            str(here / "session/start-session/scripts/context_packet.py"),
+            "--project-root",
+            str(tmp_path),
+            "--contributor",
+            "Dana Reed",
+        ],
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "No ticket inside the project resolves" not in out, out
+    assert "Context anchors" in out, out
