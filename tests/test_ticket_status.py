@@ -1120,3 +1120,36 @@ def test_a_closed_fence_still_hides_its_rows_when_more_fences_follow(tmp_path):
         "```\n| ID | Kind | Covers |\n|---|---|---|\n| F2 | build | another |\n```\n"
     )
     assert ts.parse_spec_map(path) == ["S1"]
+
+
+def test_an_undeclared_slug_ticket_directory_still_over_reports_its_edges():
+    """Pins the documented limit of `implied`, so a change to it cannot be silent.
+
+    Resolution runs one way: a slug carries an id, a bare id never elaborates into a
+    slug. So for an UNDECLARED component whose ticket directory carries the full slug,
+    `known` is keyed `S1-alpha/01` while an edge naming `S1/01` builds exactly that, and
+    the two never meet -- a valid edge reported dangling against a ticket that exists.
+
+    It is left alone because closing it needs the reverse matching `component_of` rejects
+    on a measured counter-case, and a spurious drift line is loud where an under-report
+    is silent. Asserted rather than left as prose: a documented limit with no test decays
+    into undocumented behaviour the moment somebody changes it. **If this fails, the limit
+    has moved and `component_of`'s docstring is now the stale artefact** -- which is the
+    point, and is the only form in which pinning a known limit is safe.
+    """
+    ids, implied = {"S9"}, {"S1-alpha", "S2-beta"}
+    edge = ts.edge_key("S1/01", "S2-beta", ids, implied)
+    registered = f"{ts.component_of('S1-alpha', ids, implied)}/01"
+    assert edge == "S1/01"
+    assert registered == "S1-alpha/01"
+    assert edge != registered, (
+        "the undeclared-slug over-report is closed -- update component_of's docstring, "
+        "which currently documents it as a live limit"
+    )
+
+    # Declaring the id is the remedy, and it pairs BOTH spellings in BOTH directions.
+    # This half asserts the MECHANISM rather than snapshotting the defect, so the test
+    # still means something after the limit is eventually closed.
+    declared = {"S1", "S2"}
+    assert ts.edge_key("S1/01", "S2-beta", declared, implied) == "S1/01"
+    assert f"{ts.component_of('S1-alpha', declared, implied)}/01" == "S1/01"
