@@ -338,24 +338,40 @@ def parse_spec_map(path: Path) -> list[str]:
     Scoping still does its job: a map with an `ID`-headed component table and a
     "Vocabulary gaps | Term | Why | Owner" table reads only the first, instead of minting
     `Term`, `sponsor` and `intake` as planned components.
+
+    **The trade rule 1 buys, stated so it is not read as absolute:** in a map where NO
+    header names an ID column, the union fallback reinstates that noise -- a gaps table
+    there does contribute its rows as planned components. The original defect is demoted
+    to that one shape rather than eliminated, which is the right way round, because the
+    remedy is a header a repo can write and the alternative is silence.
     """
     if not path.is_file():
         return []
 
-    # Group into tables: maximal runs of pipe-prefixed lines outside fenced blocks.
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    # Fenced regions, counted ONLY WHERE THE FENCE CLOSES. A plain `fenced = not fenced`
+    # toggle reopened the exit-0 path this skipping exists to close: one dropped closing
+    # fence swallowed the rest of the file, so a map whose Components table sat below an
+    # unterminated ``` block parsed to zero ids and the board printed "no drift", exit 0.
+    # An unmatched trailing fence is therefore ignored rather than treated as opening a
+    # region to EOF -- rule 1 again, never lose a real id, and here it has to hold even
+    # for malformed markdown.
+    marks = [i for i, raw in enumerate(lines) if raw.strip().startswith(("```", "~~~"))]
+    fenced_lines: set[int] = set()
+    for opened, closed in zip(marks[::2], marks[1::2]):
+        fenced_lines.update(range(opened, closed + 1))
+
+    # Group into tables: maximal runs of pipe-prefixed lines outside fenced regions.
     tables: list[list[str]] = []
     run: list[str] = []
-    fenced = False
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if line.startswith("```") or line.startswith("~~~"):
-            fenced = not fenced
+    for i, raw in enumerate(lines):
+        if i in fenced_lines:
             if run:
                 tables.append(run)
                 run = []
             continue
-        if fenced:
-            continue
+        line = raw.strip()
         if line.startswith("|"):
             run.append(line)
         elif run:

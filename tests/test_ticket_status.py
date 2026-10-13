@@ -1085,3 +1085,38 @@ def test_a_non_decimal_unicode_digit_does_not_crash_norm_number():
     assert norm_number("²") == "²"
     assert norm_number("⅕") == "⅕"
     assert norm_number("7") == "07"
+
+
+def test_an_unclosed_fence_does_not_swallow_the_rest_of_the_map(tmp_path):
+    """The exit-0 path, reopened by my own fence fix and closed again.
+
+    `fenced = not fenced` is a plain toggle, so ONE dropped closing fence made every
+    later line fenced: a map whose Components table sat below an unterminated ``` block
+    parsed to zero ids, and the board printed "no drift" with exit 0. Same class as the
+    fenced-example defect, reached from a single missing backtick in a hand-edited file.
+
+    An unmatched trailing fence is ignored rather than opening a region to EOF, because
+    rule 1 -- never lose a real id -- has to hold for malformed markdown too.
+    """
+    path = tmp_path / "spec-map.md"
+    path.write_text(
+        "```python\n"
+        'print("how a row is written")\n'
+        "\n"
+        "## Components\n\n"
+        "| ID | Kind | Covers |\n|---|---|---|\n| S1 | build | one |\n| S2 | build | two |\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1", "S2"]
+
+
+def test_a_closed_fence_still_hides_its_rows_when_more_fences_follow(tmp_path):
+    """The mirror: ignoring UNCLOSED fences must not stop CLOSED ones working, and a
+    second, properly closed fence later in the file must not re-pair the first one."""
+    path = tmp_path / "spec-map.md"
+    path.write_text(
+        "```\n| ID | Kind | Covers |\n|---|---|---|\n| F1 | build | example |\n```\n\n"
+        "## Components\n\n"
+        "| ID | Kind | Covers |\n|---|---|---|\n| S1 | build | one |\n\n"
+        "```\n| ID | Kind | Covers |\n|---|---|---|\n| F2 | build | another |\n```\n"
+    )
+    assert ts.parse_spec_map(path) == ["S1"]
