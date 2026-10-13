@@ -90,12 +90,26 @@ def component_of(name: str, ids: set[str], implied: set[str] = frozenset()) -> s
     The longest declared id wins, so `B.8.1-engine` resolves to `B.8.1`, not `B.8`.
 
     ``implied`` is a second, weaker vocabulary, consulted only for a name the declared
-    one does not account for: ticket directory names, which name an id by construction
-    but may also be spelled with the full slug. A map that declares some components
-    and not others is the ordinary state of a board mid-migration, and with a single
-    vocabulary every undeclared component fell back to comparing raw names -- the
-    defect this function exists to close, still open for whatever the map had not
-    reached yet.
+    one does not account for: ticket directory names, which name an id by construction.
+    A map that declares some components and not others is the ordinary state of a board
+    mid-migration, and with a single vocabulary every undeclared component fell back to
+    comparing raw names -- the defect this function exists to close, still open for
+    whatever the map had not reached yet.
+
+    **What ``implied`` does NOT do, because the one-way rule below forbids it.** An
+    earlier version of this paragraph said ticket directory names "may also be spelled
+    with the full slug", which reads as though the slug spelling were handled here. It is
+    not. A slug resolves TO a declared id; a bare id never resolves to a slug. So for an
+    **undeclared** component whose ticket directory carries the full slug, `known`
+    registers `S1-alpha/01` while an edge naming `S1/01` builds exactly that, and the two
+    never meet -- the edge is reported dangling against a ticket that exists.
+
+    That is a live over-report, measured, not a hypothetical. It is left alone on purpose:
+    closing it needs reverse matching, which the paragraph after next rejects on a
+    measured counter-case, and the failure direction is the acceptable one -- a spurious
+    drift line is loud and has an obvious remedy, which is declaring the id in the map.
+    An under-report would be silent. The remedy is the same one declaration always buys:
+    an id in the map's ID column pairs both spellings in both directions.
 
     ``name in ids`` is checked before the fallback and cannot be folded into it: a
     return value equal to ``name`` means either "declared exactly" or "not declared at
@@ -357,6 +371,16 @@ def parse_spec_map(path: Path) -> list[str]:
     # An unmatched trailing fence is therefore ignored rather than treated as opening a
     # region to EOF -- rule 1 again, never lose a real id, and here it has to hold even
     # for malformed markdown.
+    # Paired BY POSITION, which encodes "the trailing marker is the stray one". That is
+    # the right prior: the opener is typed first, so it is the closer that gets dropped.
+    #
+    # The asymmetry is deliberate and is a choice, not an oversight. Where the stray
+    # marker comes FIRST, position-pairing fences from it to the real example fence's
+    # opener, so a genuine table can be skipped and an example's ids returned instead.
+    # Nothing in the text says which of three markers is the stray, so no rule gets both.
+    # This one is chosen because its failure is LOUD -- the example's ids surface as
+    # planned components with no spec, so the board is red with a visibly bogus id -- and
+    # the other arrangement's failure was the silent exit-0 that this pairing replaced.
     marks = [i for i, raw in enumerate(lines) if raw.strip().startswith(("```", "~~~"))]
     fenced_lines: set[int] = set()
     for opened, closed in zip(marks[::2], marks[1::2]):
