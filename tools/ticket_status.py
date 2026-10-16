@@ -14,6 +14,7 @@ The exit code is the point. It is non-zero when:
   4. a component in the spec map has no spec              -- planned, unwritten
   5. a spec directory has no tickets                      -- written, uncut
   6. a ticket or the profile is MALFORMED                 -- the board is blind
+  7. a branch-scoped ticket differs from its other copy   -- a mirror was missed
 
 Condition 6 is the open-ended one, and deliberately not enumerated above: no check
 named, a check written as a full command, an `sme` row absent from the register, an
@@ -26,6 +27,15 @@ A repo adopting this workflow mid-flight will have specs that predate ticketing
 and will never have tickets. Name them in the profile's `pre_workflow_specs`
 rather than weakening condition 5: an explicit list is auditable, and it shrinks
 as those specs are retired.
+
+A spec whose code lives on another branch -- an experiment that has not merged -- can
+keep its ticket files here while its checks exist only there. Name it in the profile's
+`branch_scoped_specs` as `<spec>@<git ref>`. For those tickets a check that does not
+resolve here is looked up on the ref: a closed ticket whose named test is defined there
+is reported `away`, not drift, and is not counted done, because nothing ran it. In
+return the two copies must agree: a claim or an Outcome on the ref that is missing here
+is condition 7. The lookup is textual (`def <name>` in the file at the ref), which is
+why `away` never counts as done; the ref's own board is what runs the check.
 
 Standard library only, deliberately: this file is vendored into project repos,
 and a vendored file with dependencies is a burden on every one of them.
@@ -263,8 +273,9 @@ class Ticket:
         return f"{self.spec_id}/{self.number}"
 
 
-def parse_ticket(path: Path, spec_id: str) -> Ticket:
-    text = path.read_text(encoding="utf-8")
+def parse_ticket(path: Path, spec_id: str, text: str | None = None) -> Ticket:
+    if text is None:
+        text = path.read_text(encoding="utf-8")
     number, title = path.stem.split("-", 1)[0], path.stem
     for line in text.splitlines():
         m = _TITLE.match(line)
@@ -616,7 +627,59 @@ def mark(t: Ticket) -> str:
         return "FAIL" if t.has_outcome else "open"
     if t.state == "unresolved" and not (t.has_outcome or t.malformed):
         return "todo"  # the check is named, the test is not written yet
-    return {"pass": "done", "unresolved": "BROKEN", "unknown": "manual", "skipped": "-"}[t.state]
+    return {
+        "pass": "done",
+        "unresolved": "BROKEN",
+        "unknown": "manual",
+        "skipped": "-",
+        "away": "away",
+    }[t.state]
+
+
+def parse_scoped(raw: str, ids: set[str], implied: set[str]) -> dict[str, str]:
+    """`B.20@origin/develop, B.21@origin/develop` -> {component: ref}."""
+    out: dict[str, str] = {}
+    for item in re.split(r"[,\s]+", raw):
+        spec, sep, ref = item.strip().partition("@")
+        if spec and sep and ref:
+            out[component_of(spec, ids, implied)] = ref
+    return out
+
+
+def git_show(root: Path, ref: str, rel: str) -> str | None:
+    """The file at `ref`, or None when the ref, the path or git itself is missing."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "show", f"{ref}:./{rel}"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return r.stdout if r.returncode == 0 else None
+
+
+def ref_resolves(root: Path, ref: str) -> bool:
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],
+            capture_output=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return r.returncode == 0
+
+
+def defined_at(root: Path, ref: str, node_id: str) -> bool:
+    """Whether the test a node id names is defined in its file at `ref`. Textual."""
+    file_part, _, rest = node_id.partition("::")
+    name = re.sub(r"\[.*$", "", rest.split("::")[-1]) if rest else ""
+    text = git_show(root, ref, file_part)
+    if text is None or not name:
+        return False
+    return re.search(rf"^\s*(async\s+)?def\s+{re.escape(name)}\b", text, re.M) is not None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -658,10 +721,33 @@ def main(argv: list[str] | None = None) -> int:
         f"{component_of(t.spec_id, ids, implied)}/{t.number}" for ts in by_spec.values() for t in ts
     }
     drift: list[str] = []
+    scoped = parse_scoped(cfg.get("branch_scoped_specs", ""), ids, implied)
+    for component, ref in sorted(scoped.items()):
+        if not ref_resolves(root, ref):
+            drift.append(f"branch_scoped_specs names {ref!r}, which does not resolve")
 
     for tickets in by_spec.values():
         for t in tickets:
             evaluate(t, root, cfg, a.timeout, execute=not a.no_run)
+            ref = scoped.get(component_of(t.spec_id, ids, implied))
+            if ref and ref_resolves(root, ref):
+                if (
+                    t.state == "unresolved"
+                    and not t.malformed
+                    and t.check_type == "test"
+                    and defined_at(root, ref, t.check)
+                ):
+                    t.state, t.detail = "away", f"check lives on {ref}"
+                rel = t.path.relative_to(root).as_posix()
+                there_text = git_show(root, ref, rel)
+                if there_text is not None:
+                    there = parse_ticket(t.path, t.spec_id, there_text)
+                    if there.claimed_by.lower() != "unclaimed" and (
+                        t.claimed_by.lower() == "unclaimed"
+                    ):
+                        drift.append(f"{t.ident}: claimed on {ref}, but not here")
+                    if there.has_outcome and not t.has_outcome:
+                        drift.append(f"{t.ident}: closed on {ref}, but its Outcome is not here")
             # A check that does not resolve YET is the normal state of an unstarted
             # ticket: TDD names the check before the test exists. Only a ticket
             # claiming to be done owes a check that resolves. Failing the board on
@@ -720,7 +806,10 @@ def main(argv: list[str] | None = None) -> int:
     for spec_id in sorted(by_spec):
         tickets = by_spec[spec_id]
         done = sum(t.state == "pass" for t in tickets)
-        print(f"\n{spec_id}  [{done}/{len(tickets)} done]")
+        away = sum(t.state == "away" for t in tickets)
+        ref = scoped.get(component_of(spec_id, ids, implied), "")
+        tail = f", {away} away on {ref}" if away else ""
+        print(f"\n{spec_id}  [{done}/{len(tickets)} done{tail}]")
         for t in tickets:
             claim = t.claimed_by if t.claimed_by.lower() != "unclaimed" else "-"
             note = f"  {t.detail}" if t.detail and t.state in {"fail", "unresolved"} else ""

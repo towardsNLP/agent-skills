@@ -1153,3 +1153,142 @@ def test_an_undeclared_slug_ticket_directory_still_over_reports_its_edges():
     declared = {"S1", "S2"}
     assert ts.edge_key("S1/01", "S2-beta", declared, implied) == "S1/01"
     assert f"{ts.component_of('S1-alpha', declared, implied)}/01" == "S1/01"
+
+
+# --- branch-scoped specs ----------------------------------------------------
+#
+# A spec whose code lives on another branch keeps its ticket files on this one. The
+# board here cannot run those checks, so it must neither call a closed ticket broken nor
+# let the two copies of a ticket drift apart unseen.
+
+SCOPED = "- **test_command:** `false`\n- **branch_scoped_specs:** `P1@develop`"
+SCOPED_TEST = "tests/test_p1.py::test_p1_works"
+
+
+def _git(root: Path, *args: str) -> None:
+    import subprocess
+
+    subprocess.run(
+        ["git", "-C", str(root), *args],
+        check=True,
+        capture_output=True,
+        env={
+            "GIT_AUTHOR_NAME": "t",
+            "GIT_AUTHOR_EMAIL": "t@t",
+            "GIT_COMMITTER_NAME": "t",
+            "GIT_COMMITTER_EMAIL": "t@t",
+            "HOME": str(root),
+            "PATH": __import__("os").environ["PATH"],
+        },
+    )
+
+
+def _with_develop(root: Path, *, ticket: str | None = None, test_body: str | None = None) -> Path:
+    """Commit `root` as `main`, then make `develop` carry the code and, optionally, an
+    edited copy of ticket 01. The working tree is left on `main`."""
+    _git(root, "init", "-q", "-b", "main")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "main")
+    _git(root, "switch", "-q", "-c", "develop")
+    if test_body is not None:
+        (root / "tests").mkdir(exist_ok=True)
+        (root / SCOPED_TEST.split("::")[0]).write_text(test_body)
+    if ticket is not None:
+        (root / "planning/tickets/P1-thing/01-thing.md").write_text(ticket)
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "--allow-empty", "-m", "develop")
+    _git(root, "switch", "-q", "main")
+    return root
+
+
+def _scoped_ticket(**kw) -> str:
+    base = {
+        "num": "01",
+        "title": "thing 1",
+        "blocked": "none",
+        "ctype": "test",
+        "check": SCOPED_TEST,
+        "claim": "unclaimed",
+        "outcome": "",
+    }
+    return TICKET.format(**{**base, **kw})
+
+
+def test_a_closed_ticket_whose_check_lives_on_the_scoped_branch_is_away_not_drift(project, capsys):
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": SCOPED_TEST, "outcome": "**PR:** #5"}]},
+        profile_extra=SCOPED,
+    )
+    _with_develop(
+        root,
+        ticket=_scoped_ticket(outcome="**PR:** #5"),
+        test_body="def test_p1_works():\n    pass\n",
+    )
+    assert status(root) == 0
+    out = capsys.readouterr().out
+    assert "away" in out
+    assert "[0/1 done, 1 away on develop]" in out
+
+
+def test_a_closed_ticket_whose_check_is_on_neither_branch_is_still_drift(project, capsys):
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": SCOPED_TEST, "outcome": "**PR:** #5"}]},
+        profile_extra=SCOPED,
+    )
+    _with_develop(root, ticket=_scoped_ticket(outcome="**PR:** #5"))
+    assert status(root) == 1
+    assert "does not resolve" in capsys.readouterr().err
+
+
+def test_an_unstarted_ticket_is_not_away_because_its_test_file_exists_there(project, capsys):
+    """The file can hold other tickets' tests. Only the named test makes it away."""
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": SCOPED_TEST}]},
+        profile_extra=SCOPED,
+    )
+    _with_develop(root, test_body="def test_something_else():\n    pass\n")
+    assert status(root) == 0
+    out = capsys.readouterr().out
+    assert "todo" in out and "away" not in out
+
+
+def test_an_outcome_on_the_scoped_branch_that_is_not_mirrored_here_is_drift(project, capsys):
+    root = project({"P1-thing": [{"ctype": "test", "check": SCOPED_TEST}]}, profile_extra=SCOPED)
+    _with_develop(
+        root,
+        ticket=_scoped_ticket(outcome="**PR:** #5"),
+        test_body="def test_p1_works():\n    pass\n",
+    )
+    assert status(root) == 1
+    assert "closed on develop, but its Outcome is not here" in capsys.readouterr().err
+
+
+def test_a_claim_on_the_scoped_branch_that_is_not_mirrored_here_is_drift(project, capsys):
+    root = project({"P1-thing": [{"ctype": "test", "check": SCOPED_TEST}]}, profile_extra=SCOPED)
+    _with_develop(root, ticket=_scoped_ticket(claim="Dana Reed"))
+    assert status(root) == 1
+    assert "claimed on develop, but not here" in capsys.readouterr().err
+
+
+def test_a_ticket_already_mirrored_is_not_drift(project, capsys):
+    root = project(
+        {"P1-thing": [{"ctype": "test", "check": SCOPED_TEST, "claim": "Dana Reed"}]},
+        profile_extra=SCOPED,
+    )
+    _with_develop(root, ticket=_scoped_ticket(claim="Dana Reed"))
+    assert status(root) == 0
+
+
+def test_a_scoped_branch_that_does_not_resolve_is_drift(project, capsys):
+    root = project({"P1-thing": [{"ctype": "test", "check": SCOPED_TEST}]}, profile_extra=SCOPED)
+    _git(root, "init", "-q", "-b", "main")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "main")
+    assert status(root) == 1
+    assert "names 'develop', which does not resolve" in capsys.readouterr().err
+
+
+def test_a_scoped_spec_outside_a_git_repository_is_drift(project, capsys):
+    root = project({"P1-thing": [{"ctype": "test", "check": SCOPED_TEST}]}, profile_extra=SCOPED)
+    assert status(root) == 1
+    assert "does not resolve" in capsys.readouterr().err
