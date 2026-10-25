@@ -239,6 +239,24 @@ def test_outcome_placeholder_is_not_an_outcome(tmp_path, placeholder):
     assert ts.parse_ticket(f, "P1-thing").has_outcome is False
 
 
+def test_empty_pr_line_does_not_read_the_next_line_as_its_value(tmp_path):
+    """The template's own Outcome, untouched: `\\s*` after `**PR:**` crossed the
+    newline and took `**Diverged:**` for the PR, so every newly cut ticket read closed."""
+    f = tmp_path / "01-x.md"
+    f.write_text(
+        TICKET.format(
+            num="01",
+            title="x",
+            blocked="none",
+            ctype="gate",
+            check="true",
+            claim="unclaimed",
+            outcome="<!-- Written once, at close. -->\n\n**PR:**\n**Diverged:**",
+        )
+    )
+    assert ts.parse_ticket(f, "P1-thing").has_outcome is False
+
+
 def test_pr_placeholder_does_not_turn_a_failing_open_ticket_into_drift(project):
     root = project({"P1-thing": [{"check": "false", "outcome": "**PR:** #NN"}]})
     assert status(root) == 0

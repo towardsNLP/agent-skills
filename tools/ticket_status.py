@@ -304,7 +304,9 @@ def parse_ticket(path: Path, spec_id: str, text: str | None = None) -> Ticket:
 
     # An Outcome is real only once the placeholder has been replaced. Older
     # templates shipped `#NN`, which must not close every newly cut ticket.
-    pr = re.search(r"^\*\*PR:\*\*\s*(.*)$", outcome, re.M)
+    # `[ \t]*`, never `\s*`: `\s` matches the newline, so an empty `**PR:**` read the
+    # NEXT line (`**Diverged:**`) as its value and closed every newly cut ticket.
+    pr = re.search(r"^\*\*PR:\*\*[ \t]*(.*)$", outcome, re.M)
     pr_value = scalar(pr.group(1)).lower() if pr else ""
     t.has_outcome = pr_value not in OUTCOME_PLACEHOLDERS
     return t
