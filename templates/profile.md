@@ -30,7 +30,12 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **progress_log_path:**
 - **progress_log_ordering:** `append` (oldest first) or `prepend` (newest first)
 - **plan_path:** the master plan
-- **roadmap_path:** the status board or delivery tracker
+- **roadmap_path:** the status board or delivery tracker. `/start-session` shows the current week
+  from it when it has dated week headings, `## Week <n>: <theme> (<Mon D> to <Mon D>)`, nested
+  headings allowed and the narrowest one wins. Inside a week it reads a `**Theme:**` line, a
+  `### <first name> ...` subheading per person or `- **<first name>:** ...` items, `- [ ]` tasks
+  led by an ID such as `A1`, and a `## Milestones` table with name and date in its first two
+  columns. Dates carry no year; each takes the year nearest the date before it
 - **contracts_path:** the project's constitution, or omit
 - **modeling_handbook_path:** the domain-modelling authority, or omit
 - **architecture_doc_path:** or omit

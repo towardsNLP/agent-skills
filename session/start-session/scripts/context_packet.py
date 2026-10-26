@@ -2,9 +2,9 @@
 """Build a bounded, read-only session card from project metadata.
 
 This helper is the context boundary for ``start-session``. It reads the contributor
-profile, the contributor's current state, the selected ticket, and diary headings
-inside the process so those documents do not have to enter an LLM's context. Only
-the card written to stdout is intended for the conversation.
+profile, the contributor's current state, the selected ticket, diary headings and the
+roadmap's current week inside the process so those documents do not have to enter an
+LLM's context. Only the card written to stdout is intended for the conversation.
 
 The output budget is semantic rather than a character slicer: field values are
 always emitted whole. If complete task-routing fields do not fit, the helper emits
@@ -21,10 +21,14 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from pathlib import Path
 
 PROFILE_DEFAULT = Path("planning/agent/profile.md")
 DEFAULT_MAX_CHARS = 2500
+# The week block has its own ceiling, so a heavy week can never block the routing card.
+WEEK_MAX_CHARS = 1500
+MILESTONES_AHEAD = 3
 # Below this the fixed blocked-card message alone does not fit, so the budget
 # could not be honoured even by returning nothing useful. Refuse instead.
 MIN_MAX_CHARS = 800
@@ -34,6 +38,18 @@ _PROFILE_FIELD = re.compile(r"^\s*-\s+\*\*([A-Za-z_][A-Za-z0-9_]*):\*\*\s*(.*)$"
 _BOLD_FIELD = re.compile(r"^\s*-?\s*\*\*([^*]+):\*\*\s*(.*)$")
 _DATE_HEADING = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})\b")
 _NONE = {"", "-", "—", "none", "n/a", "not selected", "unclaimed"}
+
+_MONTHS = ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
+_MONTH_DAY = re.compile(
+    r"\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?"
+    r"|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+(\d{1,2})\b"
+)
+_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
+_WEEK_TITLE = re.compile(r"^Weeks?\s+\d.*\(([^()]*)\)$")
+_ITEM = re.compile(r"^-\s+(?:\[([ xX])\]\s+)?(.*\S)\s*$")
+_NAMED_ITEM = re.compile(r"^(?:\*\*)?([A-Z][\w'-]*)(?::\*\*|\*\*:|:)\s+(.*)$")
+_TASK_ID = re.compile(r"^([A-Z]{1,4}\d+[a-z]?)\b")
+_LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 
 
 def one_line(value: str) -> str:
@@ -130,10 +146,8 @@ def contributor_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", first.casefold())
 
 
-def roster_contains(profile_text: str, contributor: str) -> bool | None:
-    """Check the contributor roster, or return ``None`` when no roster is declared."""
-    if not contributor:
-        return None
+def roster_section(profile_text: str) -> str | None:
+    """The profile's people section, or ``None`` when it declares no contributors."""
     match = re.search(
         r"^## Identity and people\s*$([\s\S]*?)(?=^## |\Z)",
         profile_text,
@@ -141,9 +155,17 @@ def roster_contains(profile_text: str, contributor: str) -> bool | None:
     )
     if not match or "contributors" not in match.group(1).casefold():
         return None
+    return match.group(1)
+
+
+def roster_contains(profile_text: str, contributor: str) -> bool | None:
+    """Check the contributor roster, or return ``None`` when no roster is declared."""
+    roster = roster_section(profile_text)
+    if not contributor or roster is None:
+        return None
     # Whole name only. A substring test makes "Al" a member of a roster listing Alice.
     bounded = rf"(?<![\w-]){re.escape(contributor)}(?![\w-])"
-    return re.search(bounded, match.group(1), re.IGNORECASE) is not None
+    return re.search(bounded, roster, re.IGNORECASE) is not None
 
 
 def resolve_state(root: Path, profile: dict[str, str], contributor: str) -> Path | None:
@@ -284,6 +306,199 @@ def same_person(claimed_by: str, contributor: str) -> bool:
     return claim in {person, first, contributor_slug(contributor)}
 
 
+def plain(text: str) -> str:
+    """Roadmap text without bold or link markup; the words themselves are untouched."""
+    return one_line(_LINK.sub(r"\1", text).replace("**", ""))
+
+
+def month_days(text: str) -> list[tuple[int, int]]:
+    """Every real month-and-day in ``text``, in order. The year is resolved separately."""
+    found: list[tuple[int, int]] = []
+    for name, day in _MONTH_DAY.findall(text):
+        month = _MONTHS.index(name[:3].casefold()) + 1
+        try:
+            date(2000, month, int(day))  # a leap year, so only an impossible day fails
+        except ValueError:
+            continue
+        found.append((month, int(day)))
+    return found
+
+
+def _on(year: int, month: int, day: int) -> date:
+    try:
+        return date(year, month, day)
+    except ValueError:  # Feb 29 outside a leap year, the only day `month_days` lets through
+        return date(year, month, 28)
+
+
+def resolve_dates(pairs: list[tuple[int, int]], today: date) -> list[date]:
+    """Give a roadmap's year-less dates their years, in document order.
+
+    A roadmap writes "Oct 26", not "2026-10-26". The first date takes the latest year that puts
+    it no more than a quarter past today, so a plan that starts soon and one that started months
+    ago both anchor. Each later date takes the year nearest the date before it, which crosses the
+    new year and survives a nested heading that steps back in time. Nearest-to-today alone fails
+    on any plan longer than six months: seen from October, "Apr 30" is nearer last April.
+    """
+    resolved: list[date] = []
+    for month, day in pairs:
+        if resolved:
+            previous = resolved[-1]
+            years = (previous.year - 1, previous.year, previous.year + 1)
+            candidates = [_on(year, month, day) for year in years]
+            resolved.append(min(candidates, key=lambda d: abs(d - previous)))
+        else:
+            ceiling = today + timedelta(days=92)
+            candidate = _on(ceiling.year, month, day)
+            resolved.append(
+                candidate if candidate <= ceiling else _on(ceiling.year - 1, month, day)
+            )
+    return resolved
+
+
+def sections(lines: list[str]) -> list[tuple[int, str, list[str]]]:
+    """Each heading's level, text, and the lines it owns up to the next heading as high."""
+    heads = [
+        (index, len(match.group(1)), match.group(2))
+        for index, line in enumerate(lines)
+        if (match := _HEADING.match(line))
+    ]
+    result: list[tuple[int, str, list[str]]] = []
+    for position, (index, level, text) in enumerate(heads):
+        end = next((i for i, lv, _ in heads[position + 1 :] if lv <= level), len(lines))
+        result.append((level, text, lines[index + 1 : end]))
+    return result
+
+
+def week_items(body: list[str]) -> list[tuple[str, bool, str]]:
+    """``(owner, done, text)`` for each top-level list item in a week.
+
+    An item belongs to a ``Name:`` prefix when it carries one, and otherwise to the first word
+    of the subheading above it. A subheading that is not a person, such as exit criteria, owns
+    items too; they carry no task ID and match no contributor, so they surface nowhere.
+    """
+    owner = ""
+    items: list[tuple[str, bool, str]] = []
+    for line in body:
+        if heading := _HEADING.match(line):
+            owner = next(iter(re.findall(r"[^\W\d_][\w'-]*", heading.group(2))), "")
+            continue
+        if not (item := _ITEM.match(line)):
+            continue
+        box, text = item.groups()
+        named = _NAMED_ITEM.match(text)
+        who, text = (named.group(1), named.group(2)) if named else (owner, text)
+        items.append((who, box in ("x", "X"), plain(text)))
+    return items
+
+
+def week_block(
+    text: str,
+    shown: str,
+    contributor: str,
+    today: date,
+    roster: str | None = None,
+    max_chars: int = WEEK_MAX_CHARS,
+) -> str:
+    """Render the roadmap week containing ``today`` for one contributor, under its own budget.
+
+    Returns an empty string when the roadmap has no dated week headings, which is a roadmap
+    kept in another shape rather than a defect. Like the card, a task is listed whole or
+    counted, never cut.
+    """
+    parsed = sections(text.splitlines())
+    weeks = [
+        (level, title, body, pair)
+        for level, title, body in parsed
+        if (match := _WEEK_TITLE.match(title)) and len(pair := month_days(match.group(1))) == 2
+    ]
+    if not weeks:
+        return ""
+    spans = resolve_dates([md for *_, pair in weeks for md in pair], today)
+
+    rows = [
+        (plain(cells[0]), found[0])
+        for level, title, body in parsed
+        if re.match(r"milestones\b", title, re.IGNORECASE)
+        for line in body
+        if line.lstrip().startswith("|")
+        and len(cells := [cell.strip() for cell in line.strip().strip("|").split("|")]) >= 2
+        and (found := month_days(cells[1]))
+    ]
+    dated = zip((name for name, _ in rows), resolve_dates([md for _, md in rows], today))
+    upcoming = sorted((when, name) for name, when in dated if when >= today)
+
+    def countdown(when: date) -> str:
+        days = (when - today).days
+        return {0: "today", 1: "tomorrow"}.get(days, f"in {days} days")
+
+    ahead = " · ".join(
+        f"{name} {when:%a %b} {when.day} ({countdown(when)})"
+        for when, name in upcoming[:MILESTONES_AHEAD]
+    )
+    tail = [f"- **Ahead:** {ahead}"] if ahead else []
+
+    def render(lines: list[str]) -> str:
+        return "\n".join(lines) + "\n"
+
+    covering = [
+        (spans[2 * n + 1] - spans[2 * n], -level, title, body)
+        for n, (level, title, body, _) in enumerate(weeks)
+        if spans[2 * n] <= today <= spans[2 * n + 1]
+    ]
+    if not covering:
+        return render(["## This week", f"- No week in `{shown}` covers {today:%Y-%m-%d}.", *tail])
+    *_, title, body = min(covering, key=lambda week: week[:2])
+
+    theme = next(
+        (m.group(1) for line in body if (m := re.match(r"\*\*Theme:\*\*\s*(.+)", line))), ""
+    )
+    me = contributor_slug(contributor)
+    mine = [
+        (done, task) for who, done, task in week_items(body) if me and contributor_slug(who) == me
+    ]
+    tasks = [f"  - {task}" for done, task in mine if not done]
+    done = len(mine) - len(tasks)
+
+    # A teammate is someone the roster names, matched with case: "Week" from an exit-criteria
+    # heading once became a lane, and a case-blind match finds it in "onboarding week".
+    def teammate(who: str) -> bool:
+        named = rf"(?<![\w-]){re.escape(who)}(?![\w-])"
+        return roster is None or re.search(named, roster) is not None
+
+    team: dict[str, list[str]] = {}
+    for who, finished, task in week_items(body):
+        if who and contributor_slug(who) != me and not finished and (tid := _TASK_ID.match(task)):
+            if teammate(who):
+                team.setdefault(who, []).append(tid.group(1))
+    if team:
+        lane = " · ".join(f"{who} {', '.join(ids)}" for who, ids in team.items())
+        tail.insert(0, f"- **Team:** {lane}")
+
+    lines = [f"## This week — {plain(title)}"] + ([f"- **Theme:** {plain(theme)}"] if theme else [])
+    if mine:
+        lines.append(f"- **Yours ({len(tasks)} open" + (f", {done} done):**" if done else "):**"))
+    else:
+        first = contributor.split()[0] if contributor.split() else "you"
+        lines.append(f"- **Yours:** nothing listed for {first}")
+
+    more = f"  - +{len(tasks)} more in `{shown}`"  # the widest the overflow line can be
+    listed = 0
+    for task in tasks:
+        reserve = [more] if listed < len(tasks) - 1 else []
+        if len(render([*lines, task, *reserve, *tail])) > max_chars:
+            break
+        lines.append(task)
+        listed += 1
+    if hidden := len(tasks) - listed:
+        lines.append(f"  - +{hidden} more in `{shown}`")
+
+    block = render([*lines, *tail])
+    if len(block) > max_chars:
+        return render([lines[0], f"- The week is too long for the card; read it in `{shown}`."])
+    return block
+
+
 @dataclass
 class SessionCard:
     """Collect complete semantic fields and render them under a hard budget."""
@@ -395,6 +610,7 @@ def build_packet(
     contributor: str = "",
     branch: str = "",
     max_chars: int = DEFAULT_MAX_CHARS,
+    today: date | None = None,
 ) -> str:
     """Resolve project routing metadata and return one bounded session card."""
     if max_chars < MIN_MAX_CHARS:
@@ -534,7 +750,28 @@ def build_packet(
             f"{branch} is a trunk branch; create a topic branch before writes ({rule})."
         )
 
-    return card.render(root, max_chars)
+    # The roadmap is reduced to one week inside this process, under its own budget, and is
+    # appended after the card so a heavy week can never turn the routing card into a block.
+    week = ""
+    roadmap = path_value(profile.get("roadmap_path", ""))
+    if roadmap.casefold() not in _NONE:
+        roadmap_path = root / roadmap
+        if roadmap_path.is_file() and contained(root, roadmap_path):
+            week = week_block(
+                read_text(roadmap_path),
+                roadmap,
+                contributor,
+                today or date.today(),
+                roster_section(profile_text),
+            )
+            if week:
+                card.sources.append(roadmap_path)
+        else:
+            card.warnings.append(
+                f"Roadmap {roadmap} does not resolve to a file inside the project."
+            )
+
+    return card.render(root, max_chars) + (f"\n{week}" if week else "")
 
 
 def parser() -> argparse.ArgumentParser:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import subprocess
 import sys
+from datetime import date
 from functools import partial
 from pathlib import Path
 
@@ -553,3 +554,259 @@ def test_a_none_word_with_commentary_neither_warns_nor_drops_the_anchors(tmp_pat
     ).stdout
     assert "No ticket inside the project resolves" not in out, out
     assert "Context anchors" in out, out
+
+
+# --- The week block: the current week of `roadmap_path`, read inside the helper ---------------
+#
+# Dates carry no weekday here on purpose: "Fri" beside a month abbreviation is name-shaped to
+# `test_fixture_identities_are_invented`, so the fixture writes "(Dec 18)" and the assertions
+# check the date and the countdown separately.
+
+ROADMAP = """# Delivery plan
+
+## Milestones
+
+| Milestone | Target date | Purpose |
+|---|---|---|
+| **Scope lock** | **Dec 18** (Week 1) | lock scope |
+| **Pilot open** | **Jan 8** (Week 3; Jan 11 if scope slips) | first users |
+| **Pilot review** | **Jan 22** | decide |
+| **Final report** | **Feb 26** | close |
+
+## Week 1: Scope lock (Dec 14 to Dec 20)
+
+**Theme:** Lock the scope and the shared vocabulary.
+
+### Dana (lead)
+- [ ] **D1** Lock the parent-term relation (Dec 14)
+- [x] **D2** Publish the vocabulary register (Dec 15)
+- [ ] D3 Draft the review protocol, per [the notes](notes.md) (in progress; due Week 2)
+
+### Morgan (data)
+- [ ] **M1** Freeze the source register (Dec 18)
+- [x] **M2** Load the pilot dataset (Dec 16)
+
+### Week 1 exit criteria
+- [ ] Scope locked
+- [ ] V3 reply sent
+
+## Week 2: Holiday buffer (Dec 21 to Dec 27)
+
+### All hands
+- [ ] Fix defects only
+- [ ] Dana: D3 finish the review protocol
+- [ ] Morgan: M3 rebuild the index
+
+## Week 3: Pilot (Dec 28 to Jan 3)
+
+### Dana (lead)
+- [ ] **D4** THIS OTHER WEEK MUST NOT ENTER THE PACKET
+
+## Weeks 4 to 9: Pilot operation (Jan 4 to Feb 14)
+
+**Theme:** Run the pilot.
+
+### Weeks 4 to 6: Pilot open (Jan 4 to Jan 24)
+- **Dana:** weekly evidence package
+- **Morgan:** M5 weekly retrieval review
+"""
+
+
+def with_roadmap(root: Path, text: str = ROADMAP, value: str = "`planning/roadmap.md`") -> Path:
+    profile = root / "planning/agent/profile.md"
+    roster = f"  - {CONTRIBUTOR} — lead, active\n"
+    profile.write_text(
+        profile.read_text(encoding="utf-8").replace(
+            roster, f"{roster}  - {OTHER_CONTRIBUTOR} — data, active after one onboarding week\n"
+        )
+        + f"\n- **roadmap_path:** {value} — the delivery plan\n",
+        encoding="utf-8",
+    )
+    write(root / "planning/roadmap.md", text)
+    return root
+
+
+def week_block(output: str) -> str:
+    assert "## This week" in output, output
+    return output[output.index("## This week") :]
+
+
+def packet_on(root: Path, today: date, contributor: str = CONTRIBUTOR) -> str:
+    return context_packet.build_packet(
+        root, contributor=contributor, branch="dana-vocabulary-31", today=today
+    )
+
+
+def test_the_week_block_shows_this_contributors_open_tasks_whole(tmp_path: Path) -> None:
+    root = with_roadmap(project(tmp_path))
+
+    output = packet_on(root, date(2026, 12, 15))
+    week = week_block(output)
+
+    assert "## This week — Week 1: Scope lock (Dec 14 to Dec 20)" in week
+    assert "- **Theme:** Lock the scope and the shared vocabulary." in week
+    assert "- **Yours (2 open, 1 done):**" in week
+    assert "  - D1 Lock the parent-term relation (Dec 14)" in week
+    # Bold and link markup is stripped; the words, and the parenthetical due-week, are kept.
+    assert "  - D3 Draft the review protocol, per the notes (in progress; due Week 2)" in week
+    assert "Publish the vocabulary register" not in output
+    assert "**D1**" not in output
+    assert "THIS OTHER WEEK" not in output
+    assert "planning/roadmap.md" in output
+    # The routing card is untouched by the block: same fields, same budget, not blocked.
+    assert "Conflicting category labels" in output
+    assert len(output[: output.index("## This week")]) <= context_packet.DEFAULT_MAX_CHARS
+
+
+def test_the_team_line_lists_only_teammates_open_task_ids(tmp_path: Path) -> None:
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2026, 12, 15)))
+
+    # M2 is done, and the exit criteria are no one's lane even where an item is led by an
+    # ID-shaped token: "V3 reply sent" under "Week 1 exit criteria" once printed "Week V3".
+    assert "- **Team:** Morgan M1\n" in week
+
+
+def test_without_a_roster_every_lane_with_task_ids_is_a_teammate(tmp_path: Path) -> None:
+    """The roster narrows the team line; its absence must not empty it."""
+    root = with_roadmap(project(tmp_path))
+    profile = root / "planning/agent/profile.md"
+    profile.write_text(
+        profile.read_text(encoding="utf-8").replace("## Identity and people", "## People"),
+        encoding="utf-8",
+    )
+
+    week = week_block(packet_on(root, date(2026, 12, 15)))
+
+    assert "Morgan M1" in week
+
+
+def test_the_same_week_reads_from_a_teammates_side(tmp_path: Path) -> None:
+    """Mutation guard for the two tests above: "yours" is the reader, not the first lane."""
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2026, 12, 15), contributor=OTHER_CONTRIBUTOR))
+
+    assert "- **Yours (1 open, 1 done):**" in week
+    assert "  - M1 Freeze the source register (Dec 18)" in week
+    assert "- **Team:** Dana D1, D3\n" in week
+
+
+def test_ahead_counts_down_to_the_next_milestones_across_new_year(tmp_path: Path) -> None:
+    """A year-less "Jan 8" after "Dec 18" is next January, not last January."""
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2026, 12, 15)))
+    ahead = next(line for line in week.splitlines() if line.startswith("- **Ahead:**"))
+
+    assert "Scope lock" in ahead and "Dec 18 (in 3 days)" in ahead
+    assert "Pilot open" in ahead and "Jan 8 (in 24 days)" in ahead
+    assert "Pilot review" in ahead and "Jan 22 (in 38 days)" in ahead
+    assert "Final report" not in ahead  # three milestones, not all of them
+
+
+def test_a_week_that_spans_the_new_year_is_found(tmp_path: Path) -> None:
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2027, 1, 2)))
+    ahead = next(line for line in week.splitlines() if line.startswith("- **Ahead:**"))
+
+    assert "Week 3: Pilot (Dec 28 to Jan 3)" in week
+    assert "THIS OTHER WEEK MUST NOT ENTER THE PACKET" in week
+    # A milestone that has passed is behind, not ahead.
+    assert "Scope lock" not in ahead
+    assert "Pilot open" in ahead and "Jan 8 (in 6 days)" in ahead
+
+
+def test_a_name_prefixed_item_belongs_to_that_person(tmp_path: Path) -> None:
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2026, 12, 22)))
+
+    assert "  - D3 finish the review protocol" in week
+    assert "- **Team:** Morgan M3\n" in week
+    assert "Fix defects only" not in week
+
+
+def test_the_narrowest_week_wins_and_bold_name_items_count(tmp_path: Path) -> None:
+    """Jan 10 sits in "Weeks 4 to 9" and in "Weeks 4 to 6"; the narrower one is this week."""
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2027, 1, 10)))
+
+    assert "## This week — Weeks 4 to 6: Pilot open (Jan 4 to Jan 24)" in week
+    assert "  - weekly evidence package" in week
+    assert "- **Team:** Morgan M5\n" in week
+
+
+def test_a_date_no_week_covers_is_said_and_milestones_still_show(tmp_path: Path) -> None:
+    root = with_roadmap(project(tmp_path))
+
+    week = week_block(packet_on(root, date(2026, 12, 1)))
+
+    assert "No week in `planning/roadmap.md` covers 2026-12-01." in week
+    assert "Scope lock" in week and "(in 17 days)" in week
+
+
+def test_a_long_week_lists_whole_tasks_and_counts_the_rest(tmp_path: Path) -> None:
+    """The block has its own budget, and like the card it never cuts a task in half."""
+    tasks = "\n".join(
+        f"- [ ] **D{n}** " + " ".join(["meaningful"] * 12) + f" END-{n}" for n in range(1, 41)
+    )
+    roadmap = ROADMAP.replace("- [ ] **D1** Lock the parent-term relation (Dec 14)", tasks)
+    root = with_roadmap(project(tmp_path), roadmap)
+
+    output = packet_on(root, date(2026, 12, 15))
+    week = week_block(output)
+
+    assert len(week) <= context_packet.WEEK_MAX_CHARS
+    listed = [line for line in week.splitlines() if line.startswith("  - D")]
+    assert listed and all(line.rstrip().split()[-1].startswith("END-") for line in listed)
+    hidden = 41 - len(listed)  # 40 generated tasks plus D3
+    assert f"  - +{hidden} more in `planning/roadmap.md`" in week
+    assert "- **Ahead:**" in week  # the big picture survives a heavy week
+
+
+def test_a_roadmap_path_that_resolves_nowhere_warns_and_reads_nothing(tmp_path: Path) -> None:
+    root = project(tmp_path / "repo")
+    write(tmp_path / "elsewhere.md", ROADMAP)
+    profile = root / "planning/agent/profile.md"
+    profile.write_text(
+        profile.read_text(encoding="utf-8") + "\n- **roadmap_path:** ../elsewhere.md\n",
+        encoding="utf-8",
+    )
+
+    output = packet_on(root, date(2026, 12, 15))
+
+    assert "## This week" not in output
+    assert "Lock the parent-term relation" not in output
+    assert "Roadmap ../elsewhere.md does not resolve to a file inside the project." in output
+
+
+def test_without_a_roadmap_path_there_is_no_week_block(tmp_path: Path) -> None:
+    output = packet_on(project(tmp_path), date(2026, 12, 15))
+
+    assert "## This week" not in output
+    assert "Roadmap" not in output
+
+
+def test_a_year_less_date_takes_its_year_from_today_then_from_its_neighbour() -> None:
+    resolve = context_packet.resolve_dates
+    # A plan about to start, and one that started months ago, both anchor correctly.
+    assert resolve([(10, 26)], date(2026, 10, 24)) == [date(2026, 10, 26)]
+    assert resolve([(10, 26)], date(2027, 4, 20)) == [date(2026, 10, 26)]
+    # Later dates follow their neighbour, not today. Seen from October, a year-less "Apr 30" is
+    # nearer last April; after "Feb 1" it is next April, which is what the plan means.
+    assert resolve([(10, 26), (2, 1), (4, 30)], date(2026, 10, 26)) == [
+        date(2026, 10, 26),
+        date(2027, 2, 1),
+        date(2027, 4, 30),
+    ]
+    # Across the new year, and back again for a nested heading.
+    assert resolve([(12, 28), (1, 3), (5, 2), (2, 8)], date(2026, 12, 1)) == [
+        date(2026, 12, 28),
+        date(2027, 1, 3),
+        date(2027, 5, 2),
+        date(2027, 2, 8),
+    ]
