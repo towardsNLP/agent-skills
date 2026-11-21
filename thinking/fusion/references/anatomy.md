@@ -19,12 +19,14 @@ point, after the whole, the frame, the alternatives and the edge of your view.
 | `trajectory` | Trajectory | highest | before, after and later; what it unlocks and rules out; its place on the roadmap | "do Y first" |
 | `frame` | Frame | middle | the cut you chose and why, and at least one rival frame with what the plan becomes under it | a reframe, the most valuable answer |
 | `shape` | Shape | low | parts, inputs and outputs, the flow, and the seam where it is verified | "this part is really two" |
+| `precedents` | Precedents | high | similar situations in the repo and on the web: each with its source, date and what it suggests for this plan | "we tried that in X, and it failed because …" |
 | `alternatives` | Alternatives | high | two to four genuinely different shapes, the smallest version and not building it, each with a cost and a gain | bring back one you rejected |
 | `edge` | Where my view ends | middle | the facts only the user holds: history, people, commitments, intent | the facts only they hold |
 | `assumptions` | Assumptions | low | numbered, each with what breaks if it is wrong and how to check it | "A3 is false" |
 | `forks` | Forks | lowest | the decisions that need the user, in the fork card below | rulings |
 | `defaults` | Defaults | low | the decisions that need nothing only the user holds, listed for veto | a veto |
 | `preview` | What the next skill would write | middle | spec-map rows, or the spec's IN, OUT, seams and ADR candidates, and a rough ticket count | catch a consequence early |
+| `answers` | Your answers | — | the answer form's gather and copy controls, and the responder name | the gathered answers, pasted back |
 | `contributions` | Contributions by round | — | each contribution of the user, its round, and the anchor where it moved the plan; each check that ran | — |
 | `anchors` | Anchors | — | the files, commits and documents the page stands on | — |
 
@@ -55,7 +57,7 @@ a distinction the project already draws, such as where a model decides and where
 | **At stake** | the moment in a concrete case where the options produce different outcomes; what that changes in the spec, the ADRs and the tickets; the cost to reverse |
 | **Options** | lettered (a), (b), (c), each concrete enough to picture |
 | **Needs you** | what the user holds that makes this theirs: history, people, intent, taste |
-| **Provisional recommendation** | folded under "Show my provisional recommendation", with what would change your mind |
+| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind |
 | **Ruling** | open, or the user's answer with its round and reason |
 
 "What would change my mind" is a lever: a user who knows that fact can move the recommendation

@@ -54,6 +54,10 @@ claim about what exists carries an anchor.>
 
 <Parts, inputs and outputs, the flow, and the seam where it is verified; or the component map.>
 
+## Precedents
+
+- **<situation>** — <where: path or link, date>. <What it suggests for this plan.>
+
 ## Alternatives
 
 | Shape | Costs | Gets | Misses |
@@ -99,6 +103,11 @@ claim about what exists carries an anchor.>
 
 <Project: the spec map's rows. Component: the spec's IN, OUT, seams and ADR candidates, and a
 rough ticket count.>
+
+## Your answers
+
+A Markdown page has no form: reply by ID, as the ledger says. Name yourself if you are not the
+person the page was drawn for.
 
 ## Contributions by round
 

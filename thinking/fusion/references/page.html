@@ -107,6 +107,18 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   .fork details { margin-top: 10px; border-top: 1px dashed var(--fz-rule); padding-top: 8px; }
   .fork summary { cursor: pointer; font-size: .76rem; color: var(--fz-new); }
   .ruling { font-family: var(--fz-mono); font-size: .76rem; color: var(--fz-muted); margin-top: 8px; }
+
+  /* The answer form: the recommendation is pre-selected; every other choice is one click away. */
+  .q { margin: 10px 0 0; }
+  .q label { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; cursor: pointer; }
+  .q .rec { font-family: var(--fz-mono); font-size: .66rem; color: var(--fz-new); border: 1px solid; border-radius: 999px; padding: 0 .5em; }
+  .q textarea, .answers textarea, .answers input[type=text] { width: 100%; font: inherit; font-size: .88rem; color: var(--fz-fg); background: var(--fz-bg); border: 1px solid var(--fz-rule); border-radius: 6px; padding: 6px 8px; margin-top: 4px; }
+  .answers { border: 1px solid var(--fz-rule); border-radius: 10px; background: var(--fz-sunk); padding: 16px 18px; }
+  .answers button { font: inherit; font-weight: 600; border-radius: 8px; padding: 8px 14px; margin: 8px 8px 0 0; cursor: pointer; border: 1px solid var(--fz-new); }
+  .answers .primary { background: var(--fz-new); color: var(--fz-bg); }
+  .answers .secondary { background: var(--fz-card); color: var(--fz-fg); }
+  .answers #fz-summary { min-height: 180px; font-family: var(--fz-mono); font-size: .8rem; }
+  .fz-status { font-size: .82rem; color: var(--fz-new); margin-top: 6px; min-height: 1.2em; }
 </style>
 </head>
 <body>
@@ -196,8 +208,13 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   <p class="prose">{Parts, inputs and outputs, the flow, and the seam where it is verified; or the component map.}</p>
 </section>
 
+<section class="s" id="precedents">
+  <div class="s-head"><span class="s-num">6</span><h2>Precedents</h2></div>
+  <ul class="prose"><li><strong>{situation}</strong> — {where: path or link, date}. {What it suggests for this plan.}</li></ul>
+</section>
+
 <section class="s" id="alternatives">
-  <div class="s-head"><span class="s-num">6</span><h2>Alternatives</h2></div>
+  <div class="s-head"><span class="s-num">7</span><h2>Alternatives</h2></div>
   <div class="scroll"><table>
     <thead><tr><th>Shape</th><th>Costs</th><th>Gets</th><th>Misses</th></tr></thead>
     <tbody>
@@ -210,23 +227,36 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
 </section>
 
 <section class="s" id="edge">
-  <div class="s-head"><span class="s-num">7</span><h2>Where my view ends</h2></div>
-  <ol class="prose"><li><span class="id">E1</span>{A fact only you hold, asked as a question.}</li></ol>
+  <div class="s-head"><span class="s-num">8</span><h2>Where my view ends</h2></div>
+  <ol class="prose"><li><span class="id">E1</span>{A fact only you hold, asked as a question.}
+    <div class="q" data-q="E1" data-kind="edge" data-label="{short label}"><textarea rows="2" data-note placeholder="Your answer, or leave blank"></textarea></div></li></ol>
 </section>
 
 <section class="s" id="assumptions">
-  <div class="s-head"><span class="s-num">8</span><h2>Assumptions</h2></div>
-  <ol class="prose"><li><span class="id">A1</span>{Assumption.} <em>Breaks if</em> {…}. <em>Check:</em> {…}.</li></ol>
+  <div class="s-head"><span class="s-num">9</span><h2>Assumptions</h2></div>
+  <ol class="prose"><li><span class="id">A1</span>{Assumption.} <em>Breaks if</em> {…}. <em>Check:</em> {…}.
+    <div class="q" data-q="A1" data-kind="assumption" data-label="{short label}">
+      <label><input type="radio" name="q-A1" value="holds" data-recommended checked> holds</label>
+      <label><input type="radio" name="q-A1" value="wrong"> wrong</label>
+      <label><input type="radio" name="q-A1" value="not sure"> not sure</label>
+      <textarea rows="1" data-note placeholder="Optional note"></textarea>
+    </div></li></ol>
 </section>
 
 <section class="s" id="forks">
-  <div class="s-head"><span class="s-num">9</span><h2>Forks</h2></div>
+  <div class="s-head"><span class="s-num">10</span><h2>Forks</h2></div>
   <article class="fork" id="f1">
     <h3><span class="id open">F1</span>{The decision, as a question}</h3>
     <div class="row"><span class="k">Where</span><span>{figure or section}</span></div>
     <div class="row"><span class="k">Problem</span><span>{plain words}</span></div>
     <div class="row"><span class="k">At stake</span><span>{the moment in a concrete case where the options diverge; what changes in the spec, the ADRs and the tickets; the cost to reverse}</span></div>
-    <div class="row"><span class="k">Options</span><span><ol type="a"><li>{…}</li><li>{…}</li></ol></span></div>
+    <div class="row"><span class="k">Options</span><span>
+      <div class="q" data-q="F1" data-kind="fork" data-label="{short label}">
+        <label><input type="radio" name="q-F1" value="a" data-recommended checked> (a) {…} <span class="rec">recommended</span></label>
+        <label><input type="radio" name="q-F1" value="b"> (b) {…}</label>
+        <label><input type="radio" name="q-F1" value="other"> another answer (say it in the note)</label>
+        <textarea rows="2" data-note placeholder="Optional: your reason, or another option"></textarea>
+      </div></span></div>
     <div class="row"><span class="k">Needs you</span><span>{what you hold that makes this yours}</span></div>
     <details><summary>Show my provisional recommendation</summary>
       <p>{(x), because …} <em>What would change my mind:</em> {…}</p>
@@ -236,17 +266,38 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
 </section>
 
 <section class="s" id="defaults">
-  <div class="s-head"><span class="s-num">10</span><h2>Defaults</h2></div>
-  <ol class="prose"><li><span class="id">D1</span>{Default}, {reason}. Veto it by ID.</li></ol>
+  <div class="s-head"><span class="s-num">11</span><h2>Defaults</h2></div>
+  <ol class="prose"><li><span class="id">D1</span>{Default}, {reason}.
+    <div class="q" data-q="D1" data-kind="default" data-label="{short label}">
+      <label><input type="radio" name="q-D1" value="keep" data-recommended checked> keep</label>
+      <label><input type="radio" name="q-D1" value="veto"> veto</label>
+      <textarea rows="1" data-note placeholder="Optional note"></textarea>
+    </div></li></ol>
 </section>
 
 <section class="s" id="preview">
-  <div class="s-head"><span class="s-num">11</span><h2>What the next skill would write</h2></div>
+  <div class="s-head"><span class="s-num">12</span><h2>What the next skill would write</h2></div>
   <p class="prose">{Project: the spec map's rows. Component: the spec's IN, OUT, seams and ADR candidates, and a rough ticket count.}</p>
 </section>
 
+<section class="s" id="answers">
+  <div class="s-head"><span class="s-num">13</span><h2>Your answers</h2></div>
+  <div class="answers">
+    <p>Every fork starts on my recommendation; change any you disagree with. The summary marks each
+    fork as kept or changed, and lists only the defaults and assumptions you changed, with every note.</p>
+    <label>Your name, if you are not the person this page was drawn for
+      <input type="text" id="fz-responder" autocomplete="off"></label>
+    <label>Anything that is not on the page: a reframe, a missing part, a better idea
+      <textarea id="fz-free" rows="3"></textarea></label>
+    <button type="button" class="primary" id="fz-gather">Gather my answers</button>
+    <button type="button" class="secondary" id="fz-copy">Copy to clipboard</button>
+    <div class="fz-status" id="fz-status" role="status"></div>
+    <textarea id="fz-summary" readonly aria-label="Your gathered answers"></textarea>
+  </div>
+</section>
+
 <section class="s" id="contributions">
-  <div class="s-head"><span class="s-num">12</span><h2>Contributions by round</h2></div>
+  <div class="s-head"><span class="s-num">14</span><h2>Contributions by round</h2></div>
   <ul class="prose">
     <li><strong>Round 1</strong>: drawn from {sources}. Teach-back: {what it caught, or "skipped: why"}.</li>
   </ul>
@@ -254,10 +305,96 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
 </section>
 
 <section class="s" id="anchors" style="border-bottom:0">
-  <div class="s-head"><span class="s-num">13</span><h2>Anchors</h2></div>
+  <div class="s-head"><span class="s-num">15</span><h2>Anchors</h2></div>
   <ul class="prose"><li>{path, commit or document, and what it supports}</li></ul>
 </section>
 
 </div>
+<script>
+"use strict";
+(function () {
+  // One key per page and round, so a new round starts clean and an old draft is never mixed in.
+  var KEY = "fusion:" + document.title + ":" + ((document.querySelector(".eyebrow") || {}).textContent || "");
+  var storageOK = true;
+  function status(msg) { document.getElementById("fz-status").textContent = msg; }
+  function blocks() { return Array.prototype.slice.call(document.querySelectorAll("[data-q]")); }
+  function choice(b) { var c = b.querySelector("input[type=radio]:checked"); return c ? c : null; }
+  function recommended(b) { return b.querySelector("input[data-recommended]"); }
+  function note(b) { var n = b.querySelector("[data-note]"); return n ? n.value.trim() : ""; }
+
+  function state() {
+    var s = { responder: document.getElementById("fz-responder").value, free: document.getElementById("fz-free").value, q: {} };
+    blocks().forEach(function (b) { var c = choice(b); s.q[b.dataset.q] = { v: c ? c.value : "", n: note(b) }; });
+    return s;
+  }
+  function save() {
+    if (!storageOK) return;
+    try { localStorage.setItem(KEY, JSON.stringify(state())); }
+    catch (e) { storageOK = false; status("This browser blocked autosave. Gather and copy your answers before closing."); }
+  }
+  function restore() {
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { storageOK = false; }
+    if (!s) return;
+    document.getElementById("fz-responder").value = s.responder || "";
+    document.getElementById("fz-free").value = s.free || "";
+    blocks().forEach(function (b) {
+      var a = s.q[b.dataset.q]; if (!a) return;
+      var r = b.querySelector("input[type=radio][value='" + (a.v || "").replace(/'/g, "\\'") + "']"); if (r) r.checked = true;
+      var n = b.querySelector("[data-note]"); if (n) n.value = a.n || "";
+    });
+    status("Your draft from this browser was restored.");
+  }
+
+  function gather() {
+    var lines = ["Fusion page: " + document.title, (document.querySelector(".eyebrow") || {}).textContent || ""];
+    var who = document.getElementById("fz-responder").value.trim();
+    if (who) lines.push("Responder: " + who);
+    lines.push("");
+    var kept = 0, unanswered = 0;
+    blocks().forEach(function (b) {
+      var id = b.dataset.q, kind = b.dataset.kind, label = b.dataset.label || "";
+      var c = choice(b), r = recommended(b), n = note(b);
+      var changed = c && r && c !== r;
+      if (kind === "edge") {
+        if (n) lines.push(id + " " + label + ": " + n); else unanswered++;
+        return;
+      }
+      if (!c) { unanswered++; return; }
+      if (kind === "fork") {
+        lines.push(id + " " + label + ": (" + c.value + ") " + (changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation") + (n ? " | " + n : ""));
+        if (!changed) kept++;
+      } else if (changed || n) {
+        lines.push(id + " " + label + ": " + c.value + (changed ? " (changed)" : "") + (n ? " | " + n : ""));
+      } else { kept++; }
+    });
+    var free = document.getElementById("fz-free").value.trim();
+    if (free) { lines.push(""); lines.push("Not on the page: " + free); }
+    lines.push("");
+    lines.push("Kept as recommended: " + kept + " · Unanswered: " + unanswered);
+    var text = lines.join("\n");
+    document.getElementById("fz-summary").value = text;
+    return text;
+  }
+
+  function copy() {
+    var text = gather(), box = document.getElementById("fz-summary");
+    function fallback() {
+      box.focus(); box.select();
+      var ok = false; try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      status(ok ? "Copied. Paste it into your reply." : "Copy was blocked. Select the text below and copy it yourself.");
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { status("Copied. Paste it into your reply."); }, fallback);
+    } else { fallback(); }
+  }
+
+  restore();
+  document.addEventListener("change", save);
+  document.addEventListener("input", save);
+  document.getElementById("fz-gather").addEventListener("click", function () { gather(); status("Answers gathered below. Review them, then copy."); });
+  document.getElementById("fz-copy").addEventListener("click", copy);
+})();
+</script>
 </body>
 </html>

@@ -99,3 +99,24 @@ def test_every_reader_of_a_finished_page_runs_the_same_resumption_check():
         assert "resumption check" in text, path
         for move in ("ledger", '"facts checked against"', "premise that changed", "still stand"):
             assert move in text, (path, move)
+
+
+def test_every_html_question_preselects_exactly_one_recommendation():
+    """The user starts from the recommendation and changes it in one click."""
+    html = read("page.html")
+    groups = re.findall(
+        r'data-q="([A-Z]\d+)" data-kind="(fork|assumption|default)"(.*?)</div>', html, re.S
+    )
+    assert groups, "no answerable questions in page.html"
+    for qid, _, body in groups:
+        recommended = re.findall(r"<input [^>]*data-recommended[^>]*>", body)
+        assert len(recommended) == 1 and "checked" in recommended[0], qid
+        assert body.count(" checked") == 1, qid
+
+
+def test_the_html_answers_can_be_gathered_and_copied():
+    html = read("page.html")
+    for control in ('id="fz-gather"', 'id="fz-copy"', 'id="fz-summary"', 'id="fz-responder"'):
+        assert control in html, control
+    assert "kept the recommendation" in html and "CHANGED from" in html
+    assert "localStorage" in html and "execCommand" in html

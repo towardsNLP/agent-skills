@@ -37,10 +37,20 @@ page first to the user as a fork on that page.
 Done when the masthead states the scale and its one-line reason. The user corrects it like any
 other part of the frame.
 
-## Step 2 — Read broadly, then pass through the seven lenses
+## Step 2 — Read broadly, search for precedents, then pass through the seven lenses
 
 Finding facts is your job. Use helper agents where the harness offers them, and retrieve any fact
-you can before asking the user for it. Then think through every lens, at every scale:
+you can before asking the user for it.
+
+**Search for precedents in the repo and on the web.** In the repo: earlier specs, decision
+records, plans and modules that faced a similar situation, and what they chose. On the web:
+how others have solved the same kind of problem, from primary sources such as papers, official
+documentation and well-known engineering write-ups. Send the searches to helper agents in
+parallel where the harness allows, and keep each precedent to what it is, where it comes from
+(path or link, with date) and what it suggests for this plan. A precedent informs the frame and the
+alternatives; it never decides a fork. When the harness has no web access, say so on the page.
+
+Then think through every lens, at every scale:
 
 1. **System** — what the plan touches today, at `file:line` and a commit, or in dated documents
    where there is no code.
@@ -53,7 +63,8 @@ you can before asking the user for it. Then think through every lens, at every s
 7. **Alternatives** — at least two genuinely different shapes, the smallest version, and not
    building it.
 
-Done when every lens has a written finding and every claim about what exists carries an anchor.
+Done when every lens has a written finding, every claim about what exists carries an anchor, and
+each precedent carries its source.
 
 ## Step 3 — Draw the page
 
@@ -71,11 +82,16 @@ job and altitude, the key, and the fork card. Every page carries:
   what the plan would look like under it. Their most valuable answer may be a frame you did not
   offer.
 - **Grounding**: the masthead's "facts checked against" names the commit or the dated documents.
+- **Precedents**: the similar situations found in the repo and on the web, each with its source
+  and what it suggests, set beside the alternatives they inform.
+- **Pictures that carry the argument**: the page is a visual co-thinking tool. Draw the zoom-out,
+  the shape, and each fork's divergence as figures in the page's key, so the reader sees the
+  structure before reading about it. A section that can be drawn is drawn.
 - **Forks in the card format**: where it sits; the problem in plain words; **at stake**, meaning
   the moment in a concrete case where the options produce different outcomes, what that changes
   in the spec, the ADRs and the tickets, and the cost to reverse; the options; what the user
-  holds that makes it theirs; your **provisional recommendation**, folded, with what would change
-  your mind; the ruling.
+  holds that makes it theirs; your **recommended option, pre-selected** in the answer form, with
+  the reasoning folded and what would change your mind; the ruling.
 - **Defaults instead of questions**: a decision that needs nothing only the user holds becomes a
   default they can veto.
 - **Where my view ends**: the facts only the user holds, asked as questions they may skip.
@@ -86,7 +102,15 @@ The subject decides the size. A first component may need one drawing of today's 
 consequential fork; a project may need several views. Every lens is run, and only sections that
 earn their place are shown.
 
-The user writes their own reply. Give them IDs to answer by, and leave the answers to them.
+**The answer form.** An HTML page lets the user answer on the page itself: each fork's options as
+choices with your recommendation pre-selected and the others one click away, a note under each;
+keep or veto for each default and assumption; a text box for each question at the edge of your
+view, and one for anything not on the page. A responder name lets the page be shared with other
+people for their feedback. **Gather my answers** writes a plain-text summary that marks every fork
+as *kept the recommendation* or *changed*, lists only changed defaults and assumptions and every
+note, and counts what is still unanswered; **Copy to clipboard** copies it for the user to paste
+back. Answers autosave in the browser. The template carries all of this; a Markdown page is
+answered by ID in the reply instead.
 
 Done when every fork has every card field, every figure uses the page's key, and the ledger
 names each section left out.
@@ -120,7 +144,8 @@ Each reply changes the picture:
 - Open the page with **since you last read**, naming what moved by kind: boundary, dependency,
   sequence, acceptance check, frame, fork.
 - Record each contribution in the **contribution log**: what the user said, the round, and the
-  anchor where it moved the plan.
+  anchor where it moved the plan. Answers from other people who were sent the page are recorded
+  under their names.
 - A ruled fork becomes a ruling with its reason. New forks surface as old ones settle. Carry
   settled precedent forward as a default.
 - Small, local forks may go to a quick `grilling` round asked against the page, with each
@@ -157,7 +182,8 @@ approved.
 
 ## Hard rules
 
-- **The user rules every fork.** Your provisional recommendation stays folded until they open it.
+- **The user rules every fork.** Your recommendation is a pre-selected default they can change in
+  one click, and the gathered answers show which defaults they kept and which they changed.
 - **Facts are yours; decisions are theirs.**
 - **Write only the page.** Specs, ADRs, glossary terms and spec-map rows are proposed on it and
   written by `/adr-spec`, `domain-modeling` and `/deconstruct`.
