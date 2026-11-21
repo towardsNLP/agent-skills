@@ -1,0 +1,5 @@
+interface:
+  display_name: "Fusion"
+  short_description: "Co-plan through a page before a spec or spec map"
+policy:
+  allow_implicit_invocation: false

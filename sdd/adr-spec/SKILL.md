@@ -1,6 +1,6 @@
 ---
 name: adr-spec
-description: Record the decisions, then write or amend the spec against them. ADRs come first, each approved by the user, followed by a frozen blueprint or an append-only amendment. Refuses the sections that need deliberate thought unless a grilling preceded it.
+description: Record the decisions, then write or amend the spec against them. ADRs come first, each approved by the user, followed by a frozen blueprint or an append-only amendment. Refuses the sections that need deliberate thought unless a grilling or a finished fusion page preceded it.
 disable-model-invocation: true
 ---
 
@@ -12,21 +12,30 @@ archaeological dig.
 
 Read `planning/agent/profile.md` for `spec_dir`, `spec_path_pattern`, `spec_template_path`,
 `spec_owner`, `spec_initial_status`, `workstream_id_scheme`, `phase_vocabulary`, `roadmap_path`,
-`spec_map_path`, `contracts_path`, `glossary_path` and `decision_records`.
+`spec_map_path`, `contracts_path`, `glossary_path`, `decision_records` and `fusion_dir` (default
+`planning/fusion/`).
 
 ## The precondition
 
-**Do not write §3 Scope or §5 Seams and acceptance unless a grilling preceded this in the same
-context.** Those two carry the thinking; pre-filled, they get approved without being read, which
-is worse than empty.
+**Do not write §3 Scope or §5 Seams and acceptance without the thinking behind them.** Those two
+carry the thinking; pre-filled, they get approved without being read, which is worse than empty.
+The thinking is one of two things:
 
-No grilling in context means create the shell, fill §1 and §2 from what the conversation supports,
-leave the rest as placeholders, and say: *"§3 and §5 are unfilled. Run `/grill-me` and re-run
-this, or fill them by hand."* Do not interview the user here — that is grilling's job and it does
-it better.
+- **A grilling in this context.** It lives only in the conversation, so keep grilling, this skill
+  and `/tickets` in **one unbroken context window**. Don't compact between them.
+- **A finished fusion page** for this component in `fusion_dir` (the committed file, not a
+  per-round copy): the user called it finished, no
+  fork on it is open, and it shows the scope boundary and the proposed proof. It holds the thinking
+  in a file, so it may come from an earlier session. Run its **resumption check** before writing:
+  read the page's ledger; compare its "facts checked against" with the current state and list every
+  premise that changed; put the rulings to the user with those changes and ask whether they still
+  stand. Write §3 and §5 after the answer. A ruling the user changes sends the page back to
+  `/fusion`.
 
-Keep grilling, this skill and `/tickets` in **one unbroken context window**. Don't compact between
-them.
+Neither in hand means create the shell, fill §1 and §2 from what the conversation supports, leave
+the rest as placeholders, and say: *"§3 and §5 are unfilled. Run `/grill-me` or `/fusion` and
+re-run this, or fill them by hand."* Do not interview the user here — that is the job of grilling
+and fusion, and they do it better.
 
 ## Step 1 — Check nobody has already specified this
 
@@ -62,9 +71,10 @@ Apply the naming rule from `check-contracts`. On a collision, stop and ask.
 
 ## Step 3 — Record the decisions first
 
-Re-read the grilling. Every point where the user chose between real alternatives is an ADR
-candidate. Test each against the bar in the `decision_records` README — hard to reverse,
-surprising without context, a genuine trade-off, or an SME ruling that overturns a prior position.
+Re-read the grilling, or the fusion page's rulings. Every point where the user chose between real
+alternatives is an ADR candidate. Test each against the bar in the `decision_records` README — hard
+to reverse, surprising without context, a genuine trade-off, or an SME ruling that overturns a prior
+position.
 
 **Put each candidate to the user separately and wait.** State the decision, the alternatives
 considered, and why this one. An ADR asserted by an agent without a human ruling is a decision
@@ -72,13 +82,14 @@ nobody made.
 
 Write the approved ones to `decision_records` in that directory's format, numbered from the
 highest existing. For a new spec, cite them in **Anchors**. In amendment mode, cite them in the
-amendment entry because the frozen spec cannot gain another anchor. The reverse link is never
-written: `grep -rl 'adr/NNNN' <spec_dir>` computes it.
+amendment entry, with the fusion page when one fed the change, because the frozen spec cannot
+gain another anchor. The reverse link is never written: `grep -rl 'adr/NNNN' <spec_dir>` computes
+it.
 
 ## Step 4 — Triage the design before writing it
 
-For every piece of design detail the grilling produced, ask **who needs it**, and send it to one
-of exactly three destinations:
+For every piece of design detail the grilling or the fusion page produced, ask **who needs it**, and
+send it to one of exactly three destinations:
 
 | Destination | When |
 |---|---|
@@ -108,7 +119,7 @@ shape. Include its approval and any new ADR anchors. Skip the new-spec instructi
 
 Frontmatter takes `spec_owner`, `spec_initial_status`, the kind, the parent, today's date read
 from system context rather than guessed, and **Anchors** carrying the ADRs and contract sections
-this spec stands on.
+this spec stands on, and the fusion page when one fed it.
 
 Fill §1 Why and §2 Product anchor from the conversation. Then, with the precondition met:
 
@@ -135,7 +146,7 @@ the status command. Then:
 
 > **Read these two before approving: the boundaries in section 3, and the proof in section 5.**
 > They are where a wrong decision is cheapest to catch now and most expensive to discover later.
-> If the rest of the spec surprises you, the grilling was too shallow.
+> If the rest of the spec surprises you, the grilling or the fusion was too shallow.
 
 ## After approval
 
@@ -155,8 +166,9 @@ effective agreement: `spec.md` followed by amendments in date order.
 ## Hard rules
 
 - **Record decisions before writing the spec**, one at a time, each ruled on by the user.
-- **Never pre-fill §3 or §5 without a grilling in context.** The rule was never "the agent must
-  not write these" — it is that they must not be written without thought.
+- **Never pre-fill §3 or §5 without a grilling in context or a finished fusion page.** The rule
+  was never "the agent must not write these" — it is that they must not be written without
+  thought.
 - **Send design to a contract, an ADR, or nowhere.** Never let the spec absorb implementation.
 - **Never invent a phase or workstream ID.** Validate against `phase_vocabulary` and `spec_dir`.
 - **Never create a second spec with an existing ID or subject.** Extend or supersede only after the

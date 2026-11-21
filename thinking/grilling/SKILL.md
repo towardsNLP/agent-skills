@@ -29,4 +29,9 @@ yourself. Do not ask the user for a fact you can retrieve. A running exploration
 prerequisite, so only its downstream questions wait; ask the rest of the frontier now. The
 _decisions_ are the user's: put each to them and wait.
 
+**When the answers stop carrying judgment,** the questions are arriving without their picture.
+Two rounds in a row accepted wholesale, or a user who says they cannot follow, is the sign. Offer
+`/fusion`: it draws the plan as a page the user thinks with, and the open frontier is asked against
+that page.
+
 The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.

@@ -33,20 +33,30 @@ Three consequences run through every decision below, and each one is this move a
 ## 2. The pipeline
 
 ```
-/deconstruct  →  grill  →  /adr-spec  →  /tickets  →  /implement  →  review → integrate → ship
-   project                 ─── one session ───          one fresh session per ticket
+[/fusion]  →  /deconstruct  →  grill or /fusion  →  /adr-spec  →  /tickets  →  /implement  →  review → integrate → ship
+ project                        ──────── one session, or one page ────────     one fresh session per ticket
+[ ] optional
 ```
 
 - `/deconstruct` is a project-level act, run rarely.
+- **`/fusion` is the picture before each commitment.** At project scale it comes before
+  `/deconstruct`; at component scale it is the second way into `/adr-spec`, beside grilling. It
+  draws the plan as a page the user thinks with: where the plan sits, the frame it is argued in,
+  the alternatives, what the agent cannot see, and the forks, with the agent's recommendation
+  pre-selected in an answer form, its reasoning folded, and every change marked. Grilling hands the user decisions; the page hands them the model those decisions belong
+  to.
 - **Grilling, `/adr-spec` and `/tickets` run in one session.** The interview is the thought that
   makes the spec trustworthy, and the seams it settles are what makes a ticket sizeable. Splitting
-  the session throws that context away.
+  the session throws that context away. A finished fusion page is the exception: it holds the
+  thinking in a file, so the spec session may be a fresh one, opened by a check that the page's
+  rulings still stand.
 - **Each `/implement` gets a fresh session.** That is what "sized to one context window" is for.
 
 ## 3. The artifacts
 
 | Artifact | Written by | Lifetime | Path |
 |---|---|---|---|
+| Fusion page | `/fusion`, revised in rounds with the user | frozen once the spec or spec map it feeds is approved | `planning/fusion/<date>-<slug>.html` or `.md` |
 | Spec map | `/deconstruct`, after user approval | project | `planning/spec-map.md` |
 | ADR | `/adr-spec` proposes, human approves | forever | `planning/adr/NNNN-slug.md` |
 | Spec | `/adr-spec` | **immutable after approval** | `planning/specs/<spec-id>/spec.md` |
@@ -63,6 +73,7 @@ directory line enforced by an existing test, not a per-spec manifest entry that 
 ```
 planning/
   PLAN.md  roadmap.md  STATE.md
+  fusion/<date>-<slug>.html|.md       co-planning pages, frozen once what they feed is approved
   spec-map.md                         the planned component set + dependency edges
   adr/NNNN-slug.md                    decisions (sandcastle format)
   references/                         glossary, contracts — the constitution
@@ -167,8 +178,9 @@ GitHub Actions. Package it with pip at the third adopter, not before.
 
 | Skill | Reads | Writes | Never touches |
 |---|---|---|---|
-| `/deconstruct` | PLAN, roadmap, glossary, code | `spec-map.md` | specs, ADRs |
-| `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary | approved ADRs, then `spec.md` or an append to `amendments.md` | tickets, roadmap status |
+| `/fusion` | whatever the plan touches: code, plan, roadmap, documents | one fusion page | specs, ADRs, the spec map, the glossary |
+| `/deconstruct` | PLAN, roadmap, glossary, code, a finished project fusion page | `spec-map.md` | specs, ADRs |
+| `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary, a finished component fusion page | approved ADRs, then `spec.md` or an append to `amendments.md` | tickets, roadmap status |
 | `/tickets` | one effective agreement + the contracts it cites | `tickets/<spec-id>/NN-*.md` | **the spec and amendments** |
 | `/implement` | one ticket + its effective agreement + named contracts | work artifacts, the ticket's Outcome, `acceptance.md` at spec close | spec, amendments, other tickets |
 
