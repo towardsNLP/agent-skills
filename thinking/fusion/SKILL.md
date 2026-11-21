@@ -50,6 +50,11 @@ parallel where the harness allows, and keep each precedent to what it is, where 
 (path or link, with date) and what it suggests for this plan. A precedent informs the frame and the
 alternatives; it never decides a fork. When the harness has no web access, say so on the page.
 
+**A helper's report counts once its work exists.** Before using a helper's findings, check that the
+files it was asked to write are there and complete. A helper that delegates collects its own readers'
+results before it reports; one that hands back early is resumed or its work rerun, never trusted on
+its summary alone.
+
 Then think through every lens, at every scale:
 
 1. **System** — what the plan touches today, at `file:line` and a commit, or in dated documents
@@ -82,6 +87,8 @@ job and altitude, the key, and the fork card. Every page carries:
   what the plan would look like under it. Their most valuable answer may be a frame you did not
   offer.
 - **Grounding**: the masthead's "facts checked against" names the commit or the dated documents.
+  Every anchor is something a fresh session can open: a committed path, a commit, or a public link.
+  Working notes that will not be committed are summarised on the page itself, with their sources.
 - **Precedents**: the similar situations found in the repo and on the web, each with its source
   and what it suggests, set beside the alternatives they inform.
 - **Pictures that carry the argument**: the page is a visual co-thinking tool. Draw the zoom-out,
@@ -146,15 +153,17 @@ Each reply changes the picture:
 - Record each contribution in the **contribution log**: what the user said, the round, and the
   anchor where it moved the plan. Answers from other people who were sent the page are recorded
   under their names.
-- A ruled fork becomes a ruling with its reason. New forks surface as old ones settle. Carry
-  settled precedent forward as a default.
+- A ruled fork becomes a ruling with its reason, and its card turns read-only: the options stay as
+  plain text, the ruling replaces the choice, and the answer form asks only what is still open. New
+  forks surface as old ones settle. Carry settled precedent forward as a default.
 - Small, local forks may go to a quick `grilling` round asked against the page, with each
   recommendation held back until the user has answered.
 - Run the teach-back again before showing.
 
 The rounds end when the user calls the page finished, no fork is open, and, at the component
 scales, the page shows the scope boundary and the proposed proof. Ask the closing question of
-step 7 and record the answer, then mark the page finished with the date. A finished page reopens
+step 7 and record the answer, then mark the page finished with the date and close the answer form,
+leaving a line that says a later round reopens it. A finished page reopens
 only through the resumption check below. Once the spec or spec map it feeds is approved, the page
 is frozen: a record, with later change belonging to the spec's amendments.
 

@@ -67,5 +67,6 @@ with it. A question whose "needs you" field stays empty is a default, not a fork
 
 A revision moves the picture itself: the figure and the section a contribution touches. The
 **since you last read** box and the contribution log point at what moved, so a re-read costs
-minutes. When the host keeps every file it shows, write each round to its own copy (`-r1`,
+minutes. A ruled fork's card stays on the page, read-only, with its ruling and round; the answer
+form carries only open questions, and it closes when the page is finished. When the host keeps every file it shows, write each round to its own copy (`-r1`,
 `-r2`); the highest is current. The page committed at the finish is one file without the suffix.
