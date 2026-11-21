@@ -1,0 +1,263 @@
+<!doctype html>
+<!--
+HTML template of a fusion page, for a plan with a flow or an architecture to draw.
+Replace every {slot}. Leave a section out only when it does not earn its place, and say so in the
+ledger. Section jobs and the key: anatomy.md. What each section holds at each scale: scales.md.
+
+Theme: colours read the host's theme variables (--background, --foreground, --card, --muted,
+--muted-foreground, --border) when the host provides them, and fall back to light-dark() values
+otherwise. Local colours use the --fz- prefix and never redefine a host variable.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{Title}</title>
+<style>
+  :root {
+    --fz-bg: var(--background, light-dark(#fbfbf9, #0f1416));
+    --fz-fg: var(--foreground, light-dark(#17201f, #e4eaea));
+    --fz-card: var(--card, light-dark(#ffffff, #161c1f));
+    --fz-sunk: var(--muted, light-dark(#f1f4f3, #1c2427));
+    --fz-muted: var(--muted-foreground, light-dark(#5f6b6d, #98a5a7));
+    --fz-rule: var(--border, light-dark(#dfe4e3, #2a3437));
+    /* The key: one meaning per colour, in every figure (anatomy.md). */
+    --fz-exists: light-dark(#5b6870, #a3b1b8);
+    --fz-new: light-dark(#0b6b66, #5ccfc5);
+    --fz-changed: light-dark(#97570a, #e7aa58);
+    --fz-out: light-dark(#868c94, #7a818b);
+    --fz-open: light-dark(#a3352b, #f08f80);
+    --fz-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --fz-sans: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
+    --fz-mono: var(--font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fz-bg); color: var(--fz-fg); font-family: var(--fz-sans); font-size: 15.5px; line-height: 1.62; }
+  .page { max-width: 920px; margin: 0 auto; padding: 28px 16px 72px; }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--fz-display); font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+  h1 { font-size: clamp(1.9rem, 4.2vw, 2.6rem); line-height: 1.1; margin: .3rem 0 .6rem; }
+  h2 { font-size: clamp(1.3rem, 2.4vw, 1.6rem); margin: 0; }
+  h3 { font-size: 1.05rem; margin: 1.3rem 0 .4rem; }
+  p { margin: 0 0 .9rem; }
+  a { color: var(--fz-new); }
+  code { font-family: var(--fz-mono); font-size: .86em; background: var(--fz-sunk); border: 1px solid var(--fz-rule); border-radius: 4px; padding: .04em .32em; word-break: break-word; }
+  .eyebrow, .meta, .s-num, .k, .id, th, summary { font-family: var(--fz-mono); }
+  .eyebrow { font-size: .7rem; letter-spacing: .13em; text-transform: uppercase; color: var(--fz-muted); }
+  .lede { font-size: 1.12rem; max-width: 64ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: .74rem; color: var(--fz-muted); margin-top: 14px; }
+  header.mast { padding-bottom: 22px; border-bottom: 1px solid var(--fz-rule); }
+
+  .key { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; font-family: var(--fz-mono); font-size: .72rem; border: 1px solid; border-radius: 999px; padding: .2em .75em; white-space: nowrap; }
+  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: currentColor; }
+  .c-exists { color: var(--fz-exists); }
+  .c-new { color: var(--fz-new); }
+  .c-changed { color: var(--fz-changed); }
+  .c-later { color: var(--fz-new); border-style: dotted; }
+  .c-out { color: var(--fz-out); border-style: dashed; }
+  .c-open { color: var(--fz-open); }
+
+  .box { margin-top: 18px; border: 1px solid var(--fz-rule); border-radius: 8px; background: var(--fz-card); padding: 12px 18px; font-size: .9rem; }
+  .box h2 { font-family: var(--fz-sans); font-size: 1rem; font-weight: 650; letter-spacing: 0; margin-bottom: 6px; }
+  .since { border-left: 4px solid var(--fz-changed); }
+  .ledger { border-left: 4px solid var(--fz-new); }
+  .ledger dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+  .ledger dt { font-family: var(--fz-mono); font-size: .76rem; color: var(--fz-muted); }
+  .ledger dd { margin: 0; }
+  @media (max-width: 620px) { .ledger dl { grid-template-columns: 1fr; } }
+
+  section.s { padding: 36px 0 6px; border-bottom: 1px solid var(--fz-rule); }
+  .s-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .s-num { font-size: .8rem; color: var(--fz-muted); }
+  .moved { font-family: var(--fz-mono); font-size: .64rem; color: var(--fz-changed); border: 1px solid; border-radius: 999px; padding: .08em .6em; }
+  .id { font-size: .8rem; font-weight: 600; color: var(--fz-new); margin-right: 6px; }
+  .id.open { color: var(--fz-open); }
+
+  dl.terms { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; }
+  dl.terms dt { font-family: var(--fz-mono); font-size: .8rem; color: var(--fz-new); }
+  dl.terms dd { margin: 0; }
+  @media (max-width: 620px) { dl.terms { grid-template-columns: 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: 10px 0 18px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--fz-rule); }
+  th { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--fz-muted); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+
+  figure { margin: 18px 0 22px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: .84rem; color: var(--fz-muted); margin-top: 8px; max-width: 72ch; }
+  svg text { font-family: var(--fz-sans); fill: var(--fz-fg); }
+  svg .t { font-size: 13px; font-weight: 650; }
+  svg .st { font-size: 10px; fill: var(--fz-muted); }
+  .bx-exists rect { fill: color-mix(in srgb, var(--fz-exists) 8%, var(--fz-card)); stroke: var(--fz-exists); stroke-width: 1.3; }
+  .bx-new rect { fill: color-mix(in srgb, var(--fz-new) 13%, var(--fz-card)); stroke: var(--fz-new); stroke-width: 1.7; }
+  .bx-changed rect { fill: color-mix(in srgb, var(--fz-changed) 14%, var(--fz-card)); stroke: var(--fz-changed); stroke-width: 1.7; }
+  .bx-later rect { fill: none; stroke: var(--fz-new); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .bx-out rect { fill: none; stroke: var(--fz-out); stroke-width: 1.2; stroke-dasharray: 6 4; }
+  .ar { stroke: var(--fz-muted); stroke-width: 1.4; fill: none; }
+  .ahp { fill: var(--fz-muted); }
+
+  .fork { border: 1px solid var(--fz-rule); border-top: 3px solid var(--fz-open); border-radius: 10px; background: var(--fz-card); padding: 16px 18px 12px; margin: 16px 0; }
+  .fork h3 { margin: 0 0 6px; font-family: var(--fz-sans); }
+  .fork .row { display: grid; grid-template-columns: 9.5em 1fr; gap: 4px 14px; font-size: .9rem; margin: 6px 0; }
+  .fork .k { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--fz-muted); padding-top: .25em; }
+  @media (max-width: 620px) { .fork .row { grid-template-columns: 1fr; } }
+  .fork details { margin-top: 10px; border-top: 1px dashed var(--fz-rule); padding-top: 8px; }
+  .fork summary { cursor: pointer; font-size: .76rem; color: var(--fz-new); }
+  .ruling { font-family: var(--fz-mono); font-size: .76rem; color: var(--fz-muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="mast">
+  <div class="eyebrow">{project} · fusion · round {n}</div>
+  <h1>{Title: the plan in a few words}</h1>
+  <p class="lede" id="thesis">{One sentence: what changes when this plan is carried out.}</p>
+  <div class="meta">
+    <span>scale: {project | first component | component}, because {one line}</span>
+    <span>round {n} · {open | finished YYYY-MM-DD}</span>
+    <span>facts checked against {commit, or dated documents}</span>
+    <span>about {n} minutes</span>
+    <span>{authors}</span>
+  </div>
+  <div class="key" aria-label="Key">
+    <span class="chip c-exists">exists today</span>
+    <span class="chip c-new">new in this plan</span>
+    <span class="chip c-changed">exists, changed</span>
+    <span class="chip c-later">planned later</span>
+    <span class="chip c-out">left out on purpose</span>
+    <span class="chip c-open">open, needs you</span>
+  </div>
+
+  <aside class="box since" id="since">
+    <h2>Since you last read</h2>
+    <p>{First round: "First round." Later: what moved, by kind (boundary, dependency, sequence,
+    acceptance check, frame, fork), each linked to where it now sits. Mark a moved section's
+    heading with <span class="moved">round {n}</span>.}</p>
+  </aside>
+
+  <aside class="box ledger" id="ledger">
+    <h2>Ledger</h2>
+    <dl>
+      <dt>settled</dt><dd><span class="id">R1</span>{ruling} ({reason})</dd>
+      <dt>open</dt><dd><span class="id open">F1</span>{fork}</dd>
+      <dt>defaults</dt><dd>D1–D{n}, for veto</dd>
+      <dt>assumptions</dt><dd>A1–A{n}</dd>
+      <dt>only you know</dt><dd>E1–E{n}; answer any, skip any</dd>
+      <dt>left out</dt><dd>{section}: {why}, or "nothing"</dd>
+    </dl>
+    <p><strong>How to reply:</strong> by ID ("F1: b, because …", "A3 is wrong: …", "veto D4"), or
+    with anything that is not on the page. A reframe is worth more than a ruling.</p>
+  </aside>
+</header>
+
+<section class="s" id="terms">
+  <div class="s-head"><span class="s-num">1</span><h2>Terms</h2></div>
+  <dl class="terms">
+    <dt>{term}</dt><dd>{meaning, in one line}</dd>
+  </dl>
+</section>
+
+<section class="s" id="zoom-out">
+  <div class="s-head"><span class="s-num">2</span><h2>{Zoom out: the system today | the world it enters | the whole problem}</h2></div>
+  <figure>
+    <!-- Boxes take one class from the key: bx-exists, bx-new, bx-changed, bx-later, bx-out.
+         Give each marker a unique id per figure. -->
+    <svg viewBox="0 0 900 160" role="img" aria-label="{what the figure shows}">
+      <defs><marker id="ah-zoom" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahp" d="M0,0 L8,4 L0,8 z"/></marker></defs>
+      <g class="bx-exists"><rect x="40" y="50" width="160" height="48" rx="8"/></g>
+      <text class="t" x="120" y="72" text-anchor="middle">{exists}</text><text class="st" x="120" y="88" text-anchor="middle">{role}</text>
+      <path class="ar" d="M201,74 H297" marker-end="url(#ah-zoom)"/>
+      <g class="bx-new"><rect x="300" y="50" width="160" height="48" rx="8"/></g>
+      <text class="t" x="380" y="72" text-anchor="middle">{new}</text><text class="st" x="380" y="88" text-anchor="middle">{role}</text>
+      <path class="ar" d="M461,74 H557" marker-end="url(#ah-zoom)"/>
+      <g class="bx-later"><rect x="560" y="50" width="160" height="48" rx="8"/></g>
+      <text class="t" x="640" y="72" text-anchor="middle">{later}</text><text class="st" x="640" y="88" text-anchor="middle">{role}</text>
+    </svg>
+    <figcaption><strong>Figure 1.</strong> {What to see, in the key's terms.}</figcaption>
+  </figure>
+</section>
+
+<section class="s" id="trajectory">
+  <div class="s-head"><span class="s-num">3</span><h2>Trajectory</h2></div>
+  <p class="prose">{Before, after, later. What it unlocks, what it rules out, where it sits on the roadmap.}</p>
+</section>
+
+<section class="s" id="frame">
+  <div class="s-head"><span class="s-num">4</span><h2>Frame</h2></div>
+  <p class="prose">{The cut chosen and why. At least one rival frame, and what the plan would look like under it.}</p>
+</section>
+
+<section class="s" id="shape">
+  <div class="s-head"><span class="s-num">5</span><h2>Shape</h2></div>
+  <p class="prose">{Parts, inputs and outputs, the flow, and the seam where it is verified; or the component map.}</p>
+</section>
+
+<section class="s" id="alternatives">
+  <div class="s-head"><span class="s-num">6</span><h2>Alternatives</h2></div>
+  <div class="scroll"><table>
+    <thead><tr><th>Shape</th><th>Costs</th><th>Gets</th><th>Misses</th></tr></thead>
+    <tbody>
+      <tr><td><strong>{A}</strong></td><td>{…}</td><td>{…}</td><td>{…}</td></tr>
+      <tr><td><strong>{B}</strong></td><td>{…}</td><td>{…}</td><td>{…}</td></tr>
+      <tr><td><strong>{the smallest version}</strong></td><td>{…}</td><td>{…}</td><td>{…}</td></tr>
+      <tr><td><strong>{not building it}</strong></td><td>{…}</td><td>{…}</td><td>{…}</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="s" id="edge">
+  <div class="s-head"><span class="s-num">7</span><h2>Where my view ends</h2></div>
+  <ol class="prose"><li><span class="id">E1</span>{A fact only you hold, asked as a question.}</li></ol>
+</section>
+
+<section class="s" id="assumptions">
+  <div class="s-head"><span class="s-num">8</span><h2>Assumptions</h2></div>
+  <ol class="prose"><li><span class="id">A1</span>{Assumption.} <em>Breaks if</em> {…}. <em>Check:</em> {…}.</li></ol>
+</section>
+
+<section class="s" id="forks">
+  <div class="s-head"><span class="s-num">9</span><h2>Forks</h2></div>
+  <article class="fork" id="f1">
+    <h3><span class="id open">F1</span>{The decision, as a question}</h3>
+    <div class="row"><span class="k">Where</span><span>{figure or section}</span></div>
+    <div class="row"><span class="k">Problem</span><span>{plain words}</span></div>
+    <div class="row"><span class="k">At stake</span><span>{the moment in a concrete case where the options diverge; what changes in the spec, the ADRs and the tickets; the cost to reverse}</span></div>
+    <div class="row"><span class="k">Options</span><span><ol type="a"><li>{…}</li><li>{…}</li></ol></span></div>
+    <div class="row"><span class="k">Needs you</span><span>{what you hold that makes this yours}</span></div>
+    <details><summary>Show my provisional recommendation</summary>
+      <p>{(x), because …} <em>What would change my mind:</em> {…}</p>
+    </details>
+    <div class="ruling">Ruling: open</div>
+  </article>
+</section>
+
+<section class="s" id="defaults">
+  <div class="s-head"><span class="s-num">10</span><h2>Defaults</h2></div>
+  <ol class="prose"><li><span class="id">D1</span>{Default}, {reason}. Veto it by ID.</li></ol>
+</section>
+
+<section class="s" id="preview">
+  <div class="s-head"><span class="s-num">11</span><h2>What the next skill would write</h2></div>
+  <p class="prose">{Project: the spec map's rows. Component: the spec's IN, OUT, seams and ADR candidates, and a rough ticket count.}</p>
+</section>
+
+<section class="s" id="contributions">
+  <div class="s-head"><span class="s-num">12</span><h2>Contributions by round</h2></div>
+  <ul class="prose">
+    <li><strong>Round 1</strong>: drawn from {sources}. Teach-back: {what it caught, or "skipped: why"}.</li>
+  </ul>
+  <p class="prose">At the finish: <em>what did you contribute that I had not anticipated, and where can you see its effect on the plan?</em> {Your answer.}</p>
+</section>
+
+<section class="s" id="anchors" style="border-bottom:0">
+  <div class="s-head"><span class="s-num">13</span><h2>Anchors</h2></div>
+  <ul class="prose"><li>{path, commit or document, and what it supports}</li></ul>
+</section>
+
+</div>
+</body>
+</html>

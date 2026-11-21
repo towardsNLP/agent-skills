@@ -10,12 +10,16 @@ Move from a problem too big to spec to a **set of specs that covers it.** This r
 level and it runs rarely — at the start, and again when the shape of the work genuinely changes.
 
 Read `planning/agent/profile.md` for `plan_path`, `roadmap_path`, `spec_map_path`, `spec_dir`,
-`glossary_path`, `contracts_path`, `workstream_id_scheme` and `phase_vocabulary`.
+`glossary_path`, `contracts_path`, `workstream_id_scheme`, `phase_vocabulary` and `fusion_dir`
+(default `planning/fusion/`).
 
 ## Step 1 — Check the vocabulary exists first
 
 **You cannot spec what you cannot name.** Read `glossary_path` — or `contracts_path` where the
-project has no separate glossary — and list every term this project turns on.
+project has no separate glossary — and list every term this project turns on. A finished
+project-scale fusion page in `fusion_dir` has done part of this already: its terms are marked
+settled or proposed, so start from that list. A term it marks proposed is still a gap, for
+`domain-modeling`.
 
 Where a term is missing, ambiguous, or used two ways in the plan, **say so and stop short of
 inventing one.** Naming is `domain-modeling`'s job and it is upstream of this skill. Report the
@@ -24,8 +28,13 @@ decomposes along the wrong lines and every spec below it inherits the error.
 
 ## Step 2 — Read the whole problem
 
-`plan_path`, `roadmap_path`, any contract or requirements document the profile names, and enough
-of the code to know what already exists. This is the one skill that reads broadly on purpose;
+`plan_path`, `roadmap_path`, any contract or requirements document the profile names, and enough of
+the code to know what already exists. A finished project-scale fusion page comes first. Run its
+**resumption check**: read the page's ledger; compare its "facts checked against" with the current
+state and list every premise that changed; put the rulings to the user with those changes and ask
+whether they still stand. A ruling they change sends the page back to `/fusion`. Then its zoom-out,
+frame and component map are this step's starting point. A first-component page arrives here too, for
+its one spec-map row: its kind and its parent. This is the one skill that reads broadly on purpose;
 everything downstream reads narrowly.
 
 ## Step 3 — Enumerate and classify the components
@@ -81,7 +90,8 @@ Iterate until approved. Write nothing before that.
 ## Step 6 — Write the planned set, and only the planned set
 
 Write `spec_map_path` to the shape in
-[`references/spec-map-skeleton.md`](references/spec-map-skeleton.md).
+[`references/spec-map-skeleton.md`](references/spec-map-skeleton.md). When a fusion page fed the
+map, name it in the map's opening lines.
 
 **Record what is planned. Never record what exists.** Which specs are written, which have tickets,
 which are done — all of that is computed by `ticket_status_command` from the filesystem. This split

@@ -67,7 +67,7 @@ local_path = "thinking/grilling"
 source = "mattpocock-skills"
 upstream_path = "skills/productivity/grilling/SKILL.md"
 status = "adapted"
-changes = "Uses harness-neutral helper-agent and bounded-lookup wording."
+changes = "Uses harness-neutral helper-agent and bounded-lookup wording. Offers `/fusion` when rounds stop carrying judgment."
 
 [[skills]]
 local_path = "thinking/grill-me"

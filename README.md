@@ -1,12 +1,12 @@
 # Agent skills
 
-Twenty-two skills for Claude Code, Codex and other hosts, grouped by what they are for. Some I
+Twenty-three skills for Claude Code, Codex and other hosts, grouped by what they are for. Some I
 wrote, some I adapted, some are vendored unchanged with attribution.
 
 ```
 session/     start-session  end-session  sync-progress  wrap-day
 sdd/         deconstruct  adr-spec  tickets  implement  check-contracts
-thinking/    grilling  grill-me  grill-with-docs  research
+thinking/    grilling  grill-me  grill-with-docs  fusion  research
              writing-for-agents  to-questionnaire  teach
 knowledge/   domain-modeling
 craft/       tdd  unslop  show-me-your-work  codebase-design  handoff
@@ -18,12 +18,12 @@ templates/   profile.md  state.md
 ## Two install scopes, and the trap between them
 
 The directory grouping still says what each skill is *for*, but **as of 0.6.0 it no longer decides
-what installs where: the plugin declares all 22.** The two scopes remain, and they install
+what installs where: the plugin declares all 23.** The two scopes remain, and they install
 completely differently.
 
 | Scope | What | How it installs | Who gets it |
 |---|---|---|---|
-| **Project** | **all 22 skills — every one `plugin.json` declares** | as a plugin, declared in a repo's `.claude/settings.json` | everyone who clones that repo |
+| **Project** | **all 23 skills — every one `plugin.json` declares** | as a plugin, declared in a repo's `.claude/settings.json` | everyone who clones that repo |
 | **Personal** | everything in `thinking/` `knowledge/` `craft/` | `bin/link.sh` symlinks them into `~/.claude/skills` and `~/.agents/skills` | me, in every project |
 
 **Why 0.6.0 stopped drawing the line at 13.** 0.5.0 added four cross-scope skills because the
@@ -43,7 +43,7 @@ repo, no `bin/link.sh`, no personal scope at all.
 
 Being in both costs nothing: `bin/link.sh` makes symlinks, so a personal copy and the plugin copy
 are the same bytes, and the plugin's namespacing (`/sdd:tdd`) keeps the two invocations distinct.
-**It costs context, though** — 22 descriptions load in every session of every repo that enables the
+**It costs context, though** — 23 descriptions load in every session of every repo that enables the
 plugin, not 13. `skillOverrides: "name-only"` is the lever, per-skill and per-repo; see *Invocation
 cost* below.
 
@@ -89,7 +89,7 @@ skill.** A skill that names one project stops being shareable.
 
 Invocation intent is recorded for both hosts. Claude Code reads `disable-model-invocation` from
 `SKILL.md`. OpenAI products read `policy.allow_implicit_invocation` from
-`agents/openai.yaml`. **6 of 22 are model-invoked.** The other 16 remain available by explicit
+`agents/openai.yaml`. **6 of 23 are model-invoked.** The other 17 remain available by explicit
 invocation.
 
 An explicit skill may still have a metadata cost. Measured 2026-09-23 in a Claude Code session
@@ -116,6 +116,7 @@ its description; `"off"` hides it.
 | `grilling` | model | The interview primitive. Works a design tree in rounds, asks the whole frontier at once with a recommendation per question, and waits. Facts are the agent's job; decisions stay mine. |
 | `grill-me` | user | Typed entry point to `grilling`. |
 | `grill-with-docs` | user | `grilling` + `domain-modeling` together, so the interview leaves a paper trail. |
+| `fusion` | user | Co-planning before a spec or a spec map. Draws the plan as a page I think with: where it sits, the frame, the alternatives, what the agent cannot see, and the forks, with its own lean folded. Revised in rounds until I call it finished. A project page feeds `/deconstruct`; a component page feeds `/adr-spec`, and either can be picked up in a fresh session. |
 | `research` | model | Delegates reading to a background agent: primary sources only, findings written to a cited Markdown file. |
 | `writing-for-agents` | model | How to write any document an agent reads: context pointers, the two loads, the information hierarchy, completion criteria, no-ops. Read it before editing a SKILL.md or an AGENTS.md. |
 | `to-questionnaire` | user | Turns a decision I cannot make alone into a questionnaire for the person who can. Interviews me about the *send*, then aims the questions at the gap. |
@@ -185,7 +186,7 @@ the content hash of each `vendored` `SKILL.md`; a local edit must reclassify it 
 
 | Source | Skills |
 |---|---|
-| Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` `deconstruct` |
+| Mine, written from scratch | `start-session` `end-session` `sync-progress` `wrap-day` `check-contracts` `deconstruct` `fusion` |
 | [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), vendored | `research` `to-questionnaire` `codebase-design` `teach` |
 | mattpocock/skills, adapted | `writing-for-agents` `grilling` `grill-me` `grill-with-docs` `handoff` `tdd` `domain-modeling` |
 | [cursor/plugins pstack](https://github.com/cursor/plugins/tree/main/pstack), adapted | `unslop` `show-me-your-work`; `start-session` also uses two pstack principles as inspiration |
@@ -218,8 +219,9 @@ Code's built-in command of that name, since personal skills outrank bundled ones
 ## The workflow
 
 ```
-deconstruct  →  grill-me  →  adr-spec  →  tickets  →  implement  →  review → ship
-  project        ──── one session ────      one fresh session per ticket
+[fusion]  →  deconstruct  →  grill-me or fusion  →  adr-spec  →  tickets  →  implement  →  review → ship
+ project                     ─────────── one session, or one page ───────────   one fresh session per ticket
+[ ] optional
 
                   build → red / green / refactor
              experiment → register / run / evaluate
@@ -229,7 +231,9 @@ start-session  →  <the above>  →  end-session        lead also: sync-progres
 ```
 
 Keep grilling and the documents it produces in **one unbroken context window**. The interview is
-the thinking; splitting it away from the writing throws that thinking out.
+the thinking; splitting it away from the writing throws that thinking out. A fusion page is the
+exception the rule allows: it holds the thinking in a file, so `/adr-spec` or `/deconstruct` can
+pick a finished page up in a fresh session, after checking that its rulings still stand.
 
 The design behind the spec and ticket skills is in
 [`docs/sdd-workflow.md`](docs/sdd-workflow.md).
