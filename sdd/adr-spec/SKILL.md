@@ -23,7 +23,8 @@ The thinking is one of two things:
 
 - **A grilling in this context.** It lives only in the conversation, so keep grilling, this skill
   and `/tickets` in **one unbroken context window**. Don't compact between them.
-- **A finished fusion page** for this component in `fusion_dir`: the user called it finished, no
+- **A finished fusion page** for this component in `fusion_dir` (the committed file, not a
+  per-round copy): the user called it finished, no
   fork on it is open, and it shows the scope boundary and the proposed proof. It holds the thinking
   in a file, so it may come from an earlier session. Run its **resumption check** before writing:
   read the page's ledger; compare its "facts checked against" with the current state and list every

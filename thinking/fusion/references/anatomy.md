@@ -57,7 +57,7 @@ a distinction the project already draws, such as where a model decides and where
 | **At stake** | the moment in a concrete case where the options produce different outcomes; what that changes in the spec, the ADRs and the tickets; the cost to reverse |
 | **Options** | lettered (a), (b), (c), each concrete enough to picture |
 | **Needs you** | what the user holds that makes this theirs: history, people, intent, taste |
-| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind |
+| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind; the summary marks whether the user kept or changed it |
 | **Ruling** | open, or the user's answer with its round and reason |
 
 "What would change my mind" is a lever: a user who knows that fact can move the recommendation
@@ -69,4 +69,4 @@ A revision moves the picture itself: the figure and the section a contribution t
 **since you last read** box and the contribution log point at what moved, so a re-read costs
 minutes. A ruled fork's card stays on the page, read-only, with its ruling and round; the answer
 form carries only open questions, and it closes when the page is finished. When the host keeps every file it shows, write each round to its own copy (`-r1`,
-`-r2`); the highest is current. The page committed at the finish is one file without the suffix.
+`-r2`); the highest is current. The page committed at the finish is one file without the suffix, and that file is the one a later session reads.

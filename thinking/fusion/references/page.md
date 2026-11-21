@@ -35,7 +35,7 @@ is not on the page. A reframe is worth more than a ruling.
 
 ## Terms
 
-- **<term>** — <meaning, in one line>
+- **<term>** — <meaning, in one line> *(settled | proposed)*
 
 ## Zoom out
 

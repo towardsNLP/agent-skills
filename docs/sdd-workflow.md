@@ -42,8 +42,8 @@ Three consequences run through every decision below, and each one is this move a
 - **`/fusion` is the picture before each commitment.** At project scale it comes before
   `/deconstruct`; at component scale it is the second way into `/adr-spec`, beside grilling. It
   draws the plan as a page the user thinks with: where the plan sits, the frame it is argued in,
-  the alternatives, what the agent cannot see, and the forks, with the agent's lean folded until
-  opened. Grilling hands the user decisions; the page hands them the model those decisions belong
+  the alternatives, what the agent cannot see, and the forks, with the agent's recommendation
+  pre-selected in an answer form, its reasoning folded, and every change marked. Grilling hands the user decisions; the page hands them the model those decisions belong
   to.
 - **Grilling, `/adr-spec` and `/tickets` run in one session.** The interview is the thought that
   makes the spec trustworthy, and the seams it settles are what makes a ticket sizeable. Splitting

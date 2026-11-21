@@ -116,7 +116,7 @@ its description; `"off"` hides it.
 | `grilling` | model | The interview primitive. Works a design tree in rounds, asks the whole frontier at once with a recommendation per question, and waits. Facts are the agent's job; decisions stay mine. |
 | `grill-me` | user | Typed entry point to `grilling`. |
 | `grill-with-docs` | user | `grilling` + `domain-modeling` together, so the interview leaves a paper trail. |
-| `fusion` | user | Co-planning before a spec or a spec map. Draws the plan as a page I think with: where it sits, the frame, the alternatives, what the agent cannot see, and the forks, with its own lean folded. Revised in rounds until I call it finished. A project page feeds `/deconstruct`; a component page feeds `/adr-spec`, and either can be picked up in a fresh session. |
+| `fusion` | user | Co-planning before a spec or a spec map. Draws the plan as a page I think with: where it sits, the frame, the alternatives, what the agent cannot see, and the forks, with its recommendation pre-selected in an answer form and its reasoning folded. Revised in rounds until I call it finished. A project page feeds `/deconstruct`; a component page feeds `/adr-spec`, and either can be picked up in a fresh session. |
 | `research` | model | Delegates reading to a background agent: primary sources only, findings written to a cited Markdown file. |
 | `writing-for-agents` | model | How to write any document an agent reads: context pointers, the two loads, the information hierarchy, completion criteria, no-ops. Read it before editing a SKILL.md or an AGENTS.md. |
 | `to-questionnaire` | user | Turns a decision I cannot make alone into a questionnaire for the person who can. Interviews me about the *send*, then aims the questions at the gap. |

@@ -169,7 +169,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
 <section class="s" id="terms">
   <div class="s-head"><span class="s-num">1</span><h2>Terms</h2></div>
   <dl class="terms">
-    <dt>{term}</dt><dd>{meaning, in one line}</dd>
+    <dt>{term}</dt><dd>{meaning, in one line} <span class="moved">{settled | proposed}</span></dd>
   </dl>
 </section>
 
@@ -334,13 +334,14 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   }
   function restore() {
     var s = null;
-    try { s = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { storageOK = false; }
-    if (!s) return;
+    try { s = JSON.parse(localStorage.getItem(KEY) || "null"); }
+    catch (e) { storageOK = false; status("This browser blocked autosave. Gather and copy your answers before closing."); return; }
+    if (!s || typeof s !== "object" || !s.q || typeof s.q !== "object") return;
     document.getElementById("fz-responder").value = s.responder || "";
     document.getElementById("fz-free").value = s.free || "";
     blocks().forEach(function (b) {
       var a = s.q[b.dataset.q]; if (!a) return;
-      var r = b.querySelector("input[type=radio][value='" + (a.v || "").replace(/'/g, "\\'") + "']"); if (r) r.checked = true;
+      Array.prototype.forEach.call(b.querySelectorAll("input[type=radio]"), function (x) { if (x.value === a.v) x.checked = true; });
       var n = b.querySelector("[data-note]"); if (n) n.value = a.n || "";
     });
     status("Your draft from this browser was restored.");
@@ -360,10 +361,11 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
         if (n) lines.push(id + " " + label + ": " + n); else unanswered++;
         return;
       }
-      if (!c) { unanswered++; return; }
+      if (!c) { unanswered++; if (n) lines.push(id + " " + label + ": unanswered | " + n); return; }
       if (kind === "fork") {
-        lines.push(id + " " + label + ": (" + c.value + ") " + (changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation") + (n ? " | " + n : ""));
-        if (!changed) kept++;
+        var verdict = !r ? "chosen (no recommendation)" : changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation";
+        lines.push(id + " " + label + ": (" + c.value + ") " + verdict + (n ? " | " + n : ""));
+        if (r && !changed) kept++;
       } else if (changed || n) {
         lines.push(id + " " + label + ": " + c.value + (changed ? " (changed)" : "") + (n ? " | " + n : ""));
       } else { kept++; }
@@ -389,7 +391,9 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     } else { fallback(); }
   }
 
-  restore();
+  // A finished page closes its form; without it there is nothing to restore or gather.
+  if (!document.getElementById("fz-summary")) return;
+  try { restore(); } catch (e) { status("Your saved draft could not be restored; answers start fresh."); }
   document.addEventListener("change", save);
   document.addEventListener("input", save);
   document.getElementById("fz-gather").addEventListener("click", function () { gather(); status("Answers gathered below. Review them, then copy."); });

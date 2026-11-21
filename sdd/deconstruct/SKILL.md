@@ -17,8 +17,11 @@ Read `planning/agent/profile.md` for `plan_path`, `roadmap_path`, `spec_map_path
 
 **You cannot spec what you cannot name.** Read `glossary_path` — or `contracts_path` where the
 project has no separate glossary — and list every term this project turns on. A finished
-project-scale fusion page in `fusion_dir` has done part of this already: its terms are marked
-settled or proposed, so start from that list. A term it marks proposed is still a gap, for
+project-scale fusion page in `fusion_dir` has done part of this already. Run its **resumption
+check** first: read the page's ledger; compare its "facts checked against" with the current state
+and list every premise that changed; put the rulings to the user with those changes and ask
+whether they still stand. A ruling they change sends the page back to `/fusion`. Then start from
+its terms, each marked settled or proposed; a term it marks proposed is still a gap, for
 `domain-modeling`.
 
 Where a term is missing, ambiguous, or used two ways in the plan, **say so and stop short of
@@ -29,11 +32,8 @@ decomposes along the wrong lines and every spec below it inherits the error.
 ## Step 2 — Read the whole problem
 
 `plan_path`, `roadmap_path`, any contract or requirements document the profile names, and enough of
-the code to know what already exists. A finished project-scale fusion page comes first. Run its
-**resumption check**: read the page's ledger; compare its "facts checked against" with the current
-state and list every premise that changed; put the rulings to the user with those changes and ask
-whether they still stand. A ruling they change sends the page back to `/fusion`. Then its zoom-out,
-frame and component map are this step's starting point. A first-component page arrives here too, for
+the code to know what already exists. A finished project-scale fusion page, already checked in
+Step 1, comes first: its zoom-out, frame and component map are this step's starting point. A first-component page arrives here too, for
 its one spec-map row: its kind and its parent. This is the one skill that reads broadly on purpose;
 everything downstream reads narrowly.
 

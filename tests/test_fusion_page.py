@@ -49,7 +49,7 @@ def test_the_markdown_shape_carries_every_section():
 
 
 def test_the_provisional_recommendation_is_folded_in_both_templates():
-    """The user meets the options before the agent's lean, so the lean cannot anchor them."""
+    """The recommendation's reasoning stays folded, with what would change the agent's mind."""
     for name in ("page.html", "page.md"):
         text = read(name)
         assert re.search(
@@ -120,3 +120,30 @@ def test_the_html_answers_can_be_gathered_and_copied():
         assert control in html, control
     assert "kept the recommendation" in html and "CHANGED from" in html
     assert "localStorage" in html and "execCommand" in html
+
+
+def test_every_html_fork_block_names_its_kind_and_label():
+    """The summary reports a question by id, kind and label, so each must carry all three."""
+    for attrs in re.findall(r"<div class=\"q\"([^>]*)>", read("page.html")):
+        assert re.search(r'data-q="[A-Z]\d+"', attrs), attrs
+        assert re.search(r'data-kind="(fork|assumption|default|edge)"', attrs), attrs
+        assert 'data-label="' in attrs, attrs
+
+
+def test_the_answer_script_is_valid_javascript():
+    """A syntax error silently disables the whole form, so check it where node exists."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    node = shutil.which("node")
+    if not node:
+        import pytest
+
+        pytest.skip("node is not installed")
+    html = read("page.html")
+    script = html[html.rindex("<script>") + len("<script>") : html.rindex("</script>")]
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
+        handle.write(script)
+    result = subprocess.run([node, "--check", handle.name], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
