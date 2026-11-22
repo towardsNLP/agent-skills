@@ -147,3 +147,15 @@ def test_the_answer_script_is_valid_javascript():
         handle.write(script)
     result = subprocess.run([node, "--check", handle.name], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():
+    """It feeds /deconstruct and then /adr-spec, so freezing at the map would strand the second."""
+    flat = {
+        path: " ".join((ROOT / path).read_text(encoding="utf-8").split())
+        for path in ("thinking/fusion/SKILL.md", "sdd/deconstruct/SKILL.md", "docs/sdd-workflow.md")
+    }
+    assert "freezes only when its spec is approved" in flat["thinking/fusion/SKILL.md"]
+    assert "until the spec or spec map it feeds is approved" not in flat["thinking/fusion/SKILL.md"]
+    assert "cite the page's new commit" in flat["sdd/deconstruct/SKILL.md"]
+    assert "a first-component page, once its spec is" in flat["docs/sdd-workflow.md"]

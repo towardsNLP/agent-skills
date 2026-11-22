@@ -56,7 +56,7 @@ Three consequences run through every decision below, and each one is this move a
 
 | Artifact | Written by | Lifetime | Path |
 |---|---|---|---|
-| Fusion page | `/fusion`, revised in rounds with the user | frozen once the spec or spec map it feeds is approved | `planning/fusion/<date>-<slug>.html` or `.md` |
+| Fusion page | `/fusion`, revised in rounds with the user | frozen once what it feeds is approved; a first-component page, once its spec is | `planning/fusion/<date>-<slug>.html` or `.md` |
 | Spec map | `/deconstruct`, after user approval | project | `planning/spec-map.md` |
 | ADR | `/adr-spec` proposes, human approves | forever | `planning/adr/NNNN-slug.md` |
 | Spec | `/adr-spec` | **immutable after approval** | `planning/specs/<spec-id>/spec.md` |

@@ -171,8 +171,12 @@ The rounds end when the user calls the page finished, no fork is open, and, at t
 scales, the page shows the scope boundary and the proposed proof. Ask the closing question of
 step 7 and record the answer, then mark the page finished with the date and close the answer form,
 leaving a line that says a later round reopens it. A finished page reopens
-only through the resumption check below. Once the spec or spec map it feeds is approved, the page
-is frozen: a record, with later change belonging to the spec's amendments.
+only through the resumption check below. Once what it feeds is approved, the page is frozen: a
+record, with later change belonging to the spec's amendments. A project page freezes with its spec
+map, and a component page with its spec. A first-component page feeds both, so it freezes only
+when its spec is approved. The spec map cites it at the commit the map approved, and a later round
+that changes a ruling the row relied on goes back to `/deconstruct`, which puts the row to the user
+again and cites the page's new commit.
 
 ## Step 7 — Hand off
 
@@ -193,8 +197,7 @@ A finished page is built to be picked up in a fresh session, by `/adr-spec`, `/d
 later `/fusion`. That reader runs the **resumption check**: read the ledger; compare the page's
 "facts checked against" with the current state and list every premise that changed; put the
 rulings to the user with those changes and ask whether they still stand. A ruling the user
-changes reopens the page as a new round, which is possible until the spec or spec map it feeds is
-approved.
+changes reopens the page as a new round, which is possible until the page is frozen (step 6).
 
 ## Hard rules
 

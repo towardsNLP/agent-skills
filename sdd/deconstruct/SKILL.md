@@ -91,7 +91,9 @@ Iterate until approved. Write nothing before that.
 
 Write `spec_map_path` to the shape in
 [`references/spec-map-skeleton.md`](references/spec-map-skeleton.md). When a fusion page fed the
-map, name it in the map's opening lines.
+map, name it in the map's opening lines, at the commit the map approved. A first-component page
+stays open until its spec is approved: when a later round changes a ruling its row relied on,
+come back to that row, put it to the user, and cite the page's new commit.
 
 **Record what is planned. Never record what exists.** Which specs are written, which have tickets,
 which are done — all of that is computed by `ticket_status_command` from the filesystem. This split
