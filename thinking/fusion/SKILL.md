@@ -1,36 +1,43 @@
 ---
 name: fusion
-description: "Co-plan with the user before a spec or a spec map. Draw the plan as a page they think with (where it sits, the frame, the alternatives, what you cannot see, the forks), revise it in rounds until they call it finished, then hand it to /deconstruct or /adr-spec."
+description: "Co-plan with the user before a spec or a spec map, or review a spec already written, at any stage. Draw it as a page they think with (where it sits, the frame, the alternatives, what you cannot see, the forks), revise it in rounds until they call it finished, then hand it to /deconstruct, /adr-spec or /tickets."
 disable-model-invocation: true
 ---
 
 # Fusion of horizons
 
-Understanding is a **fusion of horizons**. Neither view is erased, and neither is copied. You
-see from the code and the documents; the user sees from the product, the people and the
-history. The plan comes out of where the two overlap. A grilling hands the user decisions. A
-**fusion page** hands them the model those decisions belong to, so they can change the frame
-instead of only choosing inside it.
+Understanding is a **fusion of horizons**. A horizon, in Gadamer's sense, is the range of what
+someone can see and understand from where they stand, formed by their history, language and prior
+knowledge; it moves as they learn. Neither view is erased, and neither is copied. You see from the
+code and the documents; the user sees from the product, the people and the history. The plan comes
+out of where the two overlap. A grilling hands the user decisions. A **fusion page** hands them the
+model those decisions belong to, so they can change the frame instead of only choosing inside it.
+
+The situation a plan or a spec sits in (the system, the roadmap, the neighbouring components) is
+its **context**. A horizon is where someone looks from; the context is part of what they look at.
+Never call the context a horizon.
 
 Read `planning/agent/profile.md` for `fusion_dir`, `plan_path`, `roadmap_path`,
-`spec_map_path`, `spec_dir`, `decision_records`, `glossary_path`, `architecture_doc_path`,
+`spec_map_path`, `spec_dir`, `ticket_dir`, `decision_records`, `glossary_path`, `architecture_doc_path`,
 `constraints_doc` and `authority_map`. Pages live in `fusion_dir` (default `planning/fusion/`),
 one per plan, named `<YYYY-MM-DD>-<slug>.html` or `.md`. A repo with no profile yet gets the
 default, and the page lists the profile values it needs for the user to set.
 
 ## Step 1 — Settle the scale
 
-A plan has one of three scales, and the scale changes what every section shows
-([`references/scales.md`](references/scales.md)):
+A page has one of four scales, and the scale changes what every section shows
+([`references/scales.md`](references/scales.md)). The first three plan; the fourth reviews:
 
 | Scale | The plan is | Zoom out shows | Hands off to |
 |---|---|---|---|
 | **project** | a set of specs | the whole problem, and what already exists | `/deconstruct` |
 | **first component** | the first spec where nothing is built yet | the world it enters: people, today's practice, tools, limits | `/deconstruct` for its spec-map row, then `/adr-spec` |
 | **component** | one spec in a system that exists, or an amendment to one | the system today, with the component placed in it | `/adr-spec` |
+| **review** | a spec already written, at any stage: drafted, cut into tickets, part-built or built | its intent, its commitment and whatever is built, beside its context then and now | `/adr-spec`, `/tickets`, or a new fusion page |
 
 A spec-map row or a built module named by the user means component. A request to plan the specs
-means project. No code and no spec map means first component. When a first-component page's
+means project. No code and no spec map means first component. A request to review a spec that
+exists, by ID or path, means review ([reviewing a spec](#reviewing-a-spec)). When a first-component page's
 sketch of the eventual system shows several components with real dependencies, put a project
 page first to the user as a fork on that page.
 
@@ -193,6 +200,8 @@ again and cites the page's new commit.
 
 - **Project scale** goes to `/deconstruct`.
 - **Component scale** goes to `/adr-spec`.
+- **Review** goes to `/adr-spec` for an amendment or a draft's revision, to `/tickets` for tickets,
+  or, for a re-plan, to a new `/fusion` page. An accepted finding stays on the review page.
 - **First-component scale** goes to `/deconstruct` first, which registers the component's
   spec-map row with its kind and parent, and then to `/adr-spec`, which takes both from that row.
 - The user types each command; give it to them exactly.
@@ -201,7 +210,70 @@ again and cites the page's new commit.
   drawn from the contribution log. Write it yourself; the log already holds it, so do not ask the
   user to restate it. They may correct it.
 - The page is committed with the PR of the spec or spec map it feeds. A spec cites it in its
-  Anchors, or in its amendment entry; a spec map names it in its opening lines.
+  Anchors, or in its amendment entry; a spec map names it in its opening lines. A review page goes
+  with the PR of the amendment or the tickets it feeds.
+
+## Reviewing a spec
+
+A review revisits a spec already written, whoever wrote it and however far it has got. It runs the
+same steps as a plan, with these differences.
+
+**What it reads (step 2).** Three records, and the context twice:
+
+- **Intent**: the rulings of the fusion page the spec came from, or, with none, the spec's §1–§2,
+  its ADRs' context sections and its spec-map row; and what the person calling the review says.
+  A new intent stated there goes on the page in their words, dated, as a change of intent, not as
+  drift. Stated by anyone other than the spec's owner, it is a finding for the owner to rule on.
+- **Commitment**: `spec.md` followed by `amendments.md` in date order, and the tickets in
+  `ticket_dir`, if cut.
+- **Built**: the code and the outcomes of closed tickets: none, some or all. Work whose tickets
+  are still open is not yet a finding.
+- **The context when planned**, from the page's "facts checked against" or, for a spec with no
+  page, its Created date and Anchors; and **the context today**, read fresh as the resumption
+  check reads it.
+
+Reading the built code is a helper agent's job, with every finding anchored to a file and a commit.
+The acceptance grades in `acceptance.md` are the implementer's own claim, to check, not to trust.
+
+**Whose horizons.** A review fuses at least three: the author's, recorded on the fusion page and in
+the spec; the reviewer's, whether the user, a teammate or an outside expert; and yours. Everyone the
+page is sent to reads the same page, with all its context, and answers under their name.
+
+**Findings.** A fresh AI reviewer, a different model family where the harness offers one, writes
+its findings onto the page before the owner reads, each with its evidence and its author. Each
+finding is one of: diverged, missing, unproven, a surprise nobody planned for, or the context moved.
+Findings are evidence; a finding that needs a judgement becomes a fork, and one with an obvious
+answer becomes a default. Record what worked as well, so later pages can read past reviews as repo
+precedents.
+
+**Who rules.** The spec's owner, from its **Owner** field. Reviewers' findings, the user's, a
+teammate's and the AI's, are evidence under their names, and the owner answers every finding, with
+a reason when declining one. When the spec names no owner, ask who owns it before anything is
+ruled. When the intent records are too thin to judge against, ask the owner to state the intent, as
+a question at the edge of your view.
+
+**What each finding resolves to**, and who writes it:
+
+| Resolution | Written by |
+|---|---|
+| accept, with a reason and a condition for revisiting it | the owner, on the review page |
+| revise a spec still in draft, or amend an approved one | `/adr-spec` |
+| recut tickets not yet started, or add tickets for work started or done (a revert is a ticket) | `/tickets` |
+| re-plan | a new fusion page |
+
+**Re-plan** when a premise the spec rests on no longer holds: the change would move work across its
+boundary with another component, or its spec-map row or an ADR it anchors has changed or been
+superseded. The old fusion was formed for a situation that no longer holds, and moving the horizons
+to take in what changed is what a new fusion does. When the work stays inside the spec's boundary
+and only its scope, inputs and outputs, or acceptance change, amend. A re-plan finishes the review
+page with that ruling and continues on a new fusion page at the scale it needs, which cites the
+review and takes its records and contexts as its zoom-out; the review's other findings go to it as
+inputs, since the spec they would change may be replaced.
+
+**The page** lives beside the plan page, named `<YYYY-MM-DD>-<slug>-review.html` or `.md`; for a
+spec with no plan page, the slug is the spec's ID. It uses the same templates, with each section
+holding what the review column of `scales.md` says. A review never edits a spec, an ADR or a
+ticket: it proposes, and `/adr-spec` and `/tickets` write.
 
 ## Resuming a finished page
 

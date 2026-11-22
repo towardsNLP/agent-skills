@@ -99,6 +99,19 @@ def test_every_reader_of_a_finished_page_runs_the_same_resumption_check():
         assert "resumption check" in text, path
         for move in ("ledger", '"facts checked against"', "premise that changed", "still stand"):
             assert move in text, (path, move)
+    adr_spec = " ".join((ROOT / "sdd/adr-spec/SKILL.md").read_text(encoding="utf-8").split())
+    assert "A finished **review page**" in adr_spec, "/adr-spec must accept a finished review page"
+
+
+def test_every_scale_in_the_skill_has_a_column_in_scales_md():
+    """Step 1 names the scales; scales.md says what each section holds at each of them."""
+    skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+    step_one = skill.split("## Step 1", 1)[1].split("## Step 2", 1)[0]
+    scales = re.findall(r"^\| \*\*([a-z ]+)\*\* \|", step_one, re.M)
+    assert scales == ["project", "first component", "component", "review"], scales
+    header = next(line for line in read("scales.md").splitlines() if line.startswith("| Section"))
+    columns = [cell.split(":")[0].strip().lower() for cell in header.strip("|").split("|")[1:]]
+    assert columns == scales, columns
 
 
 def test_every_html_question_preselects_exactly_one_recommendation():

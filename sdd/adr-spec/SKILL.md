@@ -30,7 +30,8 @@ The thinking is one of two things:
   read the page's ledger; compare its "facts checked against" with the current state and list every
   premise that changed; put the rulings to the user with those changes and ask whether they still
   stand. Write §3 and §5 after the answer. A ruling the user changes sends the page back to
-  `/fusion`.
+  `/fusion`. A finished **review page** for an existing spec counts the same way, for an amendment
+  or for revising a spec still in draft; its owner's rulings are the thinking.
 
 Neither in hand means create the shell, fill §1 and §2 from what the conversation supports, leave
 the rest as placeholders, and say: *"§3 and §5 are unfilled. Run `/grill-me` or `/fusion` and
@@ -43,6 +44,11 @@ Grep `spec_dir` for a spec covering the same subject, and `spec_map_path` for it
 duplicate ID is refused by `check-contracts`; a duplicate *subject* under a fresh ID is
 not, and is the more expensive mistake. If one exists, stop and say so: supersede or extend is the
 user's call.
+
+If the user chooses **supersede**, write the new spec under a new ID, with the old spec in its
+Anchors, and append one last entry to the old spec's `amendments.md` naming its successor. The old
+`spec.md` is never edited. A supersession that a review ruled as a re-plan takes its thinking from
+the new fusion page, not from the review page.
 
 If the user chooses **extend**, enter amendment mode. Keep the existing ID and read `spec.md` plus
 all existing `amendments.md` entries. Confirm that the requested change affects scope, inputs and
