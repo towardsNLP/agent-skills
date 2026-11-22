@@ -10,13 +10,16 @@ This document explains the idea, the page and the practice. The skill itself is
 [`SKILL.md`](SKILL.md); what each section of a page holds is in
 [`references/anatomy.md`](references/anatomy.md).
 
-A few words used throughout. A **spec** is the written specification of one component, which the
-build follows; a **spec map** lists a project's planned specs. An **ADR** (architecture decision
-record) records one decision and why. A **round** is one exchange: you answer, and the page
+A few words used throughout. A **skill** is a set of instructions an agent loads for one kind of
+task; `/fusion` is one. A **spec** is the written specification of one component, which the build
+follows; a **spec map** lists a project's planned specs; an **amendment** is a dated, approved change
+appended to a spec once it is frozen; a **ticket** is one unit of work with the check that proves it
+done. An **ADR** (architecture decision record) records one decision and why. A **grilling** is an
+interview skill that settles decisions one round of questions at a time. A **round** is one exchange: you answer, and the page
 changes. The **frame** is how the problem is cut: by user need, by structure, by source, or
 another way. Items on a page carry IDs: **F** a fork (a decision that needs you), **D** a default
 (yours to veto), **A** an assumption, **E** a question only you can answer, **R** a ruling already
-made.
+made. The teach-back, the resumption check and drift are explained where they come up.
 
 ## Two horizons, one page
 
@@ -44,10 +47,10 @@ from. The distinction matters in review, below.
 
 ## Why a page, and not a list of questions
 
-The usual way to settle a plan with an agent is a grilling: the agent asks numbered questions,
+A common way to settle a plan with an agent is a grilling: the agent asks numbered questions,
 each with a recommended answer, and you rule on them. Grilling is quick, but a decision can only be
-judged against the model it belongs to. A list of questions hands you the decisions and keeps the
-model in the agent's head. You can choose inside its frame, but nothing in the list is set aside for
+judged against the model it belongs to. A list of questions hands you the decisions, while the
+model they belong to stays with the agent. You can choose inside its frame, but nothing in the list is set aside for
 saying the frame is wrong, and that may be the most valuable thing you know.
 
 A page hands you the model first. Each part of its design answers a way that question lists fail:
@@ -55,7 +58,7 @@ A page hands you the model first. Each part of its design answers a way that que
 - **The frame is on the page, with a rival.** The agent states the cut it chose, why, and at least
   one other way to cut the problem, with what the plan would become under it. You can take the
   rival, or bring a third.
-- **What is at stake comes before the options.** Every decision is a *fork*, and each fork card
+- **What is at stake comes before the options.** Every decision that needs you is a *fork*, and each fork card
   says, in a concrete case, the moment the options lead to different outcomes, what that changes
   downstream, and what it would cost to reverse. Consequences are what make a decision worth your
   attention. Options alone are not.
@@ -67,8 +70,108 @@ A page hands you the model first. Each part of its design answers a way that que
 - **Every change is marked.** Round after round, the page opens with what moved since you last
   read, so a re-read starts from what changed.
 
+Recent studies of people planning with agents point the same way, though none tests a page like
+this one. In a study of a spreadsheet agent's plan mode, participants answered 88 of 99 clarifying
+questions but only 2 of 24 edited the plan itself, and 44% of the requirements came from those
+answers ([Kumar et al., 2026](https://arxiv.org/abs/2607.23670)): in that study, people
+contributed through questions rather than by editing the plan. Involving users in planning helped
+flawed plans and made sound ones worse ([He et al., CHI 2025](https://arxiv.org/abs/2502.01390)),
+which fits turning a decision that needs nothing only you hold into a default rather than a
+question. In a small pilot, people
+accepted wrong plans half as often when the plan was drawn as a graph
+([AIPOM, 2025](https://arxiv.org/abs/2509.24826)). And the two shipping plan modes linked here show
+the plan as prose with one approval gate, with no forks, rival frame or questions for the human ([Cursor](https://cursor.com/blog/plan-mode);
+[Claude Code](https://code.claude.com/docs/en/permission-modes)).
+
 The page does not replace grilling. Small, local forks can still go to a quick grilling round,
 asked against the page.
+
+## Where this comes from
+
+The pipeline `/fusion` belongs to (interview, spec, tickets, one ticket per fresh session) has a
+short and public history, and the repository records its part in it: the README's "Origins and
+pinned provenance" table and [`UPSTREAM.toml`](../../UPSTREAM.toml) pin every borrowed skill to a
+commit.
+
+- **The pattern.** In December 2025 Thariq Shihipar of Anthropic described the loop in a post:
+  start from a minimal spec, have the agent interview you, then build the spec in a new session.
+  Anthropic's [Claude Code best practices](https://code.claude.com/docs/en/best-practices) now give
+  it almost word for word: "Interview me until you could write the spec, then write it to SPEC.md",
+  then "start a fresh session to build from it", and later review the diff against `SPEC.md`.
+- **The skills.** Matt Pocock turned the loop into skills in
+  [mattpocock/skills](https://github.com/mattpocock/skills) during 2026. His first PRD (product requirements
+  document) skill interviewed the user itself (February); the interview split out as `grill-me`, after Brooks's
+  "design tree"; the PRD skill then stopped interviewing (April); and in July the chain became
+  `to-spec`, `to-tickets` and `implement`, with tickets as tracer-bullet slices, each "sized to fit
+  in a single fresh context window" (a context window is what an agent can hold in one session).
+  He credits Brooks's *The Design of Design* (2010) for the design tree and Hunt and Thomas's *The
+  Pragmatic Programmer* (1999) for tracer bullets: thin slices that run end to end. Thoughtworks'
+  Technology Radar put *grilling* in Trial (its ring for techniques worth trying on a project that
+  can absorb the risk) in November 2026, citing his repository.
+- **What this repository changed.** Grilling is adapted to offer `/fusion` when rounds stop
+  carrying judgement. `adr-spec` merges an earlier local skill with `to-spec`: decisions are
+  recorded and approved before the spec, which refuses its scope and seams sections unless a
+  grilling or a finished fusion page came first, and the spec is frozen, with dated amendments.
+  `tickets` keeps tracer bullets, blocking edges (which ticket must land first) and one-window sizing, but tickets are durable
+  files, each proved by a named check, with doneness derived from that check. `implement` is
+  rewritten to claim a ticket, load only what it names, prove it by a loop chosen for its kind of
+  work, and record what diverged. `tdd` restores the refactor step upstream dropped.
+- **The principles.** Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack),
+  published in Cursor's plugin repository in May 2026, contributed `unslop`, `show-me-your-work`,
+  and two principles behind `start-session`: guard the context window, and remove a shared write
+  target rather than lock it. pstack itself ships no planning skills ("the best spec is code"),
+  and it asks agents never to block on the human: the opposite pole from "the user rules every
+  fork".
+
+**What `/fusion` adds to that lineage.** The upstream interview hands the user questions;
+`/fusion` draws the model they belong to as a page, with the frame, a rival frame, the forks' stakes
+and the edge of the agent's view. Upstream keeps the interview and the spec in one session; a
+finished page carries its rulings in a ledger, so the spec can be written in a fresh session after a
+resumption check. The page is checked before you see it by a fresh reader, from another model
+family where the host offers one; it records several responders by name; and its review scale
+compares a spec's intent, commitment and build, with the context then and now, where upstream's
+[`to-spec` documentation](https://github.com/mattpocock/skills/blob/c55ee46073ed923f86ce59a5eb3b6d895095d1b7/docs/engineering/to-spec.md) calls the spec a throwaway record.
+
+## The field it belongs to
+
+Writing a spec for an agent to build from has become a practice of its own, usually called
+spec-driven development. Its main tools, among them the BMAD Method and Tessl, structure the same arc in different ways:
+[GitHub Spec Kit](https://github.com/github/spec-kit) (constitution, specify, plan, tasks,
+implement), [Kiro](https://kiro.dev/docs/specs/) (requirements, design, tasks), and
+[OpenSpec](https://github.com/Fission-AI/OpenSpec), whose delta specs, archived in dated folders,
+are the nearest relative we found to a frozen spec with dated amendments. Geoffrey Huntley's
+[Ralph loop](https://ghuntley.com/ralph/) (2025) made the case for a fresh context per task with
+the spec as the only memory, and OpenAI's
+[Symphony](https://openai.com/index/open-source-codex-orchestration-symphony/) (2026) gives every
+unblocked ticket its own agent.
+
+The practice has sharp critics, and `/fusion` is shaped by them:
+
+- Birgitta Böckeler [distinguishes](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)
+  three levels: spec-first (written before the work), spec-anchored (kept and maintained after it)
+  and spec-as-source (the only thing a human edits), and found reviewing generated specs heavier
+  than reviewing code (2025). A frozen spec with amendments and a review scale sits between the
+  first two.
+- François Zaninotto calls it [the waterfall striking back](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)
+  (2025), and Gabriella Gonzalez argues that [a sufficiently detailed spec is code](https://haskellforall.com/2026/03/a-sufficiently-detailed-spec-is-code)
+  (2026). Hence a spec that holds intent, decisions and acceptance, with design detail sent to a
+  contract, a decision record, or nowhere; and pages sized by their subject.
+- Thoughtworks' Radar (Vol. 35, November 2026) put *interactive visual plans with agents* in Trial
+  beside grilling, and cautioned against *AI-driven documentation sprawl* and *human-in-the-loop
+  theater*, "an empty approval step rather than a real check". The answer form's untouched warning
+  and the owner's rulings are aimed at the second; the first is a live risk for any spec with
+  amendments.
+
+The evidence is young but pointed. In a sample of 266 repositories, Agarwal and colleagues found
+that 77.6% of spec files contain implementation detail and 81.5% have a single recorded commit:
+specs mix *how* into *what*, and most are committed once
+([2026 preprint](https://arxiv.org/abs/2608.25202)). Studies of real agent sessions find
+misalignment that users must correct and work reports that overstate success
+([Tang et al., 2026](https://arxiv.org/abs/2605.29442);
+[Yang et al., 2026](https://arxiv.org/abs/2611.25760)), which is why a review rests on the code
+and the checks rather than on the agent's closing note. We found no controlled study that compares
+spec-driven work with plain prompting, or that measures planning pages; `/fusion` is a design argued
+from these sources, not a measured result.
 
 ## Where it sits
 
@@ -118,7 +221,8 @@ and its rival; the **shape**, the parts and the seam where the work will be veri
 my view ends**; the **assumptions**, each with what breaks if it is wrong; the **forks**; the
 **defaults**; and the **preview** of what the next skill would write.
 
-A page opens with a **ledger**: the rulings settled so far with their reasons, the open forks, the
+Under the masthead, which states the scale, a page opens with what moved since you last read,
+then a **ledger**: the rulings settled so far with their reasons, the open forks, the
 defaults, the assumptions, and a line for each section left out and why. A later session reads the
 ledger instead of the whole page. **Terms** come before content, so no abbreviation is used before
 it is defined.
@@ -148,7 +252,8 @@ silence from reading as agreement. If you click no fork at all, the summary says
 and the agent asks before treating the recommendations as rulings. A fork that grants a
 permission, such as pushing a branch, starts unanswered. A page is finished only when no fork is
 open. A responder name lets the same page go to other people, whose answers are recorded under
-their names.
+their names; when responders disagree, each answer stays on record and the person who rules
+decides (in a review, the spec's owner).
 
 ## Four scales
 
@@ -159,7 +264,7 @@ proposes the set of specs (boxes A to F). A first-component page shows the world
 nothing is built yet. A component page shows the system today with the component placed in it. A
 review page shows a spec beside its own records.*
 
-The scale is the first thing the page states, and you can correct it like any other part of the
+The scale is stated in the masthead, the first thing on the page, and you can correct it like any other part of the
 frame. A request to plan the specs means project. No code and no spec map means first component. A
 spec-map row or a built module means component. A spec that already exists, named for review,
 means review. When two could apply, as with a new product that could start as a project or as its
@@ -177,7 +282,8 @@ is yours. Every section keeps its job at every scale, and
 round 1 a review only looked back at built work. Two rounds of answers later it had widened: a
 review runs at any stage, so "built" may be nothing; the caller's own words count as intent; and a
 second row asks whether the context the spec was planned in has moved. The red lines are the gaps,
-called drift, explained under Review.*
+called drift, explained under Review; teal marks what the review reads fresh. The figures
+illustrate how rounds move a picture; they are not evidence that rounds work.*
 
 A round revises the picture itself, not just the prose around it: the figure and the section a
 contribution touches. A ruled fork's card stays on the page, read-only, with its ruling, and the
@@ -226,8 +332,9 @@ gaps to show, which is why a review is worth running before the build.
 The gaps have names. **Spec drift** is between intent and commitment, **build drift** between
 commitment and what was built, **intent drift** between intent and what was built, and **context
 drift** between the context then and now. Each finding is one of: diverged, missing, unproven, a
-surprise nobody planned for, or the context moved. Work whose tickets are still open is not yet a
-finding.
+surprise nobody planned for, or the context moved. Built work whose tickets are still open is not
+yet a finding; a gap between intent and commitment is a finding at any stage. A new intent stated
+by anyone other than the owner is itself a finding, for the owner to rule on.
 
 ![Three overlapping circles: the author's horizon, the reviewer's and the agent's; the review page sits where all three overlap.](figures/three-horizons.svg)
 
@@ -280,8 +387,10 @@ that no pile reaches pricing.*
 
 ## Running it
 
-`/fusion` is typed by you; the agent never starts it on its own. Name what you want planned, or
-ask it to review a spec by its ID or path. It reads `planning/agent/profile.md` for the paths it
+`/fusion` ships in this repository's `sdd` plugin for Claude Code, and as a personal skill for
+Claude Code, Codex and other hosts through `bin/link.sh` (see the top-level README's Installing
+section). You type it; the agent never starts it on its own. Name what you want planned, as in
+`/fusion plan the export of reports to CSV`, or ask for a review, as in `/fusion review spec B.3`. It reads `planning/agent/profile.md` for the paths it
 needs: `fusion_dir` for where pages live (by default `planning/fusion/`), and the project's plan,
 roadmap, spec map, specs, tickets, decision records, glossary, architecture document and
 authority map (which file or person owns the answer to each kind of question). A repo with no
@@ -302,7 +411,56 @@ amendments.
 
 ## Precedents and further reading
 
+The sources are grouped by what they are to this skill: where it comes from, the field it works
+in, and the older ideas it rests on. The newest is from November 2026.
+
+**Lineage**
+
+- Thariq Shihipar (Anthropic), the interview-then-spec loop, December 2025; now in Anthropic's
+  [Claude Code best practices](https://code.claude.com/docs/en/best-practices).
+- M. Pocock, [mattpocock/skills](https://github.com/mattpocock/skills), 2026: `grill-me`,
+  `to-spec`, `to-tickets`, `implement`; the source of this repository's grilling and ticket skills.
+- L. Tan, [pstack](https://github.com/cursor/plugins/tree/main/pstack), Cursor plugins, 2026:
+  `unslop`, `show-me-your-work`, and the principles behind `start-session`.
+- G. Huntley, "[Ralph Wiggum as a 'software engineer'](https://ghuntley.com/ralph/)", 2025: a
+  fresh context per task, with the spec as the only memory.
+- F. P. Brooks, *The Design of Design*, 2010; and A. Hunt and D. Thomas, *The Pragmatic
+  Programmer*, 1999: the design tree and the tracer bullet, as the upstream credits them.
+
+**The field**
+
+- [GitHub Spec Kit](https://github.com/github/spec-kit), [Kiro specs](https://kiro.dev/docs/specs/)
+  and [OpenSpec](https://github.com/Fission-AI/OpenSpec): the main spec-driven development tools.
+- B. Böckeler, "[Understanding Spec-Driven-Development](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)",
+  2025; F. Zaninotto, "[The Waterfall Strikes Back](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)",
+  2025; G. Gonzalez, "[A sufficiently detailed spec is code](https://haskellforall.com/2026/03/a-sufficiently-detailed-spec-is-code)",
+  2026: the critiques.
+- Thoughtworks, [Technology Radar Vol. 35](https://www.thoughtworks.com/radar/techniques),
+  November 2026: grilling and interactive visual plans with agents in Trial; documentation sprawl
+  and human-in-the-loop theater as cautions.
+- Agarwal et al., "[Spec-Driven Development as Prescribed and as Practiced](https://arxiv.org/abs/2608.25202)",
+  2026 preprint: how specs are written and how they decay.
+- Tang et al., "[How Coding Agents Fail Their Users](https://arxiv.org/abs/2605.29442)", 2026;
+  and Yang et al., "[Unfaithful Work Reports by Coding Agents](https://arxiv.org/abs/2611.25760)",
+  2026 preprint: why a review rests on evidence, not on the agent's report.
+- Kumar et al., "[Plans Work in Mysterious Ways](https://arxiv.org/abs/2607.23670)", VL/HCC
+  2026; He et al., "[Plan-Then-Execute](https://arxiv.org/abs/2502.01390)", CHI 2025; and
+  Dhanorkar et al., "[Human oversight of agentic systems in practice](https://arxiv.org/abs/2606.05391)",
+  2026 preprint: how people plan with agents, when their involvement helps, and how a plan comes
+  to stand in for the work it describes.
+- Kim et al., "[AIPOM](https://arxiv.org/abs/2509.24826)", 2025: a small pilot comparing plans
+  drawn as graphs with plans in text.
+
+**Foundations**
+
 - H.-G. Gadamer, *Truth and Method*, 1960: understanding as a fusion of horizons.
+- A. MacLean, R. M. Young, V. Bellotti and T. P. Moran, "Questions, Options, and Criteria:
+  Elements of Design Space Analysis", *Human–Computer Interaction*, 1991: design rationale made
+  visible as questions, options and the criteria between them, the ancestor of a fork card.
+- E. Horvitz, "Principles of Mixed-Initiative User Interfaces", CHI 1999: when an agent should ask
+  and when it should act.
+- B. J. Grosz and S. Kraus, "Collaborative Plans for Complex Group Action", *Artificial
+  Intelligence*, 1996: a shared plan as commitments held by more than one party.
 - C. Argyris, "[Double Loop Learning in Organizations](https://hbr.org/1977/09/double-loop-learning-in-organizations)",
   *Harvard Business Review*, 1977: fixing within a frame against questioning the frame; an
   amendment against a re-plan.
