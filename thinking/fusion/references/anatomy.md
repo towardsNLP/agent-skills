@@ -76,3 +76,8 @@ committed at the finish is one file per plan in `fusion_dir`, without the suffix
 file a later session reads: its read-only fork cards, **since you last read** and contribution log
 are the round history. A round that must be kept is committed to that same path, so git history
 holds it, never as a separate file.
+
+Each round is checked before it is shown, in proportion to what changed (SKILL.md step 4): a full
+teach-back when the frame, a figure, the scale, a fork or a default changed, and a focused check
+of the changed parts when the round only records rulings or fixes wording. A web search runs only
+when the round brings a subject or a fork that is new to the repo.

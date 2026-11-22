@@ -50,6 +50,10 @@ parallel where the harness allows, and keep each precedent to what it is, where 
 (path or link, with date) and what it suggests for this plan. A precedent informs the frame and the
 alternatives; it never decides a fork. When the harness has no web access, say so on the page.
 
+**Search the web when the subject, or a fork, is new to the repo.** Search depth follows novelty,
+not size. A later round that opens no new subject and no new fork searches nothing new, and the
+page says in one line that the precedents it already holds settle it.
+
 **A helper's report counts once its work exists.** Before using a helper's findings, check that the
 files it was asked to write are there and complete. A helper that delegates collects its own readers'
 results before it reports; one that hands back early is resumed or its work rerun, never trusted on
@@ -132,11 +136,17 @@ used unexplained, decisions hiding as defaults, claims without anchors, and figu
 contradict the prose. Fix every miss. Render the page in a browser where one is available and
 look at every figure.
 
+**The check follows the change.** Run the full teach-back on a first draft, and on any round that
+changes the frame, a figure or the scale, or adds or changes a fork or a default; a ruling that
+moves a figure counts. A round that only records the user's rulings or fixes wording gets a
+focused check: a fresh reader restates the changed cards, the ledger and **since you last read**.
+Every version gets one of the two, and the contribution log names which.
+
 A check that cannot run is recorded on the page as skipped. With no helper agent, make a
 separate pass that reads only the page, and record it as a self-check.
 
-Done when the teach-back restates every fork correctly and the page's contribution log records
-the check.
+Done when the check restates every fork it covers correctly and the page's contribution log
+records which check ran.
 
 ## Step 5 — Show it and ask for reactions
 
@@ -159,7 +169,7 @@ Each reply changes the picture:
   forks surface as old ones settle. Carry settled precedent forward as a default.
 - Small, local forks may go to a quick `grilling` round asked against the page, with each
   recommendation held back until the user has answered.
-- Run the teach-back again before showing.
+- Run the check again before showing, full or focused as step 4 decides.
 
 **Round copies are working files.** Where the host keeps every file it shows, write each round to
 its own copy (`-r1`, `-r2`) for viewing; the highest is current. Never commit these copies. The
@@ -208,4 +218,5 @@ changes reopens the page as a new round, which is possible until the page is fro
 - **Facts are yours; decisions are theirs.**
 - **Write only the page.** Specs, ADRs, glossary terms and spec-map rows are proposed on it and
   written by `/adr-spec`, `domain-modeling` and `/deconstruct`.
-- **Every version passes teach-back before the user reads it**, or the page says why it could not.
+- **Every version passes a teach-back before the user reads it**, full or focused by step 4's
+  triggers, or the page says why it could not.
