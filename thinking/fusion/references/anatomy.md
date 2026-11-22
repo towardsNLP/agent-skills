@@ -19,7 +19,7 @@ point, after the whole, the frame, the alternatives and the edge of your view.
 | `trajectory` | Trajectory | highest | before, after and later; what it unlocks and rules out; its place on the roadmap | "do Y first" |
 | `frame` | Frame | middle | the cut you chose and why, and at least one rival frame with what the plan becomes under it | a reframe, the most valuable answer |
 | `shape` | Shape | low | parts, inputs and outputs, the flow, and the seam where it is verified | "this part is really two" |
-| `precedents` | Precedents | high | similar situations in the repo and on the web: each with its source, date and what it suggests for this plan | "we tried that in X, and it failed because …" |
+| `precedents` | Precedents | high | grouped by layer (lineage, the field now, foundations), each with its source, date and what it suggests for this plan; each layer's count and what it searched, the newest source's date, what was not searched, how many the agent's own list did not hold, and which checks ran ([`research.md`](research.md)) | "we tried that in X, and it failed because …" |
 | `alternatives` | Alternatives | high | two to four genuinely different shapes, the smallest version and not building it, each with a cost and a gain | bring back one you rejected |
 | `edge` | Where my view ends | middle | the facts only the user holds: history, people, commitments, intent | the facts only they hold |
 | `assumptions` | Assumptions | low | numbered, each with what breaks if it is wrong and how to check it | "A3 is false" |
@@ -79,5 +79,6 @@ holds it, never as a separate file.
 
 Each round is checked before it is shown, in proportion to what changed (SKILL.md step 4): a full
 teach-back when the frame, a figure, the scale, a fork or a default changed, and a focused check
-of the changed parts when the round only records rulings or fixes wording. A web search runs only
-when the round brings a subject or a fork that is new to the repo.
+of the changed parts when the round only records rulings or fixes wording. The research is
+checked on a first draft; after that, a new search and the gap critic run only when a round brings
+a subject or a fork the page's precedents do not cover, or a source the user named.

@@ -49,16 +49,27 @@ other part of the frame.
 Finding facts is your job. Use helper agents where the harness offers them, and retrieve any fact
 you can before asking the user for it.
 
-**Search for precedents in the repo, and on the web when the subject is new to it.** In the repo: earlier specs, decision
-records, plans and modules that faced a similar situation, and what they chose. On the web:
-how others have solved the same kind of problem, from primary sources such as papers, official
-documentation and well-known engineering write-ups. Send the searches to helper agents in
-parallel where the harness allows, and keep each precedent to what it is, where it comes from
-(path or link, with date) and what it suggests for this plan. A precedent informs the frame and the
-alternatives; it never decides a fork. When the harness has no web access, say so on the page.
+**Search for precedents in layers**, as [`references/research.md`](references/research.md) sets
+out. Lineage first: what the repo records it descends from, the upstreams it pins, and the earlier
+pages and decision records here. Then the field now, where tool documentation, practitioner
+write-ups, talks, repositories and preprints count, graded for credibility; then the foundations.
+In the repo, also look for earlier specs, plans and modules that faced a similar situation, and
+what they chose. Send the searches to helper agents in parallel where the harness allows, and brief
+each with the goal, the field, its layer and a date window, never with the sources you already have
+in mind: write those to a separate list and compare at the end. Keep each precedent to what it is,
+where it comes from (path or link, with its exact date) and what it suggests for this plan. A
+precedent informs the frame and the alternatives; it never decides a fork. When the harness has no
+web access, say so on the page.
 
-Search depth follows novelty, not size. A later round that opens no new subject and no new fork
-searches nothing new, and the page says in one line that the precedents it already holds settle it.
+**Verify and check the research.** A source that a fork or a recommendation rests on is re-opened
+by a second reader before the page uses it. On a first draft, a gap critic (a fresh reader, from
+another model family where the harness offers one) names what an expert in the field would expect
+among the precedents and does not find; its gaps are searched before the page is drawn. At least a
+third of the web precedents come from the last 12 months, or the page says why fewer exist.
+
+Search depth follows novelty, not size. A later round searches again, and runs the gap critic
+again, only when it brings a subject or a fork the page's precedents do not cover, or a source the
+user named; otherwise the page says in one line that the precedents it holds settle it.
 
 **A helper's report counts once its work exists.** Before using a helper's findings, check that the
 files it was asked to write are there and complete. A helper that delegates collects its own readers'
@@ -78,8 +89,10 @@ Then think through every lens, at every scale:
 7. **Alternatives** — at least two genuinely different shapes, the smallest version, and not
    building it.
 
-Done when every lens has a written finding, every claim about what exists carries an anchor, and
-each precedent carries its source.
+Done when every lens has a written finding, every claim about what exists carries an anchor, each
+precedent carries its source and date and was opened in this research, the lineage layer has run,
+every other layer has been searched or the page says why not, and the gap critic (or, with no helper
+agents, a recorded self-check) has run where this step calls for it.
 
 ## Step 3 — Draw the page
 
@@ -99,8 +112,10 @@ job and altitude, the key, and the fork card. Every page carries:
 - **Grounding**: the masthead's "facts checked against" names the commit or the dated documents.
   Every anchor is something a fresh session can open: a committed path, a commit, or a public link.
   Working notes that will not be committed are summarised on the page itself, with their sources.
-- **Precedents**: the similar situations found in the repo and on the web, each with its source
-  and what it suggests, set beside the alternatives they inform.
+- **Precedents**: grouped by layer (lineage, the field now, foundations), each with its source,
+  date and what it suggests, set beside the alternatives they inform. The section shows each
+  layer's count and what it searched, the newest source's date, what was not searched or found,
+  how many precedents your own list did not hold beforehand, and which checks ran.
 - **Pictures that carry the argument**: the page is a visual co-thinking tool. Draw the zoom-out,
   the shape, and each fork's divergence as figures in the page's key, so the reader sees the
   structure before reading about it. A section that can be drawn is drawn. Start each figure from
@@ -112,7 +127,9 @@ job and altitude, the key, and the fork card. Every page carries:
   the reasoning folded and what would change your mind; the ruling.
 - **Defaults instead of questions**: a decision that needs nothing only the user holds becomes a
   default they can veto.
-- **Where my view ends**: the facts only the user holds, asked as questions they may skip.
+- **Where my view ends**: the facts only the user holds, asked as questions they may skip. On a
+  first draft it also asks which sources, people or projects the page should know beyond what the
+  repo records.
 - **The preview**: what the next skill would write, whether spec-map rows or a spec's IN, OUT,
   seams and ADR candidates.
 
@@ -177,7 +194,8 @@ Each reply changes the picture:
   forks surface as old ones settle. Carry settled precedent forward as a default.
 - Small, local forks may go to a quick `grilling` round asked against the page, with each
   recommendation held back until the user has answered.
-- Run the check again before showing, full or focused as step 4 decides.
+- Run the check again before showing, full or focused as step 4 decides, and search again where
+  step 2 calls for it.
 
 **Round copies are working files.** Where the host keeps every file it shows, write each round to
 its own copy (`-r1`, `-r2`) for viewing; the highest is current. Never commit these copies. The

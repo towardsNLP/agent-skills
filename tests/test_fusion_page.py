@@ -317,3 +317,53 @@ def test_every_figure_stands_alone_in_either_theme():
         used = set(re.findall(r"var\((--fz-[a-z-]+)\)", svg))
         defined = set(re.findall(r"(--fz-[a-z-]+):", svg))
         assert used <= defined, (path.name, used - defined)
+
+
+def test_the_researcher_searches_in_layers_without_naming_its_priors():
+    """Briefs that list the agent's own candidates make helpers confirm instead of discover."""
+    research = " ".join(read("research.md").split())
+    for layer in ("**Lineage**", "**The field now**", "**Foundations**"):
+        assert layer in research, layer
+    for rule in (
+        "Seal your priors",
+        "Never a list of expected sources",
+        "Run the gap critic",
+        "At least a third of a page's web precedents",
+        "This layer always runs",
+        "searches practitioner venues",
+        "re-opened by a second reader",
+        "Every precedent on the page was opened in this research",
+        "Without helper agents",
+        "then go on to step 8",
+        "Without web access",
+        "never given a guessed one",
+    ):
+        assert rule in research, rule
+    skill = (SKILL / "SKILL.md").read_text("utf-8")
+    step_two = " ".join(skill.split("## Step 2", 1)[1].split("## Step 3")[0].split())
+    assert "Lineage first" in step_two
+    assert "never with the sources you already have in mind" in step_two
+
+
+def test_every_page_groups_its_precedents_by_layer_and_dates_them():
+    """A fresh session must be able to audit a page's research from its precedents section."""
+    for name in ("page.html", "page.md"):
+        section = read(name).split("Precedents", 1)[1].split("Alternatives", 1)[0]
+        positions = [section.find(layer) for layer in ("Lineage", "The field now", "Foundations")]
+        assert -1 not in positions and positions == sorted(positions), (name, positions)
+        assert section.count("Searched:") >= 2, name
+        for field in ("newest", "not on my own list beforehand", "not searched", "checks:"):
+            assert field in section, (name, field)
+        assert "pinned to a commit" in section and "exact date" in section, name
+    anatomy = read("anatomy.md")
+    for field in ("newest source's date", "what it searched", "which checks ran"):
+        assert field in anatomy, field
+
+
+def test_search_again_only_for_what_the_precedents_do_not_cover():
+    """A subject old to the repo can still be new to the page, as an explainer's was."""
+    readers = (SKILL / "SKILL.md", REFS / "anatomy.md", REFS / "research.md", SKILL / "README.md")
+    for path in readers:
+        text = " ".join(path.read_text("utf-8").split())
+        assert "new to the repo" not in text, path.name
+        assert "precedents do not cover" in text, path.name

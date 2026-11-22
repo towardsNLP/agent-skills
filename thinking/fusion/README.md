@@ -308,8 +308,19 @@ the listener. The agent fixes every miss and renders the page to look at each fi
 The check follows the change. A first draft, and any round that changes the frame, a figure, the
 scale, a fork or a default, gets the full teach-back. A round that only records your rulings or
 fixes wording gets a focused check of what changed. Every version gets one, and the page says
-which. In the same spirit, the web is searched for precedents when a subject or a fork is new to
-the repo, and the page says so in a line when the precedents it already holds settle it.
+which.
+
+The research behind a page is checked too. Precedents are searched in layers: lineage first (what
+the repository records it descends from, and the earlier pages), then the field now, then the
+foundations. Each helper is briefed with a question, a field and a date window, never with the
+sources the agent already has in mind, so that it discovers rather than confirms, and every
+precedent on the page was opened in the research. A second reader re-opens any source a fork or a
+recommendation rests on. On a first draft, a gap critic (from another model family where the host
+offers one) names what an expert would expect among the precedents and does not find. At least a
+third of the web precedents come from the last year, or the page says why fewer exist. A later
+round searches again only when it brings a subject or a fork the page's precedents do not cover,
+or a source you named. The procedure is in
+[`references/research.md`](references/research.md).
 
 ## Review
 
