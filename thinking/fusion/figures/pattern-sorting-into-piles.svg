@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 344" role="img" aria-labelledby="t">
+<title id="t">Pattern: a source sorted into piles by what each becomes (invented example)</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="900" height="344" rx="10"/>
+<defs>
+<marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahp" d="M0,0 L8,4 L0,8 z"/></marker>
+<marker id="ahn" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahn" d="M0,0 L8,4 L0,8 z"/></marker>
+</defs>
+<text class="ey" x="20" y="20">THE PILE</text><text class="ey" x="360" y="20">WHAT IT BECOMES</text><text class="ey" x="660" y="20">EFFECT AT RUNTIME</text>
+<g class="bx-new"><rect x="20" y="30" width="300" height="60" rx="8"/></g>
+<text class="t" x="34" y="55" style="font-size:12px">1 · Categories</text><text class="st" x="34" y="72">how the supplier's catalogue groups its products</text>
+<g class="bx-new"><rect x="360" y="30" width="260" height="60" rx="8"/></g>
+<text class="t" x="374" y="55" style="font-size:12px">a closed vocabulary</text><text class="st" x="374" y="72">mapped to the categories we have</text>
+<g class="bx-new"><rect x="660" y="30" width="220" height="60" rx="8"/></g>
+<text class="t" x="674" y="55" style="font-size:12px">a filter in the shop</text><text class="st" x="674" y="72">read-only, for customers</text>
+<path class="ar" d="M321,60 H357" marker-end="url(#ah)"/><path class="ar" d="M621,60 H657" marker-end="url(#ah)"/>
+<g class="bx-new"><rect x="20" y="102" width="300" height="60" rx="8"/></g>
+<text class="t" x="34" y="127" style="font-size:12px">2 · Rules we can check</text><text class="st" x="34" y="144">shipping limits whose inputs we already hold</text>
+<g class="bx-new"><rect x="360" y="102" width="260" height="60" rx="8"/></g>
+<text class="t" x="374" y="127" style="font-size:12px">narrow logic</text><text class="st" x="374" y="144">those rules only; the rest to the register</text>
+<g class="bx-new"><rect x="660" y="102" width="220" height="60" rx="8"/></g>
+<text class="t" x="674" y="127" style="font-size:12px">a warning at checkout</text><text class="st" x="674" y="144">shown only when a rule applies</text>
+<path class="ar" d="M321,132 H357" marker-end="url(#ah)"/><path class="ar" d="M621,132 H657" marker-end="url(#ah)"/>
+<g class="bx-changed"><rect x="20" y="174" width="300" height="60" rx="8"/></g>
+<text class="t" x="34" y="199" style="font-size:12px">3 · Claims that contradict our records</text><text class="st" x="34" y="216">sizes, weights or origins we record differently</text>
+<g class="bx-changed"><rect x="360" y="174" width="260" height="60" rx="8"/></g>
+<text class="t" x="374" y="199" style="font-size:12px">a register of conflicts</text><text class="st" x="374" y="216">our records stand until the owner rules</text>
+<g class="bx-changed"><rect x="660" y="174" width="220" height="60" rx="8"/></g>
+<text class="t" x="674" y="199" style="font-size:12px">none at runtime</text><text class="st" x="674" y="216">a record for the owner</text>
+<path class="ar" d="M321,204 H357" marker-end="url(#ah)"/><path class="ar" d="M621,204 H657" marker-end="url(#ah)"/>
+<g class="bx-out"><rect x="20" y="246" width="300" height="60" rx="8"/></g>
+<text class="t" x="34" y="271" style="font-size:12px">4 · Marketing copy and examples</text><text class="st" x="34" y="288">text the system has no use for</text>
+<g class="bx-out"><rect x="360" y="246" width="260" height="60" rx="8"/></g>
+<text class="t" x="374" y="271" style="font-size:12px">an inventory</text><text class="st" x="374" y="288">by section, with the reason it stays out</text>
+<g class="bx-out"><rect x="660" y="246" width="220" height="60" rx="8"/></g>
+<text class="t" x="674" y="271" style="font-size:12px">none</text><text class="st" x="674" y="288">left out on purpose</text>
+<path class="ar" d="M321,276 H357" marker-end="url(#ah)"/><path class="ar" d="M621,276 H657" marker-end="url(#ah)"/>
+<text class="st" x="20" y="334">A supplier's catalogue, sorted (an invented example). The frame that settles the plan: no pile reaches pricing.</text>
+</svg>

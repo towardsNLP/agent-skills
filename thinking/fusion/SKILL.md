@@ -103,7 +103,8 @@ job and altitude, the key, and the fork card. Every page carries:
   and what it suggests, set beside the alternatives they inform.
 - **Pictures that carry the argument**: the page is a visual co-thinking tool. Draw the zoom-out,
   the shape, and each fork's divergence as figures in the page's key, so the reader sees the
-  structure before reading about it. A section that can be drawn is drawn.
+  structure before reading about it. A section that can be drawn is drawn. Start each figure from
+  the closest pattern in [`references/figures.md`](references/figures.md), with your own content.
 - **Forks in the card format**: where it sits; the problem in plain words; **at stake**, meaning
   the moment in a concrete case where the options produce different outcomes, what that changes
   in the spec, the ADRs and the tickets, and the cost to reverse; the options; what the user

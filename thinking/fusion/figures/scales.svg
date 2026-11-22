@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 270" role="img" aria-labelledby="t">
+<title id="t">What the first zoom-out shows at each of the four scales</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="1200" height="270" rx="10"/>
+<defs>
+        <marker id="ah4" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path class="ahp" d="M0,0 L8,4 L0,8 z"/></marker>
+        <marker id="ah4n" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path class="ahn" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <text class="ey" x="150" y="20" text-anchor="middle">A PROJECT'S SET OF SPECS</text>
+      <text class="ey" x="450" y="20" text-anchor="middle">A PRODUCT'S FIRST COMPONENT</text>
+      <text class="ey" x="750" y="20" text-anchor="middle">A COMPONENT IN A SYSTEM</text>
+      <text class="ey" x="1050" y="20" text-anchor="middle">A SPEC ALREADY WRITTEN</text>
+
+      <!-- project -->
+      <rect class="region" x="20" y="34" width="260" height="160" rx="14"/>
+      <text class="st" x="32" y="50">the whole problem</text>
+      <g class="bx-new"><rect x="40" y="62" width="56" height="26" rx="6"/></g><text class="t" x="68" y="80" text-anchor="middle" style="font-size:11px">A</text>
+      <g class="bx-new"><rect x="122" y="62" width="56" height="26" rx="6"/></g><text class="t" x="150" y="80" text-anchor="middle" style="font-size:11px">B</text>
+      <g class="bx-new"><rect x="204" y="62" width="56" height="26" rx="6"/></g><text class="t" x="232" y="80" text-anchor="middle" style="font-size:11px">C</text>
+      <g class="bx-new"><rect x="80" y="114" width="56" height="26" rx="6"/></g><text class="t" x="108" y="132" text-anchor="middle" style="font-size:11px">D</text>
+      <g class="bx-new"><rect x="164" y="114" width="56" height="26" rx="6"/></g><text class="t" x="192" y="132" text-anchor="middle" style="font-size:11px">E</text>
+      <g class="bx-new"><rect x="122" y="160" width="56" height="26" rx="6"/></g><text class="t" x="150" y="178" text-anchor="middle" style="font-size:11px">F</text>
+      <path class="ar" d="M72,89 L98,112" marker-end="url(#ah4)"/>
+      <path class="ar" d="M144,89 L118,112" marker-end="url(#ah4)"/>
+      <path class="ar" d="M156,89 L182,112" marker-end="url(#ah4)"/>
+      <path class="ar" d="M228,89 L202,112" marker-end="url(#ah4)"/>
+      <path class="ar" d="M112,141 L138,158" marker-end="url(#ah4)"/>
+      <path class="ar" d="M188,141 L162,158" marker-end="url(#ah4)"/>
+
+      <!-- first component -->
+      <rect class="region" x="320" y="34" width="260" height="160" rx="14"/>
+      <text class="st" x="332" y="50">the world today</text>
+      <g class="bx-exists"><rect x="334" y="60" width="58" height="22" rx="11"/></g><text class="st" x="363" y="75" text-anchor="middle" style="fill:var(--fz-fg)">users</text>
+      <g class="bx-exists"><rect x="400" y="60" width="100" height="22" rx="11"/></g><text class="st" x="450" y="75" text-anchor="middle" style="fill:var(--fz-fg)">today's practice</text>
+      <g class="bx-exists"><rect x="508" y="60" width="58" height="22" rx="11"/></g><text class="st" x="537" y="75" text-anchor="middle" style="fill:var(--fz-fg)">tools</text>
+      <g class="bx-new"><rect x="346" y="106" width="132" height="30" rx="7"/></g><text class="t" x="412" y="125" text-anchor="middle" style="font-size:11.5px">first component</text>
+      <g class="bx-later"><rect x="494" y="106" width="72" height="30" rx="7"/></g><text class="st" x="530" y="125" text-anchor="middle" style="fill:var(--fz-new)">later</text>
+      <g class="bx-later"><rect x="380" y="158" width="72" height="26" rx="7"/></g><text class="st" x="416" y="175" text-anchor="middle" style="fill:var(--fz-new)">later</text>
+      <g class="bx-later"><rect x="470" y="158" width="72" height="26" rx="7"/></g><text class="st" x="506" y="175" text-anchor="middle" style="fill:var(--fz-new)">later</text>
+      <path class="ar dash" d="M366,83 L384,104" marker-end="url(#ah4)"/>
+      <path class="ar dash" d="M446,83 L426,104" marker-end="url(#ah4)"/>
+      <path class="ar-new dash" d="M479,121 H491" marker-end="url(#ah4n)"/>
+      <path class="ar-new dash" d="M414,137 V155" marker-end="url(#ah4n)"/>
+      <path class="ar-new dash" d="M454,137 L490,155" marker-end="url(#ah4n)"/>
+
+      <!-- component in a system -->
+      <rect class="region" x="620" y="34" width="260" height="160" rx="14"/>
+      <text class="st" x="632" y="50">the system today</text>
+      <g class="bx-exists"><rect x="636" y="62" width="62" height="26" rx="6"/></g>
+      <g class="bx-exists"><rect x="718" y="62" width="62" height="26" rx="6"/></g>
+      <g class="bx-exists"><rect x="800" y="62" width="62" height="26" rx="6"/></g>
+      <g class="bx-changed"><rect x="660" y="110" width="78" height="28" rx="6"/></g><text class="st" x="699" y="128" text-anchor="middle" style="fill:var(--fz-fg)">changed</text>
+      <g class="bx-new"><rect x="782" y="110" width="70" height="28" rx="6"/></g><text class="st" x="817" y="128" text-anchor="middle" style="fill:var(--fz-fg)">new</text>
+      <g class="bx-exists"><rect x="650" y="160" width="62" height="26" rx="6"/></g>
+      <path class="ar" d="M667,89 L689,108" marker-end="url(#ah4)"/>
+      <path class="ar" d="M749,89 L715,108" marker-end="url(#ah4)"/>
+      <path class="ar" d="M761,89 L797,108" marker-end="url(#ah4)"/>
+      <path class="ar" d="M831,89 L823,108" marker-end="url(#ah4)"/>
+      <path class="ar-new" d="M781,124 H741" marker-end="url(#ah4n)"/>
+      <path class="ar" d="M693,139 L685,158" marker-end="url(#ah4)"/>
+
+      <text class="t" x="150" y="218" text-anchor="middle">→ /deconstruct</text>
+      <text class="t" x="450" y="218" text-anchor="middle">→ /deconstruct, /adr-spec</text>
+      <text class="t" x="750" y="218" text-anchor="middle">→ /adr-spec</text>
+      <text class="st" x="150" y="236" text-anchor="middle">writes the spec map</text>
+      <text class="st" x="450" y="236" text-anchor="middle">its spec-map row, then its spec</text>
+      <text class="st" x="750" y="236" text-anchor="middle">a new spec, or an amendment</text>
+      <text class="ann" x="150" y="258" text-anchor="middle">zoom out: the problem, and what exists</text>
+      <text class="ann" x="450" y="258" text-anchor="middle">zoom out: the world it enters</text>
+      <text class="ann" x="750" y="258" text-anchor="middle">zoom out: the system, with it placed</text>
+      <!-- review -->
+      <rect class="region" x="920" y="34" width="260" height="160" rx="14"/>
+      <text class="st" x="932" y="50">the spec's own records</text>
+      <g class="bx-exists"><rect x="934" y="62" width="70" height="28" rx="6"/></g><text class="st" x="969" y="80" text-anchor="middle" style="fill:var(--fz-fg)">intent</text>
+      <g class="bx-exists"><rect x="1015" y="62" width="70" height="28" rx="6"/></g><text class="st" x="1050" y="80" text-anchor="middle" style="fill:var(--fz-fg)">commitment</text>
+      <g class="bx-exists"><rect x="1096" y="62" width="70" height="28" rx="6"/></g><text class="st" x="1131" y="80" text-anchor="middle" style="fill:var(--fz-fg)">built</text>
+      <path d="M1005,76 H1014 M1086,76 H1095" style="stroke:var(--fz-open);stroke-width:1.4"/>
+      <text class="st" x="1050" y="110" text-anchor="middle" style="fill:var(--fz-open)">drift between them</text>
+      <g class="bx-exists"><rect x="934" y="124" width="100" height="26" rx="13"/></g><text class="st" x="984" y="141" text-anchor="middle" style="fill:var(--fz-fg)">context then</text>
+      <g class="bx-new"><rect x="1066" y="124" width="100" height="26" rx="13"/></g><text class="st" x="1116" y="141" text-anchor="middle" style="fill:var(--fz-fg)">context today</text>
+      <path d="M1035,137 H1063" style="stroke:var(--fz-open);stroke-width:1.4"/>
+      <g class="bx-new"><rect x="990" y="162" width="120" height="24" rx="6"/></g><text class="st" x="1050" y="178" text-anchor="middle" style="fill:var(--fz-fg)">findings, owner rules</text>
+      <text class="t" x="1050" y="218" text-anchor="middle">→ /adr-spec, /tickets</text>
+      <text class="st" x="1050" y="236" text-anchor="middle">or a new fusion page</text>
+      <text class="ann" x="1050" y="258" text-anchor="middle">zoom out: the records, and the context</text>
+
+</svg>

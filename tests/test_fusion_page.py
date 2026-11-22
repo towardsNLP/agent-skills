@@ -286,3 +286,34 @@ def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():
     assert "cite the page's new commit" in flat["sdd/deconstruct/SKILL.md"]
     assert "a first-component page, once its spec is" in flat["docs/sdd-workflow.md"]
     assert "(a first-component page, once its spec is)" in flat["templates/profile.md"]
+
+
+FIGURES = SKILL / "figures"
+
+
+def test_every_figure_is_used_and_every_figure_link_resolves():
+    """The explainer and the figure library share one set of files; none may dangle."""
+    used = set()
+    for doc in (SKILL / "README.md", REFS / "figures.md"):
+        text = doc.read_text(encoding="utf-8")
+        for name in re.findall(r"figures/([\w-]+\.svg)", text):
+            assert (FIGURES / name).is_file(), (doc.name, name)
+            used.add(name)
+    present = {path.name for path in FIGURES.glob("*.svg")}
+    assert present == used, f"unused: {present - used}"
+    for alt in re.findall(r"!\[([^\]]*)\]\(figures/", (SKILL / "README.md").read_text("utf-8")):
+        assert alt.strip(), "every figure in the explainer needs alt text"
+
+
+def test_every_figure_stands_alone_in_either_theme():
+    """GitHub shows each file as an image, outside any page that could lend it colours."""
+    for path in FIGURES.glob("*.svg"):
+        svg = path.read_text(encoding="utf-8")
+        assert 'xmlns="http://www.w3.org/2000/svg"' in svg, path.name
+        assert "<title" in svg and 'class="bg"' in svg, path.name
+        assert "prefers-color-scheme: dark" in svg, path.name
+        for borrowed in ("var(--hz-", "light-dark(", "color-mix(", "var(--background"):
+            assert borrowed not in svg, (path.name, borrowed)
+        used = set(re.findall(r"var\((--fz-[a-z-]+)\)", svg))
+        defined = set(re.findall(r"(--fz-[a-z-]+):", svg))
+        assert used <= defined, (path.name, used - defined)

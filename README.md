@@ -241,7 +241,8 @@ amendment, as tickets, or as a new plan when a premise of the spec no longer hol
 `review` step in the diagram, which reviews code before it ships.
 
 The design behind the spec and ticket skills is in
-[`docs/sdd-workflow.md`](docs/sdd-workflow.md).
+[`docs/sdd-workflow.md`](docs/sdd-workflow.md). What a fusion page is, why it works and how to run
+it, with the figures from real pages, is in [`thinking/fusion/README.md`](thinking/fusion/README.md).
 
 ## Adding a skill
 
