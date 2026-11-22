@@ -116,7 +116,7 @@ its description; `"off"` hides it.
 | `grilling` | model | The interview primitive. Works a design tree in rounds, asks the whole frontier at once with a recommendation per question, and waits. Facts are the agent's job; decisions stay mine. |
 | `grill-me` | user | Typed entry point to `grilling`. |
 | `grill-with-docs` | user | `grilling` + `domain-modeling` together, so the interview leaves a paper trail. |
-| `fusion` | user | Co-planning before a spec or a spec map. Draws the plan as a page I think with: where it sits, the frame, the alternatives, what the agent cannot see, and the forks, with its recommendation pre-selected in an answer form and its reasoning folded. Revised in rounds until I call it finished. A project page feeds `/deconstruct`; a component page feeds `/adr-spec`, and either can be picked up in a fresh session. |
+| `fusion` | user | Co-planning before a spec or a spec map. Draws the plan as a page I think with: where it sits, the frame, the alternatives, what the agent cannot see, and the forks, with its recommendation pre-selected in an answer form and its reasoning folded. Revised in rounds until I call it finished. A project page feeds `/deconstruct`; a component page feeds `/adr-spec`, and either can be picked up in a fresh session. At review scale it revisits a spec already written, at any stage and whoever wrote it: intent, commitment and whatever is built, beside the context then and now; the owner's rulings go to `/adr-spec`, `/tickets`, or a new page. |
 | `research` | model | Delegates reading to a background agent: primary sources only, findings written to a cited Markdown file. |
 | `writing-for-agents` | model | How to write any document an agent reads: context pointers, the two loads, the information hierarchy, completion criteria, no-ops. Read it before editing a SKILL.md or an AGENTS.md. |
 | `to-questionnaire` | user | Turns a decision I cannot make alone into a questionnaire for the person who can. Interviews me about the *send*, then aims the questions at the gap. |
@@ -234,6 +234,11 @@ Keep grilling and the documents it produces in **one unbroken context window**. 
 the thinking; splitting it away from the writing throws that thinking out. A fusion page is the
 exception the rule allows: it holds the thinking in a file, so `/adr-spec` or `/deconstruct` can
 pick a finished page up in a fresh session, after checking that its rulings still stand.
+
+A **fusion review** revisits a spec at any point after `/adr-spec`: drafted, cut into tickets,
+part-built or built, yours or a teammate's. Its owner rules on the findings, which go back as an
+amendment, as tickets, or as a new plan when a premise of the spec no longer holds. It is not the
+`review` step in the diagram, which reviews code before it ships.
 
 The design behind the spec and ticket skills is in
 [`docs/sdd-workflow.md`](docs/sdd-workflow.md).

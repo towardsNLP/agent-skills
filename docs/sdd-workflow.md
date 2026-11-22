@@ -45,6 +45,12 @@ Three consequences run through every decision below, and each one is this move a
   the alternatives, what the agent cannot see, and the forks, with the agent's recommendation
   pre-selected in an answer form, its reasoning folded, and every change marked. Grilling hands the user decisions; the page hands them the model those decisions belong
   to.
+- **`/fusion` also reviews a spec already written.** At any point after `/adr-spec` (drafted,
+  ticketed, part-built or built) a review page sets the spec's intent, its commitment and whatever
+  is built beside the context it was planned in and today's. The spec's owner rules on the
+  findings: an amendment or a draft's revision goes to `/adr-spec`, tickets to `/tickets`, and a
+  failed premise to a new fusion page. This is not the pipeline's `review`, which is a code
+  review of a change before it integrates.
 - **Grilling, `/adr-spec` and `/tickets` run in one session.** The interview is the thought that
   makes the spec trustworthy, and the seams it settles are what makes a ticket sizeable. Splitting
   the session throws that context away. A finished fusion page is the exception: it holds the
