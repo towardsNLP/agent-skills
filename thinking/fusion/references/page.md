@@ -113,8 +113,8 @@ person the page was drawn for.
 
 - **Round 1** — drawn from <sources>. Teach-back: <what it caught, or "skipped: why">.
 
-At the finish: *what did you contribute that I had not anticipated, and where can you see its
-effect on the plan?* <The user's answer.>
+At the finish: what the user contributed that the agent had not anticipated, and where it moved
+the plan, written from this log. <Each contribution, its round and its anchor.>
 
 ## Anchors
 

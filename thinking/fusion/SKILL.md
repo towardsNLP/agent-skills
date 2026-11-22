@@ -179,9 +179,9 @@ that must be kept is committed to that same path, so git history holds it, never
 file.
 
 The rounds end when the user calls the page finished, no fork is open, and, at the component
-scales, the page shows the scope boundary and the proposed proof. Ask the closing question of
-step 7 and record the answer, then mark the page finished with the date and close the answer form,
-leaving a line that says a later round reopens it. A finished page reopens
+scales, the page shows the scope boundary and the proposed proof. Write the closing summary of
+step 7, then mark the page finished with the date and close the answer form, leaving a line that
+says a later round reopens it. A finished page reopens
 only through the resumption check below. Once what it feeds is approved, the page is frozen: a
 record, with later change belonging to the spec's amendments. A project page freezes with its spec
 map, and a component page with its spec. A first-component page feeds both, so it freezes only
@@ -196,9 +196,10 @@ again and cites the page's new commit.
 - **First-component scale** goes to `/deconstruct` first, which registers the component's
   spec-map row with its kind and parent, and then to `/adr-spec`, which takes both from that row.
 - The user types each command; give it to them exactly.
-- The closing question, asked before the page is marked finished: *what did you contribute that I
-  had not anticipated, and where can you see its effect on the plan?* Record the answer in the
-  contribution log.
+- **The closing summary**, written before the page is marked finished: what the user contributed
+  that you had not anticipated, and where it moved the plan, each item with its round and anchor,
+  drawn from the contribution log. Write it yourself; the log already holds it, so do not ask the
+  user to restate it. They may correct it.
 - The page is committed with the PR of the spec or spec map it feeds. A spec cites it in its
   Anchors, or in its amendment entry; a spec map names it in its opening lines.
 
