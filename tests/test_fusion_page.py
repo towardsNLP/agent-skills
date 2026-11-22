@@ -130,23 +130,91 @@ def test_every_html_fork_block_names_its_kind_and_label():
         assert 'data-label="' in attrs, attrs
 
 
-def test_the_answer_script_is_valid_javascript():
-    """A syntax error silently disables the whole form, so check it where node exists."""
+def answer_script() -> str:
+    html = read("page.html")
+    return html[html.rindex("<script>") + len("<script>") : html.rindex("</script>")]
+
+
+def node_or_skip() -> str:
     import shutil
-    import subprocess
-    import tempfile
 
     node = shutil.which("node")
     if not node:
         import pytest
 
         pytest.skip("node is not installed")
-    html = read("page.html")
-    script = html[html.rindex("<script>") + len("<script>") : html.rindex("</script>")]
+    return node
+
+
+def test_the_answer_script_is_valid_javascript():
+    """A syntax error silently disables the whole form, so check it where node exists."""
+    import subprocess
+    import tempfile
+
+    node = node_or_skip()
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
-        handle.write(script)
+        handle.write(answer_script())
     result = subprocess.run([node, "--check", handle.name], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+# A stand-in for the few DOM calls the answer script makes: one fork with a recommendation, one
+# default, and the form's controls. Each case gathers the summary after its own clicks.
+FORM_HARNESS = """
+function page() {
+  const els = {}, listeners = {};
+  for (const id of ["fz-responder", "fz-free", "fz-summary"]) els[id] = { value: "" };
+  els["fz-status"] = { textContent: "" };
+  for (const id of ["fz-gather", "fz-copy"]) els[id] = { addEventListener(t, f) { this.f = f; } };
+  function block(q, kind, values) {
+    const b = { dataset: { q, kind, label: q }, note: { value: "" } };
+    b.radios = values.map((v, i) => ({ type: "radio", value: v, checked: i === 0, rec: i === 0,
+      closest: () => b }));
+    b.querySelector = (s) => s === "[data-note]" ? b.note
+      : s === "input[data-recommended]" ? b.radios.find((r) => r.rec)
+      : b.radios.find((r) => r.checked) || null;
+    b.querySelectorAll = () => b.radios;
+    return b;
+  }
+  const blocks = [block("F1", "fork", ["a", "b"]), block("D1", "default", ["keep", "veto"])];
+  globalThis.document = { title: "T", getElementById: (id) => els[id] || null,
+    querySelector: () => ({ textContent: "round 1" }), querySelectorAll: () => blocks,
+    addEventListener: (t, f) => { (listeners[t] = listeners[t] || []).push(f); } };
+  globalThis.localStorage = { getItem: () => null, setItem: () => {} };
+  globalThis.navigator = {};
+  globalThis.window = { isSecureContext: false };
+  new Function(SCRIPT)();
+  const fire = (t, target) => (listeners[t] || []).forEach((f) => f({ target }));
+  const gather = () => { els["fz-gather"].f(); return els["fz-summary"].value; };
+  return { els, blocks, fire, gather };
+}
+const out = {};
+let p = page();
+out.untouched = p.gather();
+p = page(); p.els["fz-free"].value = "a reframe"; out.freeTextOnly = p.gather();
+p = page(); p.fire("click", p.blocks[0].radios[0]); out.confirmed = p.gather();
+p = page(); p.blocks[0].radios[0].checked = false; p.blocks[0].radios[1].checked = true;
+p.fire("change", p.blocks[0].radios[1]); out.changedByKeyboard = p.gather();
+console.log(JSON.stringify(out));
+"""
+
+
+def test_the_summary_says_so_when_no_fork_was_clicked():
+    """An untouched form must not read as agreement; a click or a keyboard choice counts."""
+    import json
+    import subprocess
+
+    node = node_or_skip()
+    program = "const SCRIPT = " + json.dumps(answer_script()) + ";\n" + FORM_HARNESS
+    result = subprocess.run([node, "-e", program], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    out = json.loads(result.stdout)
+    warning = "No fork was clicked"
+    assert warning in out["untouched"], out["untouched"]
+    assert warning in out["freeTextOnly"] and "Not on the page: a reframe" in out["freeTextOnly"]
+    assert warning not in out["confirmed"] and "kept the recommendation" in out["confirmed"]
+    keyboard = out["changedByKeyboard"]
+    assert warning not in keyboard and "CHANGED from (a)" in keyboard
 
 
 def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():

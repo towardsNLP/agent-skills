@@ -316,6 +316,8 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   // One key per page and round, so a new round starts clean and an old draft is never mixed in.
   var KEY = "fusion:" + document.title + ":" + ((document.querySelector(".eyebrow") || {}).textContent || "");
   var storageOK = true;
+  // Forks clicked this round. When none was, the summary says so, and the agent asks before recording rulings.
+  var touched = {};
   function status(msg) { document.getElementById("fz-status").textContent = msg; }
   function blocks() { return Array.prototype.slice.call(document.querySelectorAll("[data-q]")); }
   function choice(b) { var c = b.querySelector("input[type=radio]:checked"); return c ? c : null; }
@@ -323,7 +325,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   function note(b) { var n = b.querySelector("[data-note]"); return n ? n.value.trim() : ""; }
 
   function state() {
-    var s = { responder: document.getElementById("fz-responder").value, free: document.getElementById("fz-free").value, q: {} };
+    var s = { responder: document.getElementById("fz-responder").value, free: document.getElementById("fz-free").value, q: {}, touched: touched };
     blocks().forEach(function (b) { var c = choice(b); s.q[b.dataset.q] = { v: c ? c.value : "", n: note(b) }; });
     return s;
   }
@@ -339,6 +341,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     if (!s || typeof s !== "object" || !s.q || typeof s.q !== "object") return;
     document.getElementById("fz-responder").value = s.responder || "";
     document.getElementById("fz-free").value = s.free || "";
+    if (s.touched && typeof s.touched === "object") touched = s.touched;
     blocks().forEach(function (b) {
       var a = s.q[b.dataset.q]; if (!a) return;
       Array.prototype.forEach.call(b.querySelectorAll("input[type=radio]"), function (x) { if (x.value === a.v) x.checked = true; });
@@ -352,7 +355,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     var who = document.getElementById("fz-responder").value.trim();
     if (who) lines.push("Responder: " + who);
     lines.push("");
-    var kept = 0, unanswered = 0;
+    var kept = 0, unanswered = 0, forks = 0, clicked = 0;
     blocks().forEach(function (b) {
       var id = b.dataset.q, kind = b.dataset.kind, label = b.dataset.label || "";
       var c = choice(b), r = recommended(b), n = note(b);
@@ -363,6 +366,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
       }
       if (!c) { unanswered++; if (n) lines.push(id + " " + label + ": unanswered | " + n); return; }
       if (kind === "fork") {
+        if (r) { forks++; if (touched[id]) clicked++; }
         var verdict = !r ? "chosen (no recommendation)" : changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation";
         lines.push(id + " " + label + ": (" + c.value + ") " + verdict + (n ? " | " + n : ""));
         if (r && !changed) kept++;
@@ -374,6 +378,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     if (free) { lines.push(""); lines.push("Not on the page: " + free); }
     lines.push("");
     lines.push("Kept as recommended: " + kept + " · Unanswered: " + unanswered);
+    if (forks && !clicked) lines.splice(2, 0, "No fork was clicked: every one is still on the recommendation.");
     var text = lines.join("\n");
     document.getElementById("fz-summary").value = text;
     return text;
@@ -394,7 +399,16 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   // A finished page closes its form; without it there is nothing to restore or gather.
   if (!document.getElementById("fz-summary")) return;
   try { restore(); } catch (e) { status("Your saved draft could not be restored; answers start fresh."); }
-  document.addEventListener("change", save);
+  // A click on the radio already selected fires no change event, and a keyboard choice fires no
+  // click, so both mark a fork as touched.
+  function touch(e) {
+    var t = e.target, b = t && t.type === "radio" && t.closest ? t.closest("[data-q]") : null;
+    if (!b || b.dataset.kind !== "fork") return false;
+    touched[b.dataset.q] = true;
+    return true;
+  }
+  document.addEventListener("click", function (e) { if (touch(e)) save(); });
+  document.addEventListener("change", function (e) { touch(e); save(); });
   document.addEventListener("input", save);
   document.getElementById("fz-gather").addEventListener("click", function () { gather(); status("Answers gathered below. Review them, then copy."); });
   document.getElementById("fz-copy").addEventListener("click", copy);

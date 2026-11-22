@@ -116,7 +116,8 @@ view, and one for anything not on the page. A responder name lets the page be sh
 people for their feedback. **Gather my answers** writes a plain-text summary that marks every fork
 as *kept the recommendation* or *changed*, lists only changed defaults and assumptions and every
 note, and counts what is still unanswered; **Copy to clipboard** copies it for the user to paste
-back. Answers autosave in the browser. The template carries all of this; a Markdown page is
+back. When no fork was clicked, the summary opens by saying so: ask whether the recommendations
+stand before recording them as rulings. Answers autosave in the browser. The template carries all of this; a Markdown page is
 answered by ID in the reply instead.
 
 Done when every fork has every card field, every figure uses the page's key, and the ledger
@@ -202,7 +203,8 @@ changes reopens the page as a new round, which is possible until the page is fro
 ## Hard rules
 
 - **The user rules every fork.** Your recommendation is a pre-selected default they can change in
-  one click, and the gathered answers show which defaults they kept and which they changed.
+  one click, and the gathered answers show which defaults they kept and which they changed. A
+  summary with no fork clicked is confirmed in chat before it becomes rulings.
 - **Facts are yours; decisions are theirs.**
 - **Write only the page.** Specs, ADRs, glossary terms and spec-map rows are proposed on it and
   written by `/adr-spec`, `domain-modeling` and `/deconstruct`.

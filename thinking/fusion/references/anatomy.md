@@ -57,7 +57,7 @@ a distinction the project already draws, such as where a model decides and where
 | **At stake** | the moment in a concrete case where the options produce different outcomes; what that changes in the spec, the ADRs and the tickets; the cost to reverse |
 | **Options** | lettered (a), (b), (c), each concrete enough to picture |
 | **Needs you** | what the user holds that makes this theirs: history, people, intent, taste |
-| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind; the summary marks whether the user kept or changed it |
+| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind; the summary marks whether the user kept or changed it, and says so when no fork was clicked |
 | **Ruling** | open, or the user's answer with its round and reason |
 
 "What would change my mind" is a lever: a user who knows that fact can move the recommendation
