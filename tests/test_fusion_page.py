@@ -112,6 +112,22 @@ def test_every_scale_in_the_skill_has_a_column_in_scales_md():
     header = next(line for line in read("scales.md").splitlines() if line.startswith("| Section"))
     columns = [cell.split(":")[0].strip().lower() for cell in header.strip("|").split("|")[1:]]
     assert columns == scales, columns
+    for name in ("page.html", "page.md"):
+        masthead = re.search(r"[Ss]cale:\*?\*? ?[{<]([^}>]+)[}>]", read(name))
+        assert masthead, name
+        listed = [part.strip() for part in masthead.group(1).split("|")]
+        assert listed == scales, (name, listed)
+
+
+def test_the_closing_summary_is_written_from_the_log_not_asked():
+    """The log already holds what the user contributed; asking them to restate it is busywork."""
+    skill = " ".join((SKILL / "SKILL.md").read_text(encoding="utf-8").split())
+    assert "do not ask the user to restate it" in skill
+    assert "what did you contribute" not in skill.lower()
+    for name in ("page.html", "page.md"):
+        text = " ".join(read(name).split())
+        assert "written from this log" in text, name
+        assert "what did you contribute" not in text.lower(), name
 
 
 def test_every_html_question_preselects_exactly_one_recommendation():
@@ -171,29 +187,37 @@ def test_the_answer_script_is_valid_javascript():
     assert result.returncode == 0, result.stderr
 
 
-# A stand-in for the few DOM calls the answer script makes: one fork with a recommendation, one
-# default, and the form's controls. Each case gathers the summary after its own clicks.
+# A stand-in for the few DOM calls the answer script makes: forks with a recommendation, one
+# default, the form's controls and a saved draft. Each case gathers the summary after its own
+# clicks.
 FORM_HARNESS = """
-function page() {
+function page(forks = 1, saved = null) {
   const els = {}, listeners = {};
   for (const id of ["fz-responder", "fz-free", "fz-summary"]) els[id] = { value: "" };
   els["fz-status"] = { textContent: "" };
   for (const id of ["fz-gather", "fz-copy"]) els[id] = { addEventListener(t, f) { this.f = f; } };
   function block(q, kind, values) {
     const b = { dataset: { q, kind, label: q }, note: { value: "" } };
-    b.radios = values.map((v, i) => ({ type: "radio", value: v, checked: i === 0, rec: i === 0,
-      closest: () => b }));
+    // Checking one radio unchecks the rest of its group, as a browser does.
+    b.radios = values.map((v, i) => {
+      const r = { type: "radio", value: v, rec: i === 0, on: i === 0, closest: () => b };
+      Object.defineProperty(r, "checked", { get: () => r.on,
+        set: (x) => { if (x) b.radios.forEach((o) => { o.on = false; }); r.on = x; } });
+      return r;
+    });
     b.querySelector = (s) => s === "[data-note]" ? b.note
       : s === "input[data-recommended]" ? b.radios.find((r) => r.rec)
       : b.radios.find((r) => r.checked) || null;
     b.querySelectorAll = () => b.radios;
     return b;
   }
-  const blocks = [block("F1", "fork", ["a", "b"]), block("D1", "default", ["keep", "veto"])];
+  const blocks = [];
+  for (let i = 1; i <= forks; i++) blocks.push(block("F" + i, "fork", ["a", "b"]));
+  blocks.push(block("D1", "default", ["keep", "veto"]));
   globalThis.document = { title: "T", getElementById: (id) => els[id] || null,
     querySelector: () => ({ textContent: "round 1" }), querySelectorAll: () => blocks,
     addEventListener: (t, f) => { (listeners[t] = listeners[t] || []).push(f); } };
-  globalThis.localStorage = { getItem: () => null, setItem: () => {} };
+  globalThis.localStorage = { getItem: () => saved && JSON.stringify(saved), setItem: () => {} };
   globalThis.navigator = {};
   globalThis.window = { isSecureContext: false };
   new Function(SCRIPT)();
@@ -208,6 +232,9 @@ p = page(); p.els["fz-free"].value = "a reframe"; out.freeTextOnly = p.gather();
 p = page(); p.fire("click", p.blocks[0].radios[0]); out.confirmed = p.gather();
 p = page(); p.blocks[0].radios[0].checked = false; p.blocks[0].radios[1].checked = true;
 p.fire("change", p.blocks[0].radios[1]); out.changedByKeyboard = p.gather();
+p = page(2); p.fire("click", p.blocks[1].radios[0]); out.oneOfTwoClicked = p.gather();
+p = page(1, { responder: "", free: "", q: { F1: { v: "b", n: "" } } });
+out.oldDraftChanged = p.gather();
 console.log(JSON.stringify(out));
 """
 
@@ -228,15 +255,24 @@ def test_the_summary_says_so_when_no_fork_was_clicked():
     assert warning not in out["confirmed"] and "kept the recommendation" in out["confirmed"]
     keyboard = out["changedByKeyboard"]
     assert warning not in keyboard and "CHANGED from (a)" in keyboard
+    assert warning not in out["oneOfTwoClicked"], "the warning is for a form with no fork clicked"
+    old_draft = out["oldDraftChanged"]
+    assert warning not in old_draft and "CHANGED from (a)" in old_draft, old_draft
 
 
 def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():
     """It feeds /deconstruct and then /adr-spec, so freezing at the map would strand the second."""
     flat = {
         path: " ".join((ROOT / path).read_text(encoding="utf-8").split())
-        for path in ("thinking/fusion/SKILL.md", "sdd/deconstruct/SKILL.md", "docs/sdd-workflow.md")
+        for path in (
+            "thinking/fusion/SKILL.md",
+            "sdd/deconstruct/SKILL.md",
+            "docs/sdd-workflow.md",
+            "templates/profile.md",
+        )
     }
     assert "freezes only when its spec is approved" in flat["thinking/fusion/SKILL.md"]
     assert "until the spec or spec map it feeds is approved" not in flat["thinking/fusion/SKILL.md"]
     assert "cite the page's new commit" in flat["sdd/deconstruct/SKILL.md"]
     assert "a first-component page, once its spec is" in flat["docs/sdd-workflow.md"]
+    assert "(a first-component page, once its spec is)" in flat["templates/profile.md"]

@@ -33,7 +33,7 @@ decomposes along the wrong lines and every spec below it inherits the error.
 
 `plan_path`, `roadmap_path`, any contract or requirements document the profile names, and enough of
 the code to know what already exists. A finished project-scale fusion page, already checked in
-Step 1, comes first: its zoom-out, frame and component map are this step's starting point. A first-component page arrives here too, for
+Step 1, comes first: its zoom-out, frame and component map are this step's starting point. A first-component page arrives here too, after the same resumption check, for
 its one spec-map row: its kind and its parent. This is the one skill that reads broadly on purpose;
 everything downstream reads narrowly.
 

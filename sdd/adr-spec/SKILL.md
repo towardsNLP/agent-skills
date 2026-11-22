@@ -43,7 +43,8 @@ and fusion, and they do it better.
 Grep `spec_dir` for a spec covering the same subject, and `spec_map_path` for its planned row. A
 duplicate ID is refused by `check-contracts`; a duplicate *subject* under a fresh ID is
 not, and is the more expensive mistake. If one exists, stop and say so: supersede or extend is the
-user's call.
+user's call. A spec still in draft, created but not yet approved, that a finished review page asks
+to revise is not a duplicate: revise it in place, then take it to approval as usual.
 
 If the user chooses **supersede**, write the new spec under a new ID, with the old spec in its
 Anchors, and append one last entry to the old spec's `amendments.md` naming its successor. The old
@@ -180,6 +181,6 @@ effective agreement: `spec.md` followed by amendments in date order.
 - **Never create a second spec with an existing ID or subject.** Extend or supersede only after the
   user chooses.
 - **Never write a ticket.** That is `/tickets`, and it runs next.
-- **Write scope is new `spec.md`, append-only `amendments.md`, and `decision_records`.**
+- **Write scope is a new or not-yet-approved `spec.md`, append-only `amendments.md`, and `decision_records`.**
   `acceptance.md`, the spec map and the roadmap are read-only here. A contract edit is proposed,
   never made unasked.

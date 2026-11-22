@@ -6,7 +6,7 @@ the ledger. Section jobs: anatomy.md. What each holds at each scale: scales.md.
 
 # <Title: the plan in a few words>
 
-**Scale:** <project | first component | component>, because <one line> ·
+**Scale:** <project | first component | component | review>, because <one line> ·
 **Round:** <n> · **Status:** <open | finished YYYY-MM-DD> ·
 **Facts checked against:** <commit, or dated documents> · **Reading time:** <minutes>
 

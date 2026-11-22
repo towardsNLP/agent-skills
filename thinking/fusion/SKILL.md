@@ -18,7 +18,7 @@ its **context**. A horizon is where someone looks from; the context is part of w
 Never call the context a horizon.
 
 Read `planning/agent/profile.md` for `fusion_dir`, `plan_path`, `roadmap_path`,
-`spec_map_path`, `spec_dir`, `ticket_dir`, `decision_records`, `glossary_path`, `architecture_doc_path`,
+`spec_map_path`, `spec_dir`, `spec_path_pattern`, `ticket_dir`, `decision_records`, `glossary_path`, `architecture_doc_path`,
 `constraints_doc` and `authority_map`. Pages live in `fusion_dir` (default `planning/fusion/`),
 one per plan, named `<YYYY-MM-DD>-<slug>.html` or `.md`. A repo with no profile yet gets the
 default, and the page lists the profile values it needs for the user to set.
@@ -49,7 +49,7 @@ other part of the frame.
 Finding facts is your job. Use helper agents where the harness offers them, and retrieve any fact
 you can before asking the user for it.
 
-**Search for precedents in the repo and on the web.** In the repo: earlier specs, decision
+**Search for precedents in the repo, and on the web when the subject is new to it.** In the repo: earlier specs, decision
 records, plans and modules that faced a similar situation, and what they chose. On the web:
 how others have solved the same kind of problem, from primary sources such as papers, official
 documentation and well-known engineering write-ups. Send the searches to helper agents in
@@ -57,9 +57,8 @@ parallel where the harness allows, and keep each precedent to what it is, where 
 (path or link, with date) and what it suggests for this plan. A precedent informs the frame and the
 alternatives; it never decides a fork. When the harness has no web access, say so on the page.
 
-**Search the web when the subject, or a fork, is new to the repo.** Search depth follows novelty,
-not size. A later round that opens no new subject and no new fork searches nothing new, and the
-page says in one line that the precedents it already holds settle it.
+Search depth follows novelty, not size. A later round that opens no new subject and no new fork
+searches nothing new, and the page says in one line that the precedents it already holds settle it.
 
 **A helper's report counts once its work exists.** Before using a helper's findings, check that the
 files it was asked to write are there and complete. A helper that delegates collects its own readers'
@@ -136,7 +135,8 @@ names each section left out.
 
 ## Step 4 — Teach-back
 
-Before the user sees any version, give a fresh helper agent the page alone: no conversation, no
+Before the user sees any version, check it. The full check, the **teach-back**: give a fresh helper
+agent the page alone: no conversation, no
 repo, and a different model family where the harness offers one. It restates each fork in its
 own words: what is decided, what each option changes, which it would pick. It also lists terms
 used unexplained, decisions hiding as defaults, claims without anchors, and figures that
@@ -210,8 +210,8 @@ again and cites the page's new commit.
   drawn from the contribution log. Write it yourself; the log already holds it, so do not ask the
   user to restate it. They may correct it.
 - The page is committed with the PR of the spec or spec map it feeds. A spec cites it in its
-  Anchors, or in its amendment entry; a spec map names it in its opening lines. A review page goes
-  with the PR of the amendment or the tickets it feeds.
+  Anchors, or in its amendment entry; a spec map names it in its opening lines. A review page is
+  committed as [reviewing a spec](#reviewing-a-spec) says.
 
 ## Reviewing a spec
 
@@ -224,8 +224,8 @@ same steps as a plan, with these differences.
   its ADRs' context sections and its spec-map row; and what the person calling the review says.
   A new intent stated there goes on the page in their words, dated, as a change of intent, not as
   drift. Stated by anyone other than the spec's owner, it is a finding for the owner to rule on.
-- **Commitment**: `spec.md` followed by `amendments.md` in date order, and the tickets in
-  `ticket_dir`, if cut.
+- **Commitment**: the spec at the path `spec_path_pattern` declares, followed by its
+  `amendments.md` in date order, and the tickets in `ticket_dir`, if cut.
 - **Built**: the code and the outcomes of closed tickets: none, some or all. Work whose tickets
   are still open is not yet a finding.
 - **The context when planned**, from the page's "facts checked against" or, for a spec with no
@@ -233,6 +233,8 @@ same steps as a plan, with these differences.
   check reads it.
 
 Reading the built code is a helper agent's job, with every finding anchored to a file and a commit.
+With no helper agents, read it yourself, and write the findings in a separate pass that reads only
+the records; the page names it a self-review.
 The acceptance grades in `acceptance.md` are the implementer's own claim, to check, not to trust.
 
 **Whose horizons.** A review fuses at least three: the author's, recorded on the fusion page and in
@@ -258,7 +260,7 @@ a question at the edge of your view.
 |---|---|
 | accept, with a reason and a condition for revisiting it | the owner, on the review page |
 | revise a spec still in draft, or amend an approved one | `/adr-spec` |
-| recut tickets not yet started, or add tickets for work started or done (a revert is a ticket) | `/tickets` |
+| recut the open tickets, never one that carries an Outcome, or add new ones (a revert is a ticket) | `/tickets` |
 | re-plan | a new fusion page |
 
 **Re-plan** when a premise the spec rests on no longer holds: the change would move work across its
@@ -275,17 +277,22 @@ spec with no plan page, the slug is the spec's ID. It uses the same templates, w
 holding what the review column of `scales.md` says. A review never edits a spec, an ADR or a
 ticket: it proposes, and `/adr-spec` and `/tickets` write.
 
+**Committing and freezing.** A review page is committed with the PR of what it feeds: the amendment
+or the draft's revision, the tickets, or the new fusion page. A review that only accepts findings is
+committed on its own, as a record, when it is finished. It freezes once everything it feeds is
+approved.
+
 ## Resuming a finished page
 
 A finished page is built to be picked up in a fresh session, by `/adr-spec`, `/deconstruct` or a
 later `/fusion`. That reader runs the **resumption check**: read the ledger; compare the page's
 "facts checked against" with the current state and list every premise that changed; put the
-rulings to the user with those changes and ask whether they still stand. A ruling the user
-changes reopens the page as a new round, which is possible until the page is frozen (step 6).
+rulings to the user (in a review, to the spec's owner) with those changes and ask whether they
+still stand. A ruling they change reopens the page as a new round, which is possible until the page is frozen (step 6).
 
 ## Hard rules
 
-- **The user rules every fork.** Your recommendation is a pre-selected default they can change in
+- **The user rules every fork**; in a review, the spec's owner does. Your recommendation is a pre-selected default they can change in
   one click, and the gathered answers show which defaults they kept and which they changed. A
   summary with no fork clicked is confirmed in chat before it becomes rulings.
 - **Facts are yours; decisions are theirs.**

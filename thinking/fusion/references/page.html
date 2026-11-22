@@ -129,7 +129,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   <h1>{Title: the plan in a few words}</h1>
   <p class="lede" id="thesis">{One sentence: what changes when this plan is carried out.}</p>
   <div class="meta">
-    <span>scale: {project | first component | component}, because {one line}</span>
+    <span>scale: {project | first component | component | review}, because {one line}</span>
     <span>round {n} · {open | finished YYYY-MM-DD}</span>
     <span>facts checked against {commit, or dated documents}</span>
     <span>about {n} minutes</span>
@@ -366,7 +366,8 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
       }
       if (!c) { unanswered++; if (n) lines.push(id + " " + label + ": unanswered | " + n); return; }
       if (kind === "fork") {
-        if (r) { forks++; if (touched[id]) clicked++; }
+        // A choice that differs from the recommendation was made by someone, even in a draft saved before clicks were tracked.
+        if (r) { forks++; if (touched[id] || changed) clicked++; }
         var verdict = !r ? "chosen (no recommendation)" : changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation";
         lines.push(id + " " + label + ": (" + c.value + ") " + verdict + (n ? " | " + n : ""));
         if (r && !changed) kept++;
