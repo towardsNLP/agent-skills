@@ -160,6 +160,13 @@ Each reply changes the picture:
   recommendation held back until the user has answered.
 - Run the teach-back again before showing.
 
+**Round copies are working files.** Where the host keeps every file it shows, write each round to
+its own copy (`-r1`, `-r2`) for viewing; the highest is current. Never commit these copies. The
+page committed at the finish is one file per plan in `fusion_dir`, without the suffix, and its
+read-only fork cards, **since you last read** and contribution log are the round history. A round
+that must be kept is committed to that same path, so git history holds it, never as a separate
+file.
+
 The rounds end when the user calls the page finished, no fork is open, and, at the component
 scales, the page shows the scope boundary and the proposed proof. Ask the closing question of
 step 7 and record the answer, then mark the page finished with the date and close the answer form,

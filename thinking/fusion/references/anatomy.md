@@ -68,5 +68,11 @@ with it. A question whose "needs you" field stays empty is a default, not a fork
 A revision moves the picture itself: the figure and the section a contribution touches. The
 **since you last read** box and the contribution log point at what moved, so a re-read costs
 minutes. A ruled fork's card stays on the page, read-only, with its ruling and round; the answer
-form carries only open questions, and it closes when the page is finished. When the host keeps every file it shows, write each round to its own copy (`-r1`,
-`-r2`); the highest is current. The page committed at the finish is one file without the suffix, and that file is the one a later session reads.
+form carries only open questions, and it closes when the page is finished.
+
+When the host keeps every file it shows, write each round to its own copy (`-r1`, `-r2`) for
+viewing; the highest is current. Round copies are working files and are never committed. The page
+committed at the finish is one file per plan in `fusion_dir`, without the suffix, and it is the
+file a later session reads: its read-only fork cards, **since you last read** and contribution log
+are the round history. A round that must be kept is committed to that same path, so git history
+holds it, never as a separate file.
