@@ -366,8 +366,11 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
       }
       if (!c) { unanswered++; if (n) lines.push(id + " " + label + ": unanswered | " + n); return; }
       if (kind === "fork") {
-        // A choice that differs from the recommendation was made by someone, even in a draft saved before clicks were tracked.
-        if (r) { forks++; if (touched[id] || changed) clicked++; }
+        // Any fork answered counts as a click: one with no recommendation can only be answered by
+        // hand, and a choice that differs from the recommendation was made by someone, even in a
+        // draft saved before clicks were tracked.
+        if (r) forks++;
+        if (touched[id] || changed || !r) clicked++;
         var verdict = !r ? "chosen (no recommendation)" : changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation";
         lines.push(id + " " + label + ": (" + c.value + ") " + verdict + (n ? " | " + n : ""));
         if (r && !changed) kept++;

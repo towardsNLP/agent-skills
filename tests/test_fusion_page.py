@@ -191,7 +191,7 @@ def test_the_answer_script_is_valid_javascript():
 # default, the form's controls and a saved draft. Each case gathers the summary after its own
 # clicks.
 FORM_HARNESS = """
-function page(forks = 1, saved = null) {
+function page(forks = 1, saved = null, open = 0) {
   const els = {}, listeners = {};
   for (const id of ["fz-responder", "fz-free", "fz-summary"]) els[id] = { value: "" };
   els["fz-status"] = { textContent: "" };
@@ -213,6 +213,12 @@ function page(forks = 1, saved = null) {
   }
   const blocks = [];
   for (let i = 1; i <= forks; i++) blocks.push(block("F" + i, "fork", ["a", "b"]));
+  // A fork with no recommendation starts unanswered, as one that grants a permission does.
+  for (let i = 1; i <= open; i++) {
+    const b = block("P" + i, "fork", ["a", "b"]);
+    b.radios.forEach((r) => { r.rec = false; r.checked = false; });
+    blocks.push(b);
+  }
   blocks.push(block("D1", "default", ["keep", "veto"]));
   globalThis.document = { title: "T", getElementById: (id) => els[id] || null,
     querySelector: () => ({ textContent: "round 1" }), querySelectorAll: () => blocks,
@@ -235,6 +241,8 @@ p.fire("change", p.blocks[0].radios[1]); out.changedByKeyboard = p.gather();
 p = page(2); p.fire("click", p.blocks[1].radios[0]); out.oneOfTwoClicked = p.gather();
 p = page(1, { responder: "", free: "", q: { F1: { v: "b", n: "" } } });
 out.oldDraftChanged = p.gather();
+p = page(1, null, 1); p.blocks[1].radios[0].checked = true; p.fire("click", p.blocks[1].radios[0]);
+out.openForkAnswered = p.gather();
 console.log(JSON.stringify(out));
 """
 
@@ -258,6 +266,8 @@ def test_the_summary_says_so_when_no_fork_was_clicked():
     assert warning not in out["oneOfTwoClicked"], "the warning is for a form with no fork clicked"
     old_draft = out["oldDraftChanged"]
     assert warning not in old_draft and "CHANGED from (a)" in old_draft, old_draft
+    answered = out["openForkAnswered"]
+    assert warning not in answered and "chosen (no recommendation)" in answered, answered
 
 
 def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():
