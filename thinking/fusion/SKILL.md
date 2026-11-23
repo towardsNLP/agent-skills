@@ -282,7 +282,7 @@ a question at the edge of your view.
 | accept, with a reason and a condition for revisiting it | the owner, on the review page |
 | revise a spec still in draft, or amend an approved one | `/adr-spec` |
 | recut the open tickets, never one that carries an Outcome or a claim, or add new ones (a revert is a ticket) | `/tickets` |
-| re-plan | a new fusion page |
+| re-plan | a new fusion page; a spec it replaces is superseded by the user's choice in `/adr-spec` |
 
 **Re-plan** when a premise the spec rests on no longer holds: the change would move work across its
 boundary with another component, or its spec-map row or an ADR it anchors has changed or been

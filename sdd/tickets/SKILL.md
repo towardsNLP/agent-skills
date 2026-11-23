@@ -113,8 +113,7 @@ Re-run this on a spec that already has tickets whenever the work teaches you the
 Experiment specs need it by nature: you cannot write the ablation's ticket until the first arm has
 run. **Add and renumber the open tickets; never touch one that carries an Outcome or a claim.** A
 closed ticket is a record of what happened, and the reason the spec did not have to be reopened; a
-claimed one belongs to the session building it, which writes its Outcome. A superseded spec's
-tickets stay where they are, and its successor's tickets are cut fresh against the new spec.
+claimed one belongs to the session building it, which writes its Outcome.
 
 ## Hard rules
 

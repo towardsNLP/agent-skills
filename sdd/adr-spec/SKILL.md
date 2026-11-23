@@ -51,10 +51,7 @@ to revise is not a duplicate: revise it in place, then take it to approval as us
 
 If the user chooses **supersede**, the new spec needs its own spec-map row first: send the user to
 `/deconstruct` to add it, then write the new spec under that ID, with the old spec in its Anchors.
-Append one last entry to the old spec's `amendments.md` naming its successor; it is the one
-amendment that changes no scope, because it records that the spec is replaced, and it says the old
-spec's open tickets are not to be built. The old `spec.md` is never edited, and its tickets stay
-where they are.
+The old spec, its amendments and its tickets are never edited.
 A supersession that a review ruled as a re-plan takes its thinking from the new fusion page, not
 from the review page.
 
@@ -170,8 +167,7 @@ appended to `amendments.md` beside it. `/implement` writes `acceptance.md` at cl
 one writer per file and prevents a dated amendment from being buried inside the blueprint or the
 final compliance record.
 
-Only a change to **scope, inputs and outputs, or acceptance** earns an amendment, apart from the one
-entry that names a successor when the spec is superseded. Local divergence
+Only a change to **scope, inputs and outputs, or acceptance** earns an amendment. Local divergence
 found during implementation belongs in the ticket that hit it. Anything that deserves to outlive
 the work goes to `decision_records`.
 

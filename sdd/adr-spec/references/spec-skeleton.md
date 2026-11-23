@@ -95,7 +95,7 @@ Paths to the documents, data and code this depends on.
 # Amendments — Spec <ID>
 
 Append only, newest last. `/adr-spec` writes one entry per approved change to scope, inputs and
-outputs, or acceptance, and one last entry naming the successor if the spec is superseded. Read after `spec.md`; later entries supersede earlier ones only where they
+outputs, or acceptance. Read after `spec.md`; later entries supersede earlier ones only where they
 say so.
 
 ### YYYY-MM-DD — <what changed>
