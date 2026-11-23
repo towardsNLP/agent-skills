@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" role="img" aria-labelledby="t">
+<title id="t">The spec-driven workflow by size of work, with the points where you approve and the review loop</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="1000" height="430" rx="10"/>
+<defs>
+    <marker id="fa" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahp" d="M0,0 L8,4 L0,8 z"/></marker>
+    <marker id="fn" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahn" d="M0,0 L8,4 L0,8 z"/></marker>
+  </defs>
+  <text class="ey" x="10" y="18">HOW BIG IS THE WORK?</text>
+  <text class="t" x="10" y="56" style="font-size:12px">A project</text>
+  <text class="st" x="10" y="71">many specs</text>
+  <text class="t" x="10" y="166" style="font-size:12px">One component</text>
+  <text class="st" x="10" y="181">one spec</text>
+  <text class="t" x="10" y="306" style="font-size:12px">A small change</text>
+  <text class="st" x="10" y="321">no scope change</text>
+
+  <!-- project lane -->
+  <g class="bx-new"><rect x="130" y="36" width="150" height="46" rx="8"/></g>
+  <text class="t" x="205" y="56" text-anchor="middle" style="font-size:12px">/fusion</text><text class="st" x="205" y="71" text-anchor="middle">a project page</text>
+  <path class="ar" d="M281,59 H318" marker-end="url(#fa)"/>
+  <g class="bx-exists"><rect x="320" y="36" width="150" height="46" rx="8"/></g>
+  <text class="t" x="395" y="56" text-anchor="middle" style="font-size:12px">/deconstruct</text><text class="st" x="395" y="71" text-anchor="middle">writes the spec map</text>
+  <path class="ar" d="M395,83 V138" marker-end="url(#fa)"/>
+  <text class="st" x="402" y="112">then, for each row of the map</text>
+
+  <!-- component lane -->
+  <g class="bx-exists"><rect x="130" y="146" width="150" height="46" rx="8"/></g>
+  <text class="t" x="205" y="166" text-anchor="middle" style="font-size:12px">grill-me or /fusion</text><text class="st" x="205" y="181" text-anchor="middle">questions, or a page</text>
+  <path class="ar" d="M281,169 H318" marker-end="url(#fa)"/>
+  <g class="bx-exists"><rect x="320" y="146" width="150" height="46" rx="8"/></g>
+  <text class="t" x="395" y="166" text-anchor="middle" style="font-size:12px">/adr-spec</text><text class="st" x="395" y="181" text-anchor="middle">decisions, then the spec</text>
+  <path class="ar" d="M471,169 H508" marker-end="url(#fa)"/>
+  <g class="bx-exists"><rect x="510" y="146" width="130" height="46" rx="8"/></g>
+  <text class="t" x="575" y="166" text-anchor="middle" style="font-size:12px">/tickets</text><text class="st" x="575" y="181" text-anchor="middle">each with its check</text>
+  <path class="ar" d="M641,169 H678" marker-end="url(#fa)"/>
+  <g class="bx-exists"><rect x="680" y="146" width="150" height="46" rx="8"/></g>
+  <text class="t" x="755" y="166" text-anchor="middle" style="font-size:12px">/implement</text><text class="st" x="755" y="181" text-anchor="middle">one ticket per session</text>
+  <path class="ar" d="M831,169 H858" marker-end="url(#fa)"/>
+  <g class="bx-out"><rect x="860" y="146" width="130" height="46" rx="8"/></g>
+  <text class="t" x="925" y="166" text-anchor="middle" style="font-size:12px;fill:var(--fz-muted)">code review</text><text class="st" x="925" y="181" text-anchor="middle">your host's, then merge</text>
+  <!-- artefacts -->
+  <text class="st" x="205" y="210" text-anchor="middle">a fusion page</text>
+  <text class="st" x="395" y="210" text-anchor="middle">ADRs · spec.md · amendments.md</text>
+  <text class="st" x="575" y="210" text-anchor="middle">tickets/&lt;spec&gt;/NN.md</text>
+  <text class="st" x="755" y="210" text-anchor="middle">Outcome · acceptance.md</text>
+  <text class="st" x="140" y="226">a grilling keeps one session; a finished fusion page lets a fresh session resume</text>
+  <path class="brk" d="M130,232 V238 H640 V232"/>
+
+  <!-- review loop -->
+  <path class="ar-new" d="M755,240 C755,272 470,272 470,246" marker-end="url(#fn)"/>
+  <text class="st" x="612" y="282" text-anchor="middle" style="fill:var(--fz-new)">/fusion review, from any stage after /adr-spec: amend, recut, or re-plan</text>
+
+  <!-- small change lane -->
+  <g class="bx-exists"><rect x="130" y="286" width="150" height="46" rx="8"/></g>
+  <text class="t" x="205" y="306" text-anchor="middle" style="font-size:12px">no spec</text><text class="st" x="205" y="321" text-anchor="middle">work it test-first</text>
+  <path class="ar" d="M281,309 H318" marker-end="url(#fa)"/>
+  <g class="bx-exists"><rect x="320" y="286" width="150" height="46" rx="8"/></g>
+  <text class="t" x="395" y="306" text-anchor="middle" style="font-size:12px">/tdd</text><text class="st" x="395" y="321" text-anchor="middle">red, green, refactor</text>
+  <path class="ar" d="M471,309 H508" marker-end="url(#fa)"/>
+  <g class="bx-out"><rect x="510" y="286" width="130" height="46" rx="8"/></g>
+  <text class="t" x="575" y="306" text-anchor="middle" style="font-size:12px;fill:var(--fz-muted)">code review</text><text class="st" x="575" y="321" text-anchor="middle">done when tests pass</text>
+
+  <!-- where you approve -->
+  <g style="fill:none;stroke:var(--fz-open);stroke-width:1.6">
+    <path d="M300,51 l6,6 -6,6 -6,-6 z"/>
+    <path d="M300,161 l6,6 -6,6 -6,-6 z"/>
+    <path d="M490,161 l6,6 -6,6 -6,-6 z"/>
+    <path d="M660,161 l6,6 -6,6 -6,-6 z"/>
+    <path d="M395,104 l6,6 -6,6 -6,-6 z"/>
+  </g>
+  <text class="st" x="300" y="34" text-anchor="middle" style="fill:var(--fz-open)">rule its forks</text>
+  <text class="st" x="352" y="122" style="fill:var(--fz-open)" text-anchor="end">approve the map</text>
+  <text class="st" x="300" y="144" text-anchor="middle" style="fill:var(--fz-open)">rule forks</text>
+  <text class="st" x="490" y="144" text-anchor="middle" style="fill:var(--fz-open)">rule each ADR · read scope and seams</text>
+  <text class="st" x="660" y="144" text-anchor="middle" style="fill:var(--fz-open)">approve the list</text>
+
+  <!-- sessions and status -->
+  <path class="brk" d="M130,362 V356 H990 V362"/>
+  <text class="st" x="560" y="350" text-anchor="middle">every working session: /start-session at the start, /end-session at the end (the lead also runs /sync-progress)</text>
+  <text class="st" x="680" y="384">done is derived: tools/ticket_status.py runs each ticket's check</text>
+  <text class="st" x="10" y="416">Grey: the pipeline. Teal: a /fusion project page and the review loop (a component may start with either a grilling or a fusion page). Dashed: outside this repo. Coral: where you approve.</text>
+</svg>

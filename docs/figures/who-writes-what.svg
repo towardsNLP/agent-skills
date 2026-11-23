@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 534" role="img" aria-labelledby="t">
+<title id="t">Which skill writes which file: one writer per file, and derived status</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="900" height="534" rx="10"/>
+<defs>
+<marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahp" d="M0,0 L8,4 L0,8 z"/></marker>
+<marker id="ahn" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahn" d="M0,0 L8,4 L0,8 z"/></marker>
+</defs>
+<text class="ey" x="20" y="22">ONE WRITER PER FILE</text>
+<g class="bx-new"><rect x="20" y="36" width="170" height="40" rx="8"/></g><text class="t" x="105" y="60" text-anchor="middle" style="font-size:12.5px">/fusion</text>
+<path class="ar" d="M191,56 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="36" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="53" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">planning/fusion/&lt;date&gt;-&lt;slug&gt;.html</text>
+<text class="st" x="254" y="68">one page per plan or review</text>
+<g class="bx-exists"><rect x="20" y="88" width="170" height="40" rx="8"/></g><text class="t" x="105" y="112" text-anchor="middle" style="font-size:12.5px">/deconstruct</text>
+<path class="ar" d="M191,108 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="88" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="105" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">planning/spec-map.md</text>
+<text class="st" x="254" y="120">the planned specs, one row each</text>
+<g class="bx-exists"><rect x="20" y="140" width="170" height="40" rx="8"/></g><text class="t" x="105" y="164" text-anchor="middle" style="font-size:12.5px">/adr-spec</text>
+<path class="ar" d="M191,160 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="140" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="157" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">adr/NNNN-&lt;slug&gt;.md · specs/&lt;id&gt;/spec.md</text>
+<text class="st" x="254" y="172">spec.md written once, then frozen; amendments.md append-only</text>
+<g class="bx-exists"><rect x="20" y="192" width="170" height="40" rx="8"/></g><text class="t" x="105" y="216" text-anchor="middle" style="font-size:12.5px">domain-modeling</text>
+<path class="ar" d="M191,212 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="192" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="209" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">the glossary, at glossary_path</text>
+<text class="st" x="254" y="224">each term written down as it is settled</text>
+<g class="bx-exists"><rect x="20" y="244" width="170" height="40" rx="8"/></g><text class="t" x="105" y="268" text-anchor="middle" style="font-size:12.5px">/tickets</text>
+<path class="ar" d="M191,264 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="244" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="261" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">tickets/&lt;id&gt;/NN-&lt;slug&gt;.md</text>
+<text class="st" x="254" y="276">one file per ticket, each with its check</text>
+<g class="bx-exists"><rect x="20" y="296" width="170" height="40" rx="8"/></g><text class="t" x="105" y="320" text-anchor="middle" style="font-size:12.5px">/implement</text>
+<path class="ar" d="M191,316 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="296" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="313" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">a ticket's claim and Outcome · specs/&lt;id&gt;/acceptance.md</text>
+<text class="st" x="254" y="328">the ticket's second writer, one phase later; acceptance.md once, at the spec's close</text>
+<g class="bx-exists"><rect x="20" y="348" width="170" height="40" rx="8"/></g><text class="t" x="105" y="372" text-anchor="middle" style="font-size:12.5px">/end-session</text>
+<path class="ar" d="M191,368 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="348" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="365" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">diaries/&lt;you&gt;-diary.md · agent/state/&lt;you&gt;.md</text>
+<text class="st" x="254" y="380">your own files only</text>
+<g class="bx-exists"><rect x="20" y="400" width="170" height="40" rx="8"/></g><text class="t" x="105" y="424" text-anchor="middle" style="font-size:12.5px">/sync-progress</text>
+<path class="ar" d="M191,420 H238" marker-end="url(#ah)"/>
+<g class="bx-exists"><rect x="240" y="400" width="640" height="40" rx="8"/></g>
+<text class="t" x="254" y="417" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">STATE.md · the progress log · the roadmap</text>
+<text class="st" x="254" y="432">the lead only</text>
+<g class="bx-new"><rect x="20" y="458" width="860" height="40" rx="8"/></g>
+<text class="t" x="34" y="475" style="font-size:12px">tools/ticket_status.py writes nothing</text>
+<text class="st" x="34" y="490">It derives what is done by running each ticket's own check, and fails when a closed ticket's check fails.</text>
+<text class="st" x="20" y="522">All paths come from the project profile. No two sessions write the same file; a ticket's claim stops two people taking the same work.</text>
+</svg>
