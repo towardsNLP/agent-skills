@@ -90,7 +90,7 @@ planning/
   diaries/  agent/  templates/  notes/
 ```
 
-`spec.md` has two commits: created, approved. Approved changes go in `amendments.md`; compliance at
+`spec.md` is revised only while it is a draft, and frozen once approved. Approved changes go in `amendments.md`; compliance at
 close goes in `acceptance.md`. This is structural, not a convention. It keeps one writer per file
 and prevents amendments from interleaving into a blueprint they are not allowed to open.
 
@@ -187,7 +187,7 @@ GitHub Actions. Package it with pip at the third adopter, not before.
 | `/fusion` | whatever the plan touches: code, plan, roadmap, documents; for a review, also the spec, its amendments, tickets, `acceptance.md` and the code | one fusion page | specs, ADRs, the spec map, the glossary |
 | `/deconstruct` | PLAN, roadmap, glossary, code, a finished project fusion page | `spec-map.md` | specs, ADRs |
 | `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary, a finished fusion page (a component page, or a review page) | approved ADRs, then `spec.md` or an append to `amendments.md` | tickets, roadmap status |
-| `/tickets` | one effective agreement + the contracts it cites, and a finished review page for that spec | `tickets/<spec-id>/NN-*.md` | **the spec and amendments** |
+| `/tickets` | one effective agreement + the contracts it cites, and, when one exists, a finished review page for that spec | `tickets/<spec-id>/NN-*.md` | **the spec and amendments** |
 | `/implement` | one ticket + its effective agreement + named contracts | work artifacts, the ticket's Outcome, `acceptance.md` at spec close | spec, amendments, other tickets |
 
 `/deconstruct` requires the glossary and flags missing vocabulary but never authors it — that is

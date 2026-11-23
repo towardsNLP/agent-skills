@@ -313,8 +313,10 @@ still stand. A ruling they change reopens the page as a new round, which is poss
 
 ## Hard rules
 
-- **The user rules every fork**; in a review, the spec's owner does. Your recommendation is a pre-selected default they can change in
-  one click, and the gathered answers show which defaults they kept and which they changed. A
+- **The user rules every fork**; in a review, the spec's owner does. Your recommendation is a
+  pre-selected default they can change in one click, except on a fork that grants a permission,
+  which starts unanswered; the gathered answers show which defaults they kept and which they
+  changed. A
   summary with no fork clicked is confirmed in chat before it becomes rulings.
 - **Facts are yours; decisions are theirs.**
 - **Write only the page.** Specs, ADRs, glossary terms and spec-map rows are proposed on it and

@@ -15,7 +15,8 @@ optional research or knowledge paths used by this ticket's work kind.
 ## Step 1 — Claim it
 
 Read the ticket. If `Claimed by` names someone else, stop and say so — that is what the field is
-for. Otherwise set it to your name and branch, per `branch_convention`, and commit that line
+for. If the spec's `amendments.md` names a successor, stop too: the spec is superseded, and its work
+belongs to the successor's tickets. Otherwise set it to your name and branch, per `branch_convention`, and commit that line
 before writing any code. **A state file records where you are; only a claim stops two people
 taking the same work.**
 
