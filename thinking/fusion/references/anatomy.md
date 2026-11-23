@@ -19,7 +19,7 @@ point, after the whole, the frame, the alternatives and the edge of your view.
 | `trajectory` | Trajectory | highest | before, after and later; what it unlocks and rules out; its place on the roadmap | "do Y first" |
 | `frame` | Frame | middle | the cut you chose and why, and at least one rival frame with what the plan becomes under it | a reframe, the most valuable answer |
 | `shape` | Shape | low | parts, inputs and outputs, the flow, and the seam where it is verified | "this part is really two" |
-| `precedents` | Precedents | high | similar situations in the repo and on the web: each with its source, date and what it suggests for this plan | "we tried that in X, and it failed because …" |
+| `precedents` | Precedents | high | grouped by layer (lineage, the field now, foundations), each with its source, date and what it suggests for this plan; each layer's count and what it searched, the newest source's date, what was not searched, how many the agent's own list did not hold, and which checks ran ([`research.md`](research.md)) | "we tried that in X, and it failed because …" |
 | `alternatives` | Alternatives | high | two to four genuinely different shapes, the smallest version and not building it, each with a cost and a gain | bring back one you rejected |
 | `edge` | Where my view ends | middle | the facts only the user holds: history, people, commitments, intent | the facts only they hold |
 | `assumptions` | Assumptions | low | numbered, each with what breaks if it is wrong and how to check it | "A3 is false" |
@@ -57,7 +57,7 @@ a distinction the project already draws, such as where a model decides and where
 | **At stake** | the moment in a concrete case where the options produce different outcomes; what that changes in the spec, the ADRs and the tickets; the cost to reverse |
 | **Options** | lettered (a), (b), (c), each concrete enough to picture |
 | **Needs you** | what the user holds that makes this theirs: history, people, intent, taste |
-| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind; the summary marks whether the user kept or changed it |
+| **Provisional recommendation** | the recommended option pre-selected in the answer form; the reasoning folded under "Show my provisional recommendation", with what would change your mind; the summary marks whether the user kept or changed it, and says so when no fork was clicked; a fork that grants a permission starts unanswered instead, and is marked chosen once answered |
 | **Ruling** | open, or the user's answer with its round and reason |
 
 "What would change my mind" is a lever: a user who knows that fact can move the recommendation
@@ -68,5 +68,17 @@ with it. A question whose "needs you" field stays empty is a default, not a fork
 A revision moves the picture itself: the figure and the section a contribution touches. The
 **since you last read** box and the contribution log point at what moved, so a re-read costs
 minutes. A ruled fork's card stays on the page, read-only, with its ruling and round; the answer
-form carries only open questions, and it closes when the page is finished. When the host keeps every file it shows, write each round to its own copy (`-r1`,
-`-r2`); the highest is current. The page committed at the finish is one file without the suffix, and that file is the one a later session reads.
+form carries only open questions, and it closes when the page is finished.
+
+When the host keeps every file it shows, write each round to its own copy (`-r1`, `-r2`) for
+viewing; the highest is current. Round copies are working files and are never committed. The page
+committed at the finish is one file per plan in `fusion_dir`, without the suffix, and it is the
+file a later session reads: its read-only fork cards, **since you last read** and contribution log
+are the round history. A round that must be kept is committed to that same path, so git history
+holds it, never as a separate file.
+
+Each round is checked before it is shown, in proportion to what changed (SKILL.md step 4): a full
+teach-back when the frame, a figure, the scale, a fork or a default changed, and a focused check
+of the changed parts when the round only records rulings or fixes wording. The research is
+checked on a first draft; after that, a new search and the gap critic run only when a round brings
+a subject or a fork the page's precedents do not cover, or a source the user named.

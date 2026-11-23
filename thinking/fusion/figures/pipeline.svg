@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 290" role="img" aria-labelledby="t">
+<title id="t">Where /fusion sits in the spec-driven pipeline, with its review scale</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="900" height="290" rx="10"/>
+<defs>
+<marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahp" d="M0,0 L8,4 L0,8 z"/></marker>
+<marker id="ahn" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahn" d="M0,0 L8,4 L0,8 z"/></marker>
+</defs>
+<path class="brk" d="M170,58 V52 H580 V58"/>
+<text class="ann" x="375" y="44" text-anchor="middle">grilling: one session · a finished page: resumable in a fresh one</text>
+<g class="bx-new"><rect x="20" y="50" width="120" height="36" rx="8"/></g><text class="t" x="80" y="66" text-anchor="middle" style="font-size:12px">/fusion</text><text class="st" x="80" y="81" text-anchor="middle">project scale</text>
+<path class="ar-new" d="M80,87 V97" marker-end="url(#ahn)"/>
+<g class="bx-exists"><rect x="20" y="100" width="120" height="44" rx="8"/></g><text class="t" x="80" y="120" text-anchor="middle" style="font-size:13px">/deconstruct</text><text class="st" x="80" y="135" text-anchor="middle">the spec map</text>
+<g class="bx-exists"><rect x="170" y="64" width="120" height="44" rx="8"/></g><text class="t" x="230" y="84" text-anchor="middle" style="font-size:13px">grilling</text><text class="st" x="230" y="99" text-anchor="middle">question rounds</text>
+<g class="bx-new"><rect x="170" y="136" width="120" height="44" rx="8"/></g><text class="t" x="230" y="156" text-anchor="middle" style="font-size:13px">/fusion</text><text class="st" x="230" y="171" text-anchor="middle">component scale</text>
+<path class="ar" d="M141,122 C156,122 154,86 167,86" marker-end="url(#ah)"/>
+<path class="ar-new" d="M141,122 C156,122 154,158 167,158" marker-end="url(#ahn)"/>
+<g class="bx-exists"><rect x="320" y="100" width="120" height="44" rx="8"/></g><text class="t" x="380" y="120" text-anchor="middle" style="font-size:13px">/adr-spec</text><text class="st" x="380" y="135" text-anchor="middle">ADRs, then the spec</text>
+<path class="ar" d="M291,86 C306,86 304,115 317,115" marker-end="url(#ah)"/>
+<path class="ar-new" d="M291,158 C306,158 304,129 317,129" marker-end="url(#ahn)"/>
+<path class="ar-new" d="M206,135 V112" marker-end="url(#ahn)"/>
+<text class="st" x="214" y="127" style="fill:var(--fz-new)">small forks</text>
+<g class="bx-exists"><rect x="470" y="100" width="110" height="44" rx="8"/></g><text class="t" x="525" y="120" text-anchor="middle" style="font-size:13px">/tickets</text><text class="st" x="525" y="135" text-anchor="middle">cut and sized</text>
+<g class="bx-exists"><rect x="610" y="100" width="120" height="44" rx="8"/></g><text class="t" x="670" y="120" text-anchor="middle" style="font-size:13px">/implement</text><text class="st" x="670" y="135" text-anchor="middle">one per session</text>
+<g class="bx-exists"><rect x="760" y="100" width="120" height="44" rx="8"/></g><text class="t" x="820" y="120" text-anchor="middle" style="font-size:13px">code review</text><text class="st" x="820" y="135" text-anchor="middle">then merge</text>
+<path class="ar" d="M441,122 H466" marker-end="url(#ah)"/>
+<path class="ar" d="M581,122 H606" marker-end="url(#ah)"/>
+<path class="ar" d="M731,122 H756" marker-end="url(#ah)"/>
+<path class="ar-new" d="M230,181 V196" marker-end="url(#ahn)"/>
+<path class="doc" d="M200,200 H250 L262,212 V250 H200 Z"/><path class="doc" d="M250,200 V212 H262"/>
+<text class="st" x="231" y="230" text-anchor="middle" style="fill:var(--fz-fg)">the page</text>
+<path class="ar-new" d="M264,224 C320,224 360,190 372,148" marker-end="url(#ahn)"/>
+<text class="ann" x="231" y="266" text-anchor="middle">committed, and cited</text>
+<text class="ann" x="231" y="279" text-anchor="middle">in the spec's Anchors</text>
+<g class="bx-new"><rect x="420" y="236" width="460" height="40" rx="8"/></g>
+<text class="t" x="650" y="252" text-anchor="middle" style="font-size:12px">/fusion review</text>
+<text class="st" x="650" y="267" text-anchor="middle">reads the spec at any stage; hands rulings back as an amendment, tickets, or a new plan</text>
+<path class="ar-new" d="M432,234 V148" marker-end="url(#ahn)" style="stroke-width:1.1"/>
+<path class="ar-new" d="M525,234 V148" marker-end="url(#ahn)" style="stroke-width:1.1"/>
+<path class="ar-new" d="M670,234 V148" marker-end="url(#ahn)" style="stroke-width:1.1"/>
+<path class="ar-new" d="M820,234 V148" marker-end="url(#ahn)" style="stroke-width:1.1"/>
+</svg>

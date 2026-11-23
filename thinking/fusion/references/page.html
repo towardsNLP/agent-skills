@@ -119,6 +119,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   .answers .secondary { background: var(--fz-card); color: var(--fz-fg); }
   .answers #fz-summary { min-height: 180px; font-family: var(--fz-mono); font-size: .8rem; }
   .fz-status { font-size: .82rem; color: var(--fz-new); margin-top: 6px; min-height: 1.2em; }
+  .small { font-size: .84rem; color: var(--fz-muted); }
 </style>
 </head>
 <body>
@@ -129,7 +130,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   <h1>{Title: the plan in a few words}</h1>
   <p class="lede" id="thesis">{One sentence: what changes when this plan is carried out.}</p>
   <div class="meta">
-    <span>scale: {project | first component | component}, because {one line}</span>
+    <span>scale: {project | first component | component | review}, because {one line}</span>
     <span>round {n} · {open | finished YYYY-MM-DD}</span>
     <span>facts checked against {commit, or dated documents}</span>
     <span>about {n} minutes</span>
@@ -210,7 +211,15 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
 
 <section class="s" id="precedents">
   <div class="s-head"><span class="s-num">6</span><h2>Precedents</h2></div>
-  <ul class="prose"><li><strong>{situation}</strong> — {where: path or link, date}. {What it suggests for this plan.}</li></ul>
+  <p class="prose small">{n} precedents · newest {date} · {k} not on my own list beforehand · not searched or not found: {what, and why, or "nothing"} · checks: {second reader, gap critic, or self-checks}</p>
+  <h3>Lineage ({n})</h3>
+  <p class="prose small">Searched: {the provenance files, pinned upstreams and earlier pages checked}</p>
+  <ul class="prose"><li><strong>{situation}</strong> — {where: path or link pinned to a commit, exact date}. {What it suggests for this plan.}</li></ul>
+  <h3>The field now ({n})</h3>
+  <p class="prose small">Searched: {kinds of source and how many of each: documentation, write-ups, talks, repositories, preprints, studies}</p>
+  <ul class="prose"><li><strong>{situation}</strong> — {where, exact date, credibility}. {What it suggests for this plan.}</li></ul>
+  <h3>Foundations ({n})</h3>
+  <ul class="prose"><li><strong>{situation}</strong> — {where, date}. {What it suggests for this plan.}</li></ul>
 </section>
 
 <section class="s" id="alternatives">
@@ -283,8 +292,8 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
 <section class="s" id="answers">
   <div class="s-head"><span class="s-num">13</span><h2>Your answers</h2></div>
   <div class="answers">
-    <p>Every fork starts on my recommendation; change any you disagree with. The summary marks each
-    fork as kept or changed, and lists only the defaults and assumptions you changed, with every note.</p>
+    <p>Each fork starts on my recommendation, except one that grants a permission, which starts unanswered; change any you disagree with. The summary marks each
+    fork as kept, changed or chosen, and lists only the defaults and assumptions you changed, with every note.</p>
     <label>Your name, if you are not the person this page was drawn for
       <input type="text" id="fz-responder" autocomplete="off"></label>
     <label>Anything that is not on the page: a reframe, a missing part, a better idea
@@ -301,7 +310,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   <ul class="prose">
     <li><strong>Round 1</strong>: drawn from {sources}. Teach-back: {what it caught, or "skipped: why"}.</li>
   </ul>
-  <p class="prose">At the finish: <em>what did you contribute that I had not anticipated, and where can you see its effect on the plan?</em> {Your answer.}</p>
+  <p class="prose">At the finish: what you contributed that I had not anticipated, and where it moved the plan, written from this log. {Each contribution, its round and its anchor.}</p>
 </section>
 
 <section class="s" id="anchors" style="border-bottom:0">
@@ -316,6 +325,8 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   // One key per page and round, so a new round starts clean and an old draft is never mixed in.
   var KEY = "fusion:" + document.title + ":" + ((document.querySelector(".eyebrow") || {}).textContent || "");
   var storageOK = true;
+  // Forks clicked this round. When none was, the summary says so, and the agent asks before recording rulings.
+  var touched = {};
   function status(msg) { document.getElementById("fz-status").textContent = msg; }
   function blocks() { return Array.prototype.slice.call(document.querySelectorAll("[data-q]")); }
   function choice(b) { var c = b.querySelector("input[type=radio]:checked"); return c ? c : null; }
@@ -323,7 +334,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   function note(b) { var n = b.querySelector("[data-note]"); return n ? n.value.trim() : ""; }
 
   function state() {
-    var s = { responder: document.getElementById("fz-responder").value, free: document.getElementById("fz-free").value, q: {} };
+    var s = { responder: document.getElementById("fz-responder").value, free: document.getElementById("fz-free").value, q: {}, touched: touched };
     blocks().forEach(function (b) { var c = choice(b); s.q[b.dataset.q] = { v: c ? c.value : "", n: note(b) }; });
     return s;
   }
@@ -339,6 +350,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     if (!s || typeof s !== "object" || !s.q || typeof s.q !== "object") return;
     document.getElementById("fz-responder").value = s.responder || "";
     document.getElementById("fz-free").value = s.free || "";
+    if (s.touched && typeof s.touched === "object") touched = s.touched;
     blocks().forEach(function (b) {
       var a = s.q[b.dataset.q]; if (!a) return;
       Array.prototype.forEach.call(b.querySelectorAll("input[type=radio]"), function (x) { if (x.value === a.v) x.checked = true; });
@@ -352,7 +364,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     var who = document.getElementById("fz-responder").value.trim();
     if (who) lines.push("Responder: " + who);
     lines.push("");
-    var kept = 0, unanswered = 0;
+    var kept = 0, unanswered = 0, forks = 0, clicked = 0;
     blocks().forEach(function (b) {
       var id = b.dataset.q, kind = b.dataset.kind, label = b.dataset.label || "";
       var c = choice(b), r = recommended(b), n = note(b);
@@ -363,6 +375,11 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
       }
       if (!c) { unanswered++; if (n) lines.push(id + " " + label + ": unanswered | " + n); return; }
       if (kind === "fork") {
+        // Any fork answered counts as a click: one with no recommendation can only be answered by
+        // hand, and a choice that differs from the recommendation was made by someone, even in a
+        // draft saved before clicks were tracked.
+        if (r) forks++;
+        if (touched[id] || changed || !r) clicked++;
         var verdict = !r ? "chosen (no recommendation)" : changed ? "CHANGED from (" + r.value + ")" : "kept the recommendation";
         lines.push(id + " " + label + ": (" + c.value + ") " + verdict + (n ? " | " + n : ""));
         if (r && !changed) kept++;
@@ -374,6 +391,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     if (free) { lines.push(""); lines.push("Not on the page: " + free); }
     lines.push("");
     lines.push("Kept as recommended: " + kept + " · Unanswered: " + unanswered);
+    if (forks && !clicked) lines.splice(2, 0, "No fork was clicked: each one with a recommendation is still on it.");
     var text = lines.join("\n");
     document.getElementById("fz-summary").value = text;
     return text;
@@ -394,7 +412,16 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   // A finished page closes its form; without it there is nothing to restore or gather.
   if (!document.getElementById("fz-summary")) return;
   try { restore(); } catch (e) { status("Your saved draft could not be restored; answers start fresh."); }
-  document.addEventListener("change", save);
+  // A click on the radio already selected fires no change event, and a keyboard choice fires no
+  // click, so both mark a fork as touched.
+  function touch(e) {
+    var t = e.target, b = t && t.type === "radio" && t.closest ? t.closest("[data-q]") : null;
+    if (!b || b.dataset.kind !== "fork") return false;
+    touched[b.dataset.q] = true;
+    return true;
+  }
+  document.addEventListener("click", function (e) { if (touch(e)) save(); });
+  document.addEventListener("change", function (e) { touch(e); save(); });
   document.addEventListener("input", save);
   document.getElementById("fz-gather").addEventListener("click", function () { gather(); status("Answers gathered below. Review them, then copy."); });
   document.getElementById("fz-copy").addEventListener("click", copy);

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 230" role="img" aria-labelledby="t">
+<title id="t">The steps of one session: alone, then rounds together, then the hand-off</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="900" height="230" rx="10"/>
+<defs>
+        <marker id="ah3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahn" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <path class="brk" d="M10,56 V50 H442 V56"/><text class="ann" x="226" y="42" text-anchor="middle">the agent, alone</text>
+      <path class="brk" d="M458,56 V50 H666 V56"/><text class="ann" x="562" y="42" text-anchor="middle">together</text>
+      <path class="brk" d="M682,56 V50 H890 V56"/><text class="ann" x="786" y="42" text-anchor="middle">the pipeline</text>
+      <g class="bx-new"><rect x="10" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="58" y="94" text-anchor="middle" style="font-size:12.5px">Read broadly</text><text class="st" x="58" y="111" text-anchor="middle">facts, precedents</text>
+      <g class="bx-new"><rect x="122" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="170" y="94" text-anchor="middle" style="font-size:12.5px">Seven lenses</text><text class="st" x="170" y="111" text-anchor="middle">system to failure</text>
+      <g class="bx-new"><rect x="234" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="282" y="94" text-anchor="middle" style="font-size:12.5px">Draw the page</text><text class="st" x="282" y="111" text-anchor="middle">from the template</text>
+      <g class="bx-new"><rect x="346" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="394" y="94" text-anchor="middle" style="font-size:12.5px">Teach-back</text><text class="st" x="394" y="111" text-anchor="middle">full or focused</text>
+      <g class="bx-new"><rect x="458" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="506" y="94" text-anchor="middle" style="font-size:12.5px">Show you</text><text class="st" x="506" y="111" text-anchor="middle">inline or a file</text>
+      <g class="bx-new"><rect x="570" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="618" y="94" text-anchor="middle" style="font-size:12.5px">You react</text><text class="st" x="618" y="111" text-anchor="middle">by ID, or freely</text>
+      <g class="bx-new"><rect x="682" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="730" y="94" text-anchor="middle" style="font-size:12.5px">Hand off</text><text class="st" x="730" y="111" text-anchor="middle">to the next skill</text>
+      <g class="bx-exists"><rect x="794" y="70" width="96" height="58" rx="8"/></g>
+      <text class="t" x="842" y="94" text-anchor="middle" style="font-size:12.5px">/adr-spec</text><text class="st" x="842" y="111" text-anchor="middle">or /deconstruct</text>
+      <path class="ar-new" d="M107,99 H119" marker-end="url(#ah3)"/>
+      <path class="ar-new" d="M219,99 H231" marker-end="url(#ah3)"/>
+      <path class="ar-new" d="M331,99 H343" marker-end="url(#ah3)"/>
+      <path class="ar-new" d="M443,99 H455" marker-end="url(#ah3)"/>
+      <path class="ar-new" d="M555,99 H567" marker-end="url(#ah3)"/>
+      <path class="ar-new" d="M667,99 H679" marker-end="url(#ah3)"/>
+      <path class="ar-new" d="M779,99 H791" marker-end="url(#ah3)"/>
+      <text class="ann" x="673" y="146" text-anchor="middle" style="fill:var(--fz-new)">finished</text>
+      <path class="ar-new" d="M618,130 C618,200 394,200 394,133" marker-end="url(#ah3)"/>
+      <text class="ann" x="506" y="218" text-anchor="middle">not yet: revise, mark what changed, check again</text>
+</svg>

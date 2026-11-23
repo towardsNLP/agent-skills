@@ -6,7 +6,7 @@ the ledger. Section jobs: anatomy.md. What each holds at each scale: scales.md.
 
 # <Title: the plan in a few words>
 
-**Scale:** <project | first component | component>, because <one line> ·
+**Scale:** <project | first component | component | review>, because <one line> ·
 **Round:** <n> · **Status:** <open | finished YYYY-MM-DD> ·
 **Facts checked against:** <commit, or dated documents> · **Reading time:** <minutes>
 
@@ -56,7 +56,25 @@ claim about what exists carries an anchor.>
 
 ## Precedents
 
-- **<situation>** — <where: path or link, date>. <What it suggests for this plan.>
+<n> precedents · newest <date> · <k> not on my own list beforehand · not searched or not found:
+<what, and why, or "nothing"> · checks: <second reader, gap critic, or self-checks>
+
+### Lineage (<n>)
+
+Searched: <the provenance files, pinned upstreams and earlier pages checked>
+
+- **<situation>** — <where: path or link pinned to a commit, exact date>. <What it suggests.>
+
+### The field now (<n>)
+
+Searched: <kinds of source and how many of each: documentation, write-ups, talks, repositories,
+preprints, studies>
+
+- **<situation>** — <where, exact date, credibility>. <What it suggests.>
+
+### Foundations (<n>)
+
+- **<situation>** — <where, date>. <What it suggests.>
 
 ## Alternatives
 
@@ -113,8 +131,8 @@ person the page was drawn for.
 
 - **Round 1** — drawn from <sources>. Teach-back: <what it caught, or "skipped: why">.
 
-At the finish: *what did you contribute that I had not anticipated, and where can you see its
-effect on the plan?* <The user's answer.>
+At the finish: what the user contributed that the agent had not anticipated, and where it moved
+the plan, written from this log. <Each contribution, its round and its anchor.>
 
 ## Anchors
 

@@ -30,7 +30,11 @@ The thinking is one of two things:
   read the page's ledger; compare its "facts checked against" with the current state and list every
   premise that changed; put the rulings to the user with those changes and ask whether they still
   stand. Write §3 and §5 after the answer. A ruling the user changes sends the page back to
-  `/fusion`.
+  `/fusion`. A finished **review page** for an existing spec counts the same way, for an amendment
+  or for revising a spec still in draft: its owner's rulings are the thinking, in place of the
+  scope boundary and proof a plan page shows, and its resumption check puts the rulings to the
+  spec's owner. When the component has both, the plan page holds the original intent and the review
+  page the change; write from the review page.
 
 Neither in hand means create the shell, fill §1 and §2 from what the conversation supports, leave
 the rest as placeholders, and say: *"§3 and §5 are unfilled. Run `/grill-me` or `/fusion` and
@@ -42,7 +46,17 @@ and fusion, and they do it better.
 Grep `spec_dir` for a spec covering the same subject, and `spec_map_path` for its planned row. A
 duplicate ID is refused by `check-contracts`; a duplicate *subject* under a fresh ID is
 not, and is the more expensive mistake. If one exists, stop and say so: supersede or extend is the
-user's call.
+user's call. A spec still in draft, created but not yet approved, that a finished review page asks
+to revise is not a duplicate: revise it in place, then take it to approval as usual.
+
+If the user chooses **supersede**, the new spec needs its own spec-map row first: send the user to
+`/deconstruct` to add it, then write the new spec under that ID, with the old spec in its Anchors.
+The old spec and its amendments are never edited. Superseding records lineage only: the status tool
+does not know a spec is superseded, so the old spec's open tickets stay on the board and can still
+be claimed. Say so, and ask the user what happens to them: built, or recut by `/tickets` with the
+work that depends on them.
+A supersession that a review ruled as a re-plan takes its thinking from the new fusion page, not
+from the review page.
 
 If the user chooses **extend**, enter amendment mode. Keep the existing ID and read `spec.md` plus
 all existing `amendments.md` entries. Confirm that the requested change affects scope, inputs and
@@ -150,7 +164,8 @@ the status command. Then:
 
 ## After approval
 
-**`spec.md` is immutable.** Two commits in its life: created, approved. A later approved change is
+**`spec.md` is immutable once approved.** While it is a draft it may be revised, as a review can
+ask; then it is approved and frozen. A later approved change is
 appended to `amendments.md` beside it. `/implement` writes `acceptance.md` at close. The split keeps
 one writer per file and prevents a dated amendment from being buried inside the blueprint or the
 final compliance record.
@@ -171,9 +186,9 @@ effective agreement: `spec.md` followed by amendments in date order.
   thought.
 - **Send design to a contract, an ADR, or nowhere.** Never let the spec absorb implementation.
 - **Never invent a phase or workstream ID.** Validate against `phase_vocabulary` and `spec_dir`.
-- **Never create a second spec with an existing ID or subject.** Extend or supersede only after the
-  user chooses.
+- **Never create a second spec with an existing ID or subject**, except a superseding spec the user
+  chose, under its own new ID. Extend or supersede only after the user chooses.
 - **Never write a ticket.** That is `/tickets`, and it runs next.
-- **Write scope is new `spec.md`, append-only `amendments.md`, and `decision_records`.**
+- **Write scope is a new or not-yet-approved `spec.md`, append-only `amendments.md`, and `decision_records`.**
   `acceptance.md`, the spec map and the roadmap are read-only here. A contract edit is proposed,
   never made unasked.

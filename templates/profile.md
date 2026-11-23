@@ -71,8 +71,8 @@ placeholder value is worse than a missing one, because a skill will act on it.
 - **decision_records:** `planning/adr/` — `NNNN-slug.md`; the bar and format live in that
   directory's README
 - **fusion_dir:** `planning/fusion/` — fusion pages, one per plan, `<YYYY-MM-DD>-<slug>.html` or
-  `.md`. Written only by `/fusion`, frozen once the spec or spec map the page feeds is approved,
-  and committed with that PR
+  `.md`. Written only by `/fusion`, frozen once what it feeds is approved (a first-component page,
+  once its spec is), and committed with that PR
 - **sme_register_path:** the file a `check_type: sme` ticket points a row at, or omit
 - **ticket_status_command:** what derives doneness — e.g. `make ticket-status`. Exits non-zero
   when a ticket carries an Outcome but its check fails, when a check no longer resolves, when a

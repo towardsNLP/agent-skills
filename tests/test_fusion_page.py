@@ -93,12 +93,46 @@ def test_both_templates_keep_the_anatomy_section_order():
 
 
 def test_every_reader_of_a_finished_page_runs_the_same_resumption_check():
-    """Three skills describe the check; each must keep its three moves."""
-    for path in ("thinking/fusion/SKILL.md", "sdd/adr-spec/SKILL.md", "sdd/deconstruct/SKILL.md"):
+    """Four skills describe the check; each must keep its three moves."""
+    for path in (
+        "thinking/fusion/SKILL.md",
+        "sdd/adr-spec/SKILL.md",
+        "sdd/deconstruct/SKILL.md",
+        "sdd/tickets/SKILL.md",
+    ):
         text = " ".join((ROOT / path).read_text(encoding="utf-8").split())
         assert "resumption check" in text, path
         for move in ("ledger", '"facts checked against"', "premise that changed", "still stand"):
             assert move in text, (path, move)
+    adr_spec = " ".join((ROOT / "sdd/adr-spec/SKILL.md").read_text(encoding="utf-8").split())
+    assert "A finished **review page**" in adr_spec, "/adr-spec must accept a finished review page"
+
+
+def test_every_scale_in_the_skill_has_a_column_in_scales_md():
+    """Step 1 names the scales; scales.md says what each section holds at each of them."""
+    skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+    step_one = skill.split("## Step 1", 1)[1].split("## Step 2", 1)[0]
+    scales = re.findall(r"^\| \*\*([a-z ]+)\*\* \|", step_one, re.M)
+    assert scales == ["project", "first component", "component", "review"], scales
+    header = next(line for line in read("scales.md").splitlines() if line.startswith("| Section"))
+    columns = [cell.split(":")[0].strip().lower() for cell in header.strip("|").split("|")[1:]]
+    assert columns == scales, columns
+    for name in ("page.html", "page.md"):
+        masthead = re.search(r"[Ss]cale:\*?\*? ?[{<]([^}>]+)[}>]", read(name))
+        assert masthead, name
+        listed = [part.strip() for part in masthead.group(1).split("|")]
+        assert listed == scales, (name, listed)
+
+
+def test_the_closing_summary_is_written_from_the_log_not_asked():
+    """The log already holds what the user contributed; asking them to restate it is busywork."""
+    skill = " ".join((SKILL / "SKILL.md").read_text(encoding="utf-8").split())
+    assert "do not ask the user to restate it" in skill
+    assert "what did you contribute" not in skill.lower()
+    for name in ("page.html", "page.md"):
+        text = " ".join(read(name).split())
+        assert "written from this log" in text, name
+        assert "what did you contribute" not in text.lower(), name
 
 
 def test_every_html_question_preselects_exactly_one_recommendation():
@@ -130,20 +164,218 @@ def test_every_html_fork_block_names_its_kind_and_label():
         assert 'data-label="' in attrs, attrs
 
 
-def test_the_answer_script_is_valid_javascript():
-    """A syntax error silently disables the whole form, so check it where node exists."""
+def answer_script() -> str:
+    html = read("page.html")
+    return html[html.rindex("<script>") + len("<script>") : html.rindex("</script>")]
+
+
+def node_or_skip() -> str:
     import shutil
-    import subprocess
-    import tempfile
 
     node = shutil.which("node")
     if not node:
         import pytest
 
         pytest.skip("node is not installed")
-    html = read("page.html")
-    script = html[html.rindex("<script>") + len("<script>") : html.rindex("</script>")]
+    return node
+
+
+def test_the_answer_script_is_valid_javascript():
+    """A syntax error silently disables the whole form, so check it where node exists."""
+    import subprocess
+    import tempfile
+
+    node = node_or_skip()
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
-        handle.write(script)
+        handle.write(answer_script())
     result = subprocess.run([node, "--check", handle.name], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+# A stand-in for the few DOM calls the answer script makes: forks with a recommendation, one
+# default, the form's controls and a saved draft. Each case gathers the summary after its own
+# clicks.
+FORM_HARNESS = """
+function page(forks = 1, saved = null, open = 0) {
+  const els = {}, listeners = {};
+  for (const id of ["fz-responder", "fz-free", "fz-summary"]) els[id] = { value: "" };
+  els["fz-status"] = { textContent: "" };
+  for (const id of ["fz-gather", "fz-copy"]) els[id] = { addEventListener(t, f) { this.f = f; } };
+  function block(q, kind, values) {
+    const b = { dataset: { q, kind, label: q }, note: { value: "" } };
+    // Checking one radio unchecks the rest of its group, as a browser does.
+    b.radios = values.map((v, i) => {
+      const r = { type: "radio", value: v, rec: i === 0, on: i === 0, closest: () => b };
+      Object.defineProperty(r, "checked", { get: () => r.on,
+        set: (x) => { if (x) b.radios.forEach((o) => { o.on = false; }); r.on = x; } });
+      return r;
+    });
+    b.querySelector = (s) => s === "[data-note]" ? b.note
+      : s === "input[data-recommended]" ? b.radios.find((r) => r.rec)
+      : b.radios.find((r) => r.checked) || null;
+    b.querySelectorAll = () => b.radios;
+    return b;
+  }
+  const blocks = [];
+  for (let i = 1; i <= forks; i++) blocks.push(block("F" + i, "fork", ["a", "b"]));
+  // A fork with no recommendation starts unanswered, as one that grants a permission does.
+  for (let i = 1; i <= open; i++) {
+    const b = block("P" + i, "fork", ["a", "b"]);
+    b.radios.forEach((r) => { r.rec = false; r.checked = false; });
+    blocks.push(b);
+  }
+  blocks.push(block("D1", "default", ["keep", "veto"]));
+  globalThis.document = { title: "T", getElementById: (id) => els[id] || null,
+    querySelector: () => ({ textContent: "round 1" }), querySelectorAll: () => blocks,
+    addEventListener: (t, f) => { (listeners[t] = listeners[t] || []).push(f); } };
+  globalThis.localStorage = { getItem: () => saved && JSON.stringify(saved), setItem: () => {} };
+  globalThis.navigator = {};
+  globalThis.window = { isSecureContext: false };
+  new Function(SCRIPT)();
+  const fire = (t, target) => (listeners[t] || []).forEach((f) => f({ target }));
+  const gather = () => { els["fz-gather"].f(); return els["fz-summary"].value; };
+  return { els, blocks, fire, gather };
+}
+const out = {};
+let p = page();
+out.untouched = p.gather();
+p = page(); p.els["fz-free"].value = "a reframe"; out.freeTextOnly = p.gather();
+p = page(); p.fire("click", p.blocks[0].radios[0]); out.confirmed = p.gather();
+p = page(); p.blocks[0].radios[0].checked = false; p.blocks[0].radios[1].checked = true;
+p.fire("change", p.blocks[0].radios[1]); out.changedByKeyboard = p.gather();
+p = page(2); p.fire("click", p.blocks[1].radios[0]); out.oneOfTwoClicked = p.gather();
+p = page(1, { responder: "", free: "", q: { F1: { v: "b", n: "" } } });
+out.oldDraftChanged = p.gather();
+p = page(1, null, 1); p.blocks[1].radios[0].checked = true; p.fire("click", p.blocks[1].radios[0]);
+out.openForkAnswered = p.gather();
+p = page(1); p.fire("change", p.blocks[0].radios[0]); out.reconfirmedByKeyboard = p.gather();
+p = page(1, null, 1); p.blocks[1].radios[0].checked = true;
+out.openForkAnsweredSilently = p.gather();
+console.log(JSON.stringify(out));
+"""
+
+
+def test_the_summary_says_so_when_no_fork_was_clicked():
+    """An untouched form must not read as agreement; a click or a keyboard choice counts."""
+    import json
+    import subprocess
+
+    node = node_or_skip()
+    program = "const SCRIPT = " + json.dumps(answer_script()) + ";\n" + FORM_HARNESS
+    result = subprocess.run([node, "-e", program], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    out = json.loads(result.stdout)
+    warning = "No fork was clicked"
+    assert warning in out["untouched"], out["untouched"]
+    assert warning in out["freeTextOnly"] and "Not on the page: a reframe" in out["freeTextOnly"]
+    assert warning not in out["confirmed"] and "kept the recommendation" in out["confirmed"]
+    keyboard = out["changedByKeyboard"]
+    assert warning not in keyboard and "CHANGED from (a)" in keyboard
+    assert warning not in out["oneOfTwoClicked"], "the warning is for a form with no fork clicked"
+    old_draft = out["oldDraftChanged"]
+    assert warning not in old_draft and "CHANGED from (a)" in old_draft, old_draft
+    answered = out["openForkAnswered"]
+    assert warning not in answered and "chosen (no recommendation)" in answered, answered
+    # Each guard on its own: a keyboard re-confirmation of the recommendation changes nothing but
+    # the touch, and a fork with no recommendation can only have been answered by hand.
+    assert warning not in out["reconfirmedByKeyboard"], out["reconfirmedByKeyboard"]
+    assert warning not in out["openForkAnsweredSilently"], out["openForkAnsweredSilently"]
+
+
+def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():
+    """It feeds /deconstruct and then /adr-spec, so freezing at the map would strand the second."""
+    flat = {
+        path: " ".join((ROOT / path).read_text(encoding="utf-8").split())
+        for path in (
+            "thinking/fusion/SKILL.md",
+            "sdd/deconstruct/SKILL.md",
+            "docs/sdd-workflow.md",
+            "templates/profile.md",
+        )
+    }
+    assert "freezes only when its spec is approved" in flat["thinking/fusion/SKILL.md"]
+    assert "until the spec or spec map it feeds is approved" not in flat["thinking/fusion/SKILL.md"]
+    assert "cite the page's new commit" in flat["sdd/deconstruct/SKILL.md"]
+    assert "a first-component page, once its spec is" in flat["docs/sdd-workflow.md"]
+    assert "(a first-component page, once its spec is)" in flat["templates/profile.md"]
+
+
+FIGURES = SKILL / "figures"
+
+
+def test_every_figure_is_used_and_every_figure_link_resolves():
+    """The explainer and the figure library share one set of files; none may dangle."""
+    used = set()
+    for doc in (SKILL / "README.md", REFS / "figures.md"):
+        text = doc.read_text(encoding="utf-8")
+        for name in re.findall(r"figures/([\w-]+\.svg)", text):
+            assert (FIGURES / name).is_file(), (doc.name, name)
+            used.add(name)
+    present = {path.name for path in FIGURES.glob("*.svg")}
+    assert present == used, f"unused: {present - used}"
+    for alt in re.findall(r"!\[([^\]]*)\]\(figures/", (SKILL / "README.md").read_text("utf-8")):
+        assert alt.strip(), "every figure in the explainer needs alt text"
+
+
+def test_every_figure_stands_alone_in_either_theme():
+    """GitHub shows each file as an image, outside any page that could lend it colours."""
+    for path in FIGURES.glob("*.svg"):
+        svg = path.read_text(encoding="utf-8")
+        assert 'xmlns="http://www.w3.org/2000/svg"' in svg, path.name
+        assert "<title" in svg and 'class="bg"' in svg, path.name
+        assert "prefers-color-scheme: dark" in svg, path.name
+        for borrowed in ("var(--hz-", "light-dark(", "color-mix(", "var(--background"):
+            assert borrowed not in svg, (path.name, borrowed)
+        used = set(re.findall(r"var\((--fz-[a-z-]+)\)", svg))
+        defined = set(re.findall(r"(--fz-[a-z-]+):", svg))
+        assert used <= defined, (path.name, used - defined)
+
+
+def test_the_researcher_searches_in_layers_without_naming_its_priors():
+    """Briefs that list the agent's own candidates make helpers confirm instead of discover."""
+    research = " ".join(read("research.md").split())
+    for layer in ("**Lineage**", "**The field now**", "**Foundations**"):
+        assert layer in research, layer
+    for rule in (
+        "Seal your priors",
+        "Never a list of expected sources",
+        "Run the gap critic",
+        "At least a third of a page's web precedents",
+        "This layer always runs",
+        "searches practitioner venues",
+        "re-opened by a second reader",
+        "Every precedent on the page was opened in this research",
+        "Without helper agents",
+        "then go on to step 8",
+        "Without web access",
+        "never given a guessed one",
+    ):
+        assert rule in research, rule
+    skill = (SKILL / "SKILL.md").read_text("utf-8")
+    step_two = " ".join(skill.split("## Step 2", 1)[1].split("## Step 3")[0].split())
+    assert "Lineage first" in step_two
+    assert "never with the sources you already have in mind" in step_two
+
+
+def test_every_page_groups_its_precedents_by_layer_and_dates_them():
+    """A fresh session must be able to audit a page's research from its precedents section."""
+    for name in ("page.html", "page.md"):
+        section = read(name).split("Precedents", 1)[1].split("Alternatives", 1)[0]
+        positions = [section.find(layer) for layer in ("Lineage", "The field now", "Foundations")]
+        assert -1 not in positions and positions == sorted(positions), (name, positions)
+        assert section.count("Searched:") >= 2, name
+        for field in ("newest", "not on my own list beforehand", "not searched", "checks:"):
+            assert field in section, (name, field)
+        assert "pinned to a commit" in section and "exact date" in section, name
+    anatomy = read("anatomy.md")
+    for field in ("newest source's date", "what it searched", "which checks ran"):
+        assert field in anatomy, field
+
+
+def test_search_again_only_for_what_the_precedents_do_not_cover():
+    """A subject old to the repo can still be new to the page, as an explainer's was."""
+    readers = (SKILL / "SKILL.md", REFS / "anatomy.md", REFS / "research.md", SKILL / "README.md")
+    for path in readers:
+        text = " ".join(path.read_text("utf-8").split())
+        assert "new to the repo" not in text, path.name
+        assert "precedents do not cover" in text, path.name

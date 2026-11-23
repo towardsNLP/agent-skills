@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 318" role="img" aria-labelledby="t">
+<title id="t">Review frame, round 3: three records, two contexts, and the drift between them</title>
+<style>
+svg{--fz-fg:#17201f;--fz-card:#ffffff;--fz-muted:#5f6b6d;--fz-rule:#dfe4e3;--fz-exists:#5b6870;--fz-new:#0b6b66;--fz-changed:#97570a;--fz-out:#868c94;--fz-open:#a3352b;--fz-exists-fill:#f2f3f4;--fz-new-fill:#dfeceb;--fz-changed-fill:#f0e8dd}
+@media (prefers-color-scheme: dark){svg{--fz-fg:#e4eaea;--fz-card:#161c1f;--fz-muted:#98a5a7;--fz-rule:#2a3437;--fz-exists:#a3b1b8;--fz-new:#5ccfc5;--fz-changed:#e7aa58;--fz-out:#7a818b;--fz-open:#f08f80;--fz-exists-fill:#21282b;--fz-new-fill:#1f3335;--fz-changed-fill:#333027}}
+.bg{fill:var(--fz-card)}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;fill:var(--fz-fg)}
+.t{font-size:13px;font-weight:650}.st{font-size:10px;fill:var(--fz-muted)}.ann{font-size:10.5px;fill:var(--fz-muted)}
+.ey{font-size:10.5px;letter-spacing:.12em;fill:var(--fz-muted);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.halo{paint-order:stroke;stroke:var(--fz-card);stroke-width:5px;stroke-linejoin:round}
+.bx-exists rect,rect.bx-exists{fill:var(--fz-exists-fill);stroke:var(--fz-exists);stroke-width:1.3}
+.bx-new rect,rect.bx-new{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.7}
+.bx-changed rect,rect.bx-changed{fill:var(--fz-changed-fill);stroke:var(--fz-changed);stroke-width:1.7}
+.bx-later rect{fill:none;stroke:var(--fz-new);stroke-width:1.5;stroke-dasharray:3 3}
+.bx-out rect{fill:none;stroke:var(--fz-out);stroke-width:1.2;stroke-dasharray:6 4}
+.bx-open rect{fill:none;stroke:var(--fz-open);stroke-width:1.6}
+.ar{stroke:var(--fz-muted);stroke-width:1.4;fill:none}.ar-new{stroke:var(--fz-new);stroke-width:1.6;fill:none}
+.ahp{fill:var(--fz-muted)}.ahn{fill:var(--fz-new)}.brk{stroke:var(--fz-muted);stroke-width:1;fill:none}.dash{stroke-dasharray:5 4}
+.doc{fill:var(--fz-new-fill);stroke:var(--fz-new);stroke-width:1.5}
+.dot{fill:var(--fz-card);stroke:var(--fz-new);stroke-width:2.2}.dot.fk{stroke:var(--fz-open)}
+.gl{stroke:var(--fz-rule);stroke-width:1;stroke-dasharray:3 5}.region{fill:none;stroke:var(--fz-exists);stroke-width:1.2;stroke-dasharray:5 4}
+.wave{stroke:var(--fz-new);stroke-width:2.6;fill:none;stroke-linecap:round}
+</style>
+<rect class="bg" width="900" height="318" rx="10"/>
+<g class="bx-exists"><rect x="30" y="20" width="240" height="84" rx="8"/></g>
+      <text class="t" x="150" y="43" text-anchor="middle" style="font-size:12.5px">Intent</text>
+      <text class="st" x="150" y="61" text-anchor="middle">the fusion page's rulings, or the</text>
+      <text class="st" x="150" y="75" text-anchor="middle">spec's §1–§2, ADRs and spec-map row;</text>
+      <text class="st" x="150" y="89" text-anchor="middle">and what the review's caller says</text>
+      <g class="bx-exists"><rect x="330" y="20" width="240" height="84" rx="8"/></g>
+      <text class="t" x="450" y="43" text-anchor="middle" style="font-size:12.5px">Commitment</text>
+      <text class="st" x="450" y="61" text-anchor="middle">the spec, with amendments once</text>
+      <text class="st" x="450" y="75" text-anchor="middle">approved; the tickets, if cut</text>
+      <g class="bx-exists"><rect x="630" y="20" width="240" height="84" rx="8"/></g>
+      <text class="t" x="750" y="43" text-anchor="middle" style="font-size:12.5px">Built</text>
+      <text class="st" x="750" y="61" text-anchor="middle">the code and outcomes of closed</text>
+      <text class="st" x="750" y="75" text-anchor="middle">tickets: none, some or all</text>
+      <path class="ar" style="stroke:var(--fz-open)" d="M272,62 H328"/><path class="ar" style="stroke:var(--fz-open)" d="M572,62 H628"/>
+      <path class="ar" style="stroke:var(--fz-open)" d="M150,106 C150,162 750,162 750,106"/>
+      <text class="st" x="300" y="124" text-anchor="middle" style="fill:var(--fz-open)">spec drift</text>
+      <text class="st" x="600" y="124" text-anchor="middle" style="fill:var(--fz-open)">build drift</text>
+      <text class="st" x="450" y="172" text-anchor="middle" style="fill:var(--fz-open)">intent drift: did we get what we meant?</text>
+      <g class="bx-exists"><rect x="30" y="200" width="360" height="56" rx="8"/></g>
+      <text class="t" x="210" y="223" text-anchor="middle" style="font-size:12.5px">Context when planned</text>
+      <text class="st" x="210" y="241" text-anchor="middle">what the page or the spec was checked against</text>
+      <g class="bx-new"><rect x="510" y="200" width="360" height="56" rx="8"/></g>
+      <text class="t" x="690" y="223" text-anchor="middle" style="font-size:12.5px">Context today</text>
+      <text class="st" x="690" y="241" text-anchor="middle">the system, the roadmap and the components around it now</text>
+      <path class="ar" style="stroke:var(--fz-open)" d="M392,228 H508"/>
+      <text class="st" x="450" y="278" text-anchor="middle" style="fill:var(--fz-open)">context drift: has the situation the spec was planned in moved?</text>
+      <text class="st" x="450" y="306" text-anchor="middle">Coral: the gaps a review puts to whoever rules. Each finding: diverged · missing · unproven · a surprise · the context moved</text>
+</svg>

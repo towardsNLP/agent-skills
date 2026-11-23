@@ -33,7 +33,7 @@ decomposes along the wrong lines and every spec below it inherits the error.
 
 `plan_path`, `roadmap_path`, any contract or requirements document the profile names, and enough of
 the code to know what already exists. A finished project-scale fusion page, already checked in
-Step 1, comes first: its zoom-out, frame and component map are this step's starting point. A first-component page arrives here too, for
+Step 1, comes first: its zoom-out, frame and component map are this step's starting point. A first-component page arrives here too, after the same resumption check, for
 its one spec-map row: its kind and its parent. This is the one skill that reads broadly on purpose;
 everything downstream reads narrowly.
 
@@ -91,7 +91,9 @@ Iterate until approved. Write nothing before that.
 
 Write `spec_map_path` to the shape in
 [`references/spec-map-skeleton.md`](references/spec-map-skeleton.md). When a fusion page fed the
-map, name it in the map's opening lines.
+map, name it in the map's opening lines, at the commit the map approved. A first-component page
+stays open until its spec is approved: when a later round changes a ruling its row relied on,
+come back to that row, put it to the user, and cite the page's new commit.
 
 **Record what is planned. Never record what exists.** Which specs are written, which have tickets,
 which are done — all of that is computed by `ticket_status_command` from the filesystem. This split

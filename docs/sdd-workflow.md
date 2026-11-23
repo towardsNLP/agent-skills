@@ -45,6 +45,12 @@ Three consequences run through every decision below, and each one is this move a
   the alternatives, what the agent cannot see, and the forks, with the agent's recommendation
   pre-selected in an answer form, its reasoning folded, and every change marked. Grilling hands the user decisions; the page hands them the model those decisions belong
   to.
+- **`/fusion` also reviews a spec already written.** At any point after `/adr-spec` (drafted,
+  ticketed, part-built or built) a review page sets the spec's intent, its commitment and whatever
+  is built beside the context it was planned in and today's. The spec's owner rules on the
+  findings: an amendment or a draft's revision goes to `/adr-spec`, tickets to `/tickets`, and a
+  failed premise to a new fusion page. This is not the pipeline's `review`, which is a code
+  review of a change before it integrates.
 - **Grilling, `/adr-spec` and `/tickets` run in one session.** The interview is the thought that
   makes the spec trustworthy, and the seams it settles are what makes a ticket sizeable. Splitting
   the session throws that context away. A finished fusion page is the exception: it holds the
@@ -56,7 +62,7 @@ Three consequences run through every decision below, and each one is this move a
 
 | Artifact | Written by | Lifetime | Path |
 |---|---|---|---|
-| Fusion page | `/fusion`, revised in rounds with the user | frozen once the spec or spec map it feeds is approved | `planning/fusion/<date>-<slug>.html` or `.md` |
+| Fusion page | `/fusion`, revised in rounds with the user | frozen once what it feeds is approved; a first-component page, once its spec is | `planning/fusion/<date>-<slug>.html` or `.md` |
 | Spec map | `/deconstruct`, after user approval | project | `planning/spec-map.md` |
 | ADR | `/adr-spec` proposes, human approves | forever | `planning/adr/NNNN-slug.md` |
 | Spec | `/adr-spec` | **immutable after approval** | `planning/specs/<spec-id>/spec.md` |
@@ -84,7 +90,7 @@ planning/
   diaries/  agent/  templates/  notes/
 ```
 
-`spec.md` has two commits: created, approved. Approved changes go in `amendments.md`; compliance at
+`spec.md` is revised only while it is a draft, and frozen once approved. Approved changes go in `amendments.md`; compliance at
 close goes in `acceptance.md`. This is structural, not a convention. It keeps one writer per file
 and prevents amendments from interleaving into a blueprint they are not allowed to open.
 
@@ -178,10 +184,10 @@ GitHub Actions. Package it with pip at the third adopter, not before.
 
 | Skill | Reads | Writes | Never touches |
 |---|---|---|---|
-| `/fusion` | whatever the plan touches: code, plan, roadmap, documents | one fusion page | specs, ADRs, the spec map, the glossary |
+| `/fusion` | whatever the plan touches: code, plan, roadmap, documents; for a review, also the spec, its amendments, tickets, `acceptance.md` and the code | one fusion page | specs, ADRs, the spec map, the glossary |
 | `/deconstruct` | PLAN, roadmap, glossary, code, a finished project fusion page | `spec-map.md` | specs, ADRs |
-| `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary, a finished component fusion page | approved ADRs, then `spec.md` or an append to `amendments.md` | tickets, roadmap status |
-| `/tickets` | one effective agreement + the contracts it cites | `tickets/<spec-id>/NN-*.md` | **the spec and amendments** |
+| `/adr-spec` | the spec-map row, contracts, existing ADRs, glossary, a finished fusion page (a component page, or a review page) | approved ADRs, then `spec.md` or an append to `amendments.md` | tickets, roadmap status |
+| `/tickets` | one effective agreement + the contracts it cites, and, when one exists, a finished review page for that spec | `tickets/<spec-id>/NN-*.md` | **the spec and amendments** |
 | `/implement` | one ticket + its effective agreement + named contracts | work artifacts, the ticket's Outcome, `acceptance.md` at spec close | spec, amendments, other tickets |
 
 `/deconstruct` requires the glossary and flags missing vocabulary but never authors it — that is
