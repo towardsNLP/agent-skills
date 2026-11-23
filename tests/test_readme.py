@@ -28,6 +28,14 @@ def test_every_printed_plugin_command_names_a_declared_skill():
     assert not unknown, f"the README prints commands no skill answers: {sorted(unknown)}"
 
 
+def test_every_printed_command_matches_its_skill_name():
+    """A host invokes a skill by the name in its SKILL.md; a folder name that differs fails."""
+    for name in set(re.findall(r"/sdd:([a-z][a-z-]*)", README)):
+        skill = next(ROOT.glob(f"*/{name}/SKILL.md"))
+        declared = re.search(r"^name:\s*(\S+)", skill.read_text(encoding="utf-8"), re.M)
+        assert declared and declared.group(1) == name, (name, declared and declared.group(1))
+
+
 def test_every_relative_link_and_image_resolves():
     targets = re.findall(r"\]\((?!https?://|#|mailto:)([^)#\s]+)", README)
     missing = [target for target in targets if not (ROOT / target).exists()]
@@ -45,6 +53,8 @@ def test_every_readme_figure_is_used_and_stands_alone():
         assert 'xmlns="http://www.w3.org/2000/svg"' in svg, path.name
         assert "<title" in svg and 'class="bg"' in svg, path.name
         assert "prefers-color-scheme: dark" in svg, path.name
+        for borrowed in ("var(--hz-", "light-dark(", "color-mix(", "var(--background"):
+            assert borrowed not in svg, (path.name, borrowed)
         used_vars = set(re.findall(r"var\((--fz-[a-z-]+)\)", svg))
         assert used_vars <= set(re.findall(r"(--fz-[a-z-]+):", svg)), path.name
 

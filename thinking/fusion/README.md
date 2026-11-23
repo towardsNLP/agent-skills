@@ -363,7 +363,7 @@ evidence under their names. The owner answers every finding, with a reason when 
 |---|---|
 | accept: the gap is real, and the spec stays as it is, with a reason and a condition for revisiting it | the owner, on the review page |
 | revise a spec still in draft, or amend an approved one | `/adr-spec` |
-| recut the open tickets, or add new ones (a revert is a ticket) | `/tickets` |
+| recut the open tickets no one has claimed, or add new ones (a revert is a ticket) | `/tickets` |
 | re-plan | a new fusion page |
 
 **When to re-plan.** A horizon does not move by itself when the system changes; it moves when
@@ -399,7 +399,7 @@ that no pile reaches pricing.*
 ## Running it
 
 `/fusion` ships in this repository's `sdd` plugin for Claude Code, and as a personal skill for
-Claude Code, Codex and other hosts through `bin/link.sh` (see the top-level README's Installing
+Claude Code, Codex and other hosts through `bin/link.sh` (see the top-level README's Install
 section). You type it; the agent never starts it on its own. Name what you want planned, as in
 `/fusion plan the export of reports to CSV`, or ask for a review, as in `/fusion review spec B.3`. It reads `planning/agent/profile.md` for the paths it
 needs: `fusion_dir` for where pages live (by default `planning/fusion/`), and the project's plan,

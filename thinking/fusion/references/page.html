@@ -119,6 +119,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
   .answers .secondary { background: var(--fz-card); color: var(--fz-fg); }
   .answers #fz-summary { min-height: 180px; font-family: var(--fz-mono); font-size: .8rem; }
   .fz-status { font-size: .82rem; color: var(--fz-new); margin-top: 6px; min-height: 1.2em; }
+  .small { font-size: .84rem; color: var(--fz-muted); }
 </style>
 </head>
 <body>
@@ -390,7 +391,7 @@ otherwise. Local colours use the --fz- prefix and never redefine a host variable
     if (free) { lines.push(""); lines.push("Not on the page: " + free); }
     lines.push("");
     lines.push("Kept as recommended: " + kept + " · Unanswered: " + unanswered);
-    if (forks && !clicked) lines.splice(2, 0, "No fork was clicked: every one is still on the recommendation.");
+    if (forks && !clicked) lines.splice(2, 0, "No fork was clicked: each one with a recommendation is still on it.");
     var text = lines.join("\n");
     document.getElementById("fz-summary").value = text;
     return text;

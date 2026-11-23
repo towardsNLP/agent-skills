@@ -267,9 +267,10 @@ twice. The SDD and session skills have no install path outside Claude Code yet.
 
 <details><summary>If a skill does not load, or behaves differently for a teammate</summary>
 
-A personal skill silently shadows a project skill of the same name. If you, or a teammate, keep a
-personal copy of `start-session` while the project uses the plugin's, you run different versions
-with no warning. The plugin's `/sdd:` prefix avoids the clash. The two install scopes, why the
+The plugin's skills are namespaced (`/sdd:`), so nothing shadows them. The trap is a copy left
+behind: a skill the project still commits in its own `.claude/skills` folder is silently shadowed
+by anyone's personal skill of the same name, so two people run different versions with no warning.
+After moving to the plugin, delete the project's old committed copies. The two install scopes, why the
 personal set is symlinked, and what each skill costs in context are explained in
 [`docs/install.md`](docs/install.md).
 

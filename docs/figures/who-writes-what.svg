@@ -41,7 +41,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-seri
 <path class="ar" d="M191,160 H238" marker-end="url(#ah)"/>
 <g class="bx-exists"><rect x="240" y="140" width="640" height="40" rx="8"/></g>
 <text class="t" x="254" y="157" style="font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace">adr/NNNN-&lt;slug&gt;.md · specs/&lt;id&gt;/spec.md</text>
-<text class="st" x="254" y="172">spec.md written once, then frozen; amendments.md append-only</text>
+<text class="st" x="254" y="172">spec.md frozen once approved; amendments.md append-only</text>
 <g class="bx-exists"><rect x="20" y="192" width="170" height="40" rx="8"/></g><text class="t" x="105" y="216" text-anchor="middle" style="font-size:12.5px">domain-modeling</text>
 <path class="ar" d="M191,212 H238" marker-end="url(#ah)"/>
 <g class="bx-exists"><rect x="240" y="192" width="640" height="40" rx="8"/></g>

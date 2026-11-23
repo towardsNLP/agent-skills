@@ -49,7 +49,7 @@ so none crowds out another.
    by a second reader, who quotes the passage that supports it. A claim that does not survive is
    dropped or stated with its caveat.
 7. **Run the gap critic** on a first draft, and on any later round that brings a subject or a fork
-   the page's precedents do not cover. Give a fresh reader, from another model family where the
+   the page's precedents do not cover, or a source the user named. Give a fresh reader, from another model family where the
    harness offers one, the plan's subject and the precedent table, but not your sealed list. It
    names what an expert in this field would expect to find there and does not, and which entries
    are weakest. Its gaps become queries: search them as in step 5 until a pass adds nothing new,

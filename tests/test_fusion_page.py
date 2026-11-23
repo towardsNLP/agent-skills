@@ -93,8 +93,13 @@ def test_both_templates_keep_the_anatomy_section_order():
 
 
 def test_every_reader_of_a_finished_page_runs_the_same_resumption_check():
-    """Three skills describe the check; each must keep its three moves."""
-    for path in ("thinking/fusion/SKILL.md", "sdd/adr-spec/SKILL.md", "sdd/deconstruct/SKILL.md"):
+    """Four skills describe the check; each must keep its three moves."""
+    for path in (
+        "thinking/fusion/SKILL.md",
+        "sdd/adr-spec/SKILL.md",
+        "sdd/deconstruct/SKILL.md",
+        "sdd/tickets/SKILL.md",
+    ):
         text = " ".join((ROOT / path).read_text(encoding="utf-8").split())
         assert "resumption check" in text, path
         for move in ("ledger", '"facts checked against"', "premise that changed", "still stand"):
@@ -243,6 +248,9 @@ p = page(1, { responder: "", free: "", q: { F1: { v: "b", n: "" } } });
 out.oldDraftChanged = p.gather();
 p = page(1, null, 1); p.blocks[1].radios[0].checked = true; p.fire("click", p.blocks[1].radios[0]);
 out.openForkAnswered = p.gather();
+p = page(1); p.fire("change", p.blocks[0].radios[0]); out.reconfirmedByKeyboard = p.gather();
+p = page(1, null, 1); p.blocks[1].radios[0].checked = true;
+out.openForkAnsweredSilently = p.gather();
 console.log(JSON.stringify(out));
 """
 
@@ -268,6 +276,10 @@ def test_the_summary_says_so_when_no_fork_was_clicked():
     assert warning not in old_draft and "CHANGED from (a)" in old_draft, old_draft
     answered = out["openForkAnswered"]
     assert warning not in answered and "chosen (no recommendation)" in answered, answered
+    # Each guard on its own: a keyboard re-confirmation of the recommendation changes nothing but
+    # the touch, and a fork with no recommendation can only have been answered by hand.
+    assert warning not in out["reconfirmedByKeyboard"], out["reconfirmedByKeyboard"]
+    assert warning not in out["openForkAnsweredSilently"], out["openForkAnsweredSilently"]
 
 
 def test_a_first_component_page_freezes_with_its_spec_not_its_spec_map():

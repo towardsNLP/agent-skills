@@ -145,7 +145,9 @@ people for their feedback. **Gather my answers** writes a plain-text summary tha
 as *kept the recommendation* or *changed*, lists only changed defaults and assumptions and every
 note, and counts what is still unanswered; **Copy to clipboard** copies it for the user to paste
 back. When no fork was clicked, the summary opens by saying so: ask whether the recommendations
-stand before recording them as rulings. Answers autosave in the browser. The template carries all of this; a Markdown page is
+stand before recording them as rulings. A fork that grants a permission (to push, to merge, to
+publish something) starts unanswered, with your recommendation in its fold, so an untouched form
+can never grant it. Answers autosave in the browser. The template carries all of this; a Markdown page is
 answered by ID in the reply instead.
 
 Done when every fork has every card field, every figure uses the page's key, and the ledger
@@ -279,7 +281,7 @@ a question at the edge of your view.
 |---|---|
 | accept, with a reason and a condition for revisiting it | the owner, on the review page |
 | revise a spec still in draft, or amend an approved one | `/adr-spec` |
-| recut the open tickets, never one that carries an Outcome, or add new ones (a revert is a ticket) | `/tickets` |
+| recut the open tickets, never one that carries an Outcome or a claim, or add new ones (a revert is a ticket) | `/tickets` |
 | re-plan | a new fusion page |
 
 **Re-plan** when a premise the spec rests on no longer holds: the change would move work across its
@@ -303,8 +305,8 @@ approved.
 
 ## Resuming a finished page
 
-A finished page is built to be picked up in a fresh session, by `/adr-spec`, `/deconstruct` or a
-later `/fusion`. That reader runs the **resumption check**: read the ledger; compare the page's
+A finished page is built to be picked up in a fresh session, by `/adr-spec`, `/deconstruct`,
+`/tickets` (a review page's ticket rulings) or a later `/fusion`. That reader runs the **resumption check**: read the ledger; compare the page's
 "facts checked against" with the current state and list every premise that changed; put the
 rulings to the user (in a review, to the spec's owner) with those changes and ask whether they
 still stand. A ruling they change reopens the page as a new round, which is possible until the page is frozen (step 6).

@@ -15,7 +15,10 @@ Read `planning/agent/profile.md` for `spec_dir`, `spec_path_pattern`, `ticket_di
 
 Runs straight after `/adr-spec`, in the same context window: the seams are settled, and **you
 cannot size a ticket until you know where it gets verified.** A finished review page from `/fusion`
-is the other way in: it holds its ticket rulings in a file, so run its resumption check first.
+is the other way in: it holds its ticket rulings in a file, so run its **resumption check** first:
+read the page's ledger; compare its "facts checked against" with the current state and list every
+premise that changed; put the rulings to the spec's owner with those changes and ask whether they
+still stand. A ruling the owner changes sends the page back to `/fusion`.
 
 ## Step 1 — Load one spec, and only one
 
@@ -108,8 +111,10 @@ Report the count, the frontier — which tickets are takeable now — and the pa
 
 Re-run this on a spec that already has tickets whenever the work teaches you the cut was wrong.
 Experiment specs need it by nature: you cannot write the ablation's ticket until the first arm has
-run. **Add and renumber the open tickets; never touch one that carries an Outcome.** A closed
-ticket is a record of what happened, and the reason the spec did not have to be reopened.
+run. **Add and renumber the open tickets; never touch one that carries an Outcome or a claim.** A
+closed ticket is a record of what happened, and the reason the spec did not have to be reopened; a
+claimed one belongs to the session building it, which writes its Outcome. When a spec is superseded,
+remove its tickets that carry neither, since the work they describe now belongs to the successor.
 
 ## Hard rules
 
