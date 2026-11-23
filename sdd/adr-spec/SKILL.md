@@ -51,7 +51,10 @@ to revise is not a duplicate: revise it in place, then take it to approval as us
 
 If the user chooses **supersede**, the new spec needs its own spec-map row first: send the user to
 `/deconstruct` to add it, then write the new spec under that ID, with the old spec in its Anchors.
-The old spec, its amendments and its tickets are never edited.
+The old spec and its amendments are never edited. Superseding records lineage only: the status tool
+does not know a spec is superseded, so the old spec's open tickets stay on the board and can still
+be claimed. Say so, and ask the user what happens to them: built, or recut by `/tickets` with the
+work that depends on them.
 A supersession that a review ruled as a re-plan takes its thinking from the new fusion page, not
 from the review page.
 
@@ -183,8 +186,8 @@ effective agreement: `spec.md` followed by amendments in date order.
   thought.
 - **Send design to a contract, an ADR, or nowhere.** Never let the spec absorb implementation.
 - **Never invent a phase or workstream ID.** Validate against `phase_vocabulary` and `spec_dir`.
-- **Never create a second spec with an existing ID or subject.** Extend or supersede only after the
-  user chooses.
+- **Never create a second spec with an existing ID or subject**, except a superseding spec the user
+  chose, under its own new ID. Extend or supersede only after the user chooses.
 - **Never write a ticket.** That is `/tickets`, and it runs next.
 - **Write scope is a new or not-yet-approved `spec.md`, append-only `amendments.md`, and `decision_records`.**
   `acceptance.md`, the spec map and the roadmap are read-only here. A contract edit is proposed,

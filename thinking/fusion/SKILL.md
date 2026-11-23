@@ -142,7 +142,7 @@ choices with your recommendation pre-selected and the others one click away, a n
 keep or veto for each default and assumption; a text box for each question at the edge of your
 view, and one for anything not on the page. A responder name lets the page be shared with other
 people for their feedback. **Gather my answers** writes a plain-text summary that marks every fork
-as *kept the recommendation* or *changed*, lists only changed defaults and assumptions and every
+as *kept the recommendation*, *changed*, or *chosen* (a fork with no recommendation), lists only changed defaults and assumptions and every
 note, and counts what is still unanswered; **Copy to clipboard** copies it for the user to paste
 back. When no fork was clicked, the summary opens by saying so: ask whether the recommendations
 stand before recording them as rulings. A fork that grants a permission (to push, to merge, to
@@ -282,7 +282,7 @@ a question at the edge of your view.
 | accept, with a reason and a condition for revisiting it | the owner, on the review page |
 | revise a spec still in draft, or amend an approved one | `/adr-spec` |
 | recut the open tickets, never one that carries an Outcome or a claim, or add new ones (a revert is a ticket) | `/tickets` |
-| re-plan | a new fusion page; a spec it replaces is superseded by the user's choice in `/adr-spec` |
+| re-plan | a new fusion page; a spec it replaces is superseded by the user's choice in `/adr-spec`, which records the lineage and leaves the old tickets for the user to decide |
 
 **Re-plan** when a premise the spec rests on no longer holds: the change would move work across its
 boundary with another component, or its spec-map row or an ADR it anchors has changed or been

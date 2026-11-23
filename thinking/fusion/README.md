@@ -247,7 +247,7 @@ mind" is a lever: if you know that fact, you can move the recommendation with it
 agent's recommendation, with every other option one click away and a note under each; a fork you
 leave untouched keeps it. Defaults
 and assumptions have keep or veto. **Gather my answers** writes a plain-text summary marking each
-fork *kept* or *changed*, and **Copy** puts it on your clipboard to paste back. Two guards keep
+fork *kept*, *changed*, or *chosen* when it had no recommendation, and **Copy** puts it on your clipboard to paste back. Two guards keep
 silence from reading as agreement. If you click no fork at all, the summary says so at its top,
 and the agent asks before treating the recommendations as rulings. A fork that grants a
 permission, such as pushing a branch, starts unanswered. A page is finished only when no fork is
