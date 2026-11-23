@@ -49,7 +49,7 @@ in [`thinking/fusion/README.md`](thinking/fusion/README.md).
 
 ## The workflow on one screen
 
-![The workflow by size of work. A project: a fusion project page, then deconstruct writes the spec map, then each row follows the component lane. One component: grill-me or a fusion page, then adr-spec, tickets, and implement one ticket per session, then your host's code review. A small change: no spec, work it test-first. Coral diamonds mark where you approve; a teal loop marks fusion review; the session skills bracket every working session.](docs/figures/sdd-workflow.svg)
+![The workflow by size of work. A project: a fusion project page, then deconstruct writes the spec map, and each row of the map enters the component lane. One component: grill-me or a fusion page, then adr-spec, tickets, and implement one ticket per fresh session, then your host's code review. Below implement, a fusion review reads the spec and what was built, and sends three arrows back up: re-plan to the planning step, amend to adr-spec, recut or add to tickets. A small change: no spec, tdd, then code review. Coral diamonds mark where you approve; the session skills bracket every working session.](docs/figures/sdd-workflow.svg)
 
 Start from the size of the work:
 
